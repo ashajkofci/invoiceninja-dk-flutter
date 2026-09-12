@@ -114,64 +114,45 @@ class MyHttpOverrides extends HttpOverrides {
 }
 
 void main({bool isTesting = false}) async {
-  final debugFile =
-      File('${Directory.systemTemp.path}/invoiceninja_startup_debug.log');
-  Future<void> debugLog(String msg) async {
-    try {
-      await debugFile.writeAsString(
-          '${DateTime.now().toIso8601String()}  $msg\n',
-          mode: FileMode.append);
-    } catch (_) {}
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final prefs = await SharedPreferences.getInstance();
+  HttpOverrides.global =
+      MyHttpOverrides(prefs.getString(kSharedPrefHostOverride) ?? '');
+
+  _registerErrorHandlers();
+
+  try {
+    SecurityContext.defaultContext.setTrustedCertificatesBytes(
+      Uint8List.fromList(isrgRootX1.codeUnits),
+    );
+  } catch (e) {
+    // Ignore CERT_ALREADY_IN_HASH_TABLE
   }
 
-  await debugLog('== app start ==');
+  if (isDesktopOS()) {
+    await windowManager.ensureInitialized();
 
-  runZonedGuarded(() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    await debugLog('binding initialized');
+    windowManager.waitUntilReadyToShow(
+        WindowOptions(
+          center: true,
+          size: Size(
+            prefs.getDouble(kSharedPrefWidth) ?? 800,
+            prefs.getDouble(kSharedPrefHeight) ?? 600,
+          ),
+        ), () async {
+      await windowManager.show();
+      await windowManager.focus();
 
-    final prefs = await SharedPreferences.getInstance();
-    await debugLog('prefs loaded');
-    HttpOverrides.global =
-        MyHttpOverrides(prefs.getString(kSharedPrefHostOverride) ?? '');
+      if (prefs.getBool(kSharedPrefMaximized) == true) {
+        windowManager.maximize();
+      }
+    });
+  }
 
-    _registerErrorHandlers();
-
-    try {
-      SecurityContext.defaultContext.setTrustedCertificatesBytes(
-        Uint8List.fromList(isrgRootX1.codeUnits),
-      );
-    } catch (e) {
-      // Ignore CERT_ALREADY_IN_HASH_TABLE
-    }
-
-    await debugLog('certs configured, isDesktopOS=${isDesktopOS()}');
-
-    if (isDesktopOS()) {
-      await windowManager.ensureInitialized();
-      await debugLog('window manager initialized');
-
-      windowManager.waitUntilReadyToShow(
-          WindowOptions(
-            center: true,
-            size: Size(
-              prefs.getDouble(kSharedPrefWidth) ?? 800,
-              prefs.getDouble(kSharedPrefHeight) ?? 600,
-            ),
-          ), () async {
-        await debugLog('window ready to show');
-        await windowManager.show();
-        await windowManager.focus();
-
-        if (prefs.getBool(kSharedPrefMaximized) == true) {
-          windowManager.maximize();
-        }
-      });
-    }
-
-    final store = Store<AppState>(appReducer,
-        initialState: await _initialState(isTesting, prefs),
-        middleware: []
+  final store = Store<AppState>(appReducer,
+      initialState: await _initialState(isTesting, prefs),
+      middleware: []
         ..addAll(createStoreAuthMiddleware())
         ..addAll(createStoreDocumentsMiddleware())
         ..addAll(createStoreDashboardMiddleware())
@@ -215,7 +196,7 @@ void main({bool isTesting = false}) async {
                 ),
               ]));
 
-  if (!kReleaseMode || Config.SENTRY_DNS.isEmpty) {
+  if (!kReleaseMode) {
     runApp(InvoiceNinjaApp(store: store));
   } else {
     await SentryFlutter.init(
