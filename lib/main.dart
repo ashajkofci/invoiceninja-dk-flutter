@@ -237,7 +237,8 @@ void main({bool isTesting = false}) async {
 Future<AppState> _initialState(bool isTesting, SharedPreferences prefs) async {
   final prefString = prefs.getString(kSharedPrefs);
 
-  final url = WebUtils.apiUrl ?? prefs.getString(kSharedPrefUrl) ?? '';
+  final url =
+      WebUtils.apiUrl ?? prefs.getString(kSharedPrefUrl) ?? Config.DEFAULT_URL;
   if (!kReleaseMode) {
     //url = kAppStagingUrl;
     //url = kAppProductionUrl;

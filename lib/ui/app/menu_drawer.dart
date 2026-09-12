@@ -34,6 +34,7 @@ import 'package:invoiceninja_flutter/redux/app/app_state.dart';
 import 'package:invoiceninja_flutter/redux/company_gateway/company_gateway_selectors.dart';
 import 'package:invoiceninja_flutter/redux/dashboard/dashboard_actions.dart';
 import 'package:invoiceninja_flutter/redux/ui/pref_state.dart';
+import 'package:invoiceninja_flutter/redux/ui/ui_actions.dart';
 import 'package:invoiceninja_flutter/ui/app/app_border.dart';
 import 'package:invoiceninja_flutter/ui/app/buttons/elevated_button.dart';
 import 'package:invoiceninja_flutter/ui/app/dialogs/alert_dialog.dart';
@@ -45,6 +46,7 @@ import 'package:invoiceninja_flutter/ui/app/menu_drawer_vm.dart';
 import 'package:invoiceninja_flutter/ui/app/resources/cached_image.dart';
 import 'package:invoiceninja_flutter/ui/app/scrollable_listview.dart';
 import 'package:invoiceninja_flutter/ui/system/update_dialog.dart';
+import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_calendar.dart';
 import 'package:invoiceninja_flutter/utils/colors.dart';
 import 'package:invoiceninja_flutter/utils/dialogs.dart';
 import 'package:invoiceninja_flutter/utils/icons.dart';
@@ -621,6 +623,24 @@ class _MenuDrawerState extends State<MenuDrawer> {
                                   title: localization.invoices,
                                   iconTooltip: localization.newInvoice,
                                 ),
+                                if (company.enabledModules &
+                                        kModuleProductReservations !=
+                                    0)
+                                  DrawerTile(
+                                    company: company,
+                                    icon: Icons.calendar_month,
+                                    title: 'Reservation calendar',
+                                    onTap: () {
+                                      store.dispatch(UpdateCurrentRoute(
+                                          ProductReservationCalendarScreen
+                                              .route));
+                                      if (isMobile(context)) {
+                                        Navigator.of(context).pushNamed(
+                                            ProductReservationCalendarScreen
+                                                .route);
+                                      }
+                                    },
+                                  ),
                                 DrawerTile(
                                   company: company,
                                   entityType: EntityType.recurringInvoice,
@@ -802,6 +822,8 @@ class _DrawerTileState extends State<DrawerTile> {
       route = kReports;
     } else if (widget.title == localization.kanban) {
       route = kKanban;
+    } else if (widget.onTap != null && widget.entityType == null) {
+      route = widget.title!;
     } else {
       route = widget.entityType!.name;
     }
@@ -1147,6 +1169,9 @@ class SidebarFooter extends StatelessWidget {
                   url += '/user-guide';
                 } else if (uiState.mainRoute == kReports) {
                   url += '/$kReports';
+                } else if (uiState.mainRoute ==
+                    ProductReservationCalendarScreen.route.substring(1)) {
+                  url += '/user-guide';
                 } else {
                   final route = state.uiState.entityTypeRoute.plural;
                   url += '/' + toSnakeCase(route).replaceAll('_', '-');

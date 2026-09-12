@@ -1084,6 +1084,7 @@ const int kModuleRecurringQuotes = 2048;
 const int kModuleInvoices = 4096;
 const int kModuleProformaInvoices = 8192;
 const int kModulePurchaseOrders = 16384;
+const int kModuleProductReservations = 32768;
 
 const Map<int, String> kModules = {
   kModuleInvoices: 'invoices',
@@ -1098,6 +1099,7 @@ const Map<int, String> kModules = {
   kModuleRecurringExpenses: 'recurring_expenses',
   kModuleTransactions: 'transactions',
   kModuleDocuments: 'documents',
+  kModuleProductReservations: 'calendar',
   //kModuleRecurringTasks: 'recurring_tasks',
   //kModuleRecurringQuotes: 'recurring_quotes',
 };

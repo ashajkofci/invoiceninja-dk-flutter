@@ -392,6 +392,12 @@ class _$CompanyEntitySerializer implements StructuredSerializer<CompanyEntity> {
       'enabled_modules',
       serializers.serialize(object.enabledModules,
           specifiedType: const FullType(int)),
+      'reservation_start_custom_field',
+      serializers.serialize(object.reservationStartCustomField,
+          specifiedType: const FullType(int)),
+      'reservation_end_custom_field',
+      serializers.serialize(object.reservationEndCustomField,
+          specifiedType: const FullType(int)),
       'calculate_expense_tax_by_amount',
       serializers.serialize(object.calculateExpenseTaxByAmount,
           specifiedType: const FullType(bool)),
@@ -977,6 +983,14 @@ class _$CompanyEntitySerializer implements StructuredSerializer<CompanyEntity> {
           break;
         case 'enabled_modules':
           result.enabledModules = serializers.deserialize(value,
+              specifiedType: const FullType(int))! as int;
+          break;
+        case 'reservation_start_custom_field':
+          result.reservationStartCustomField = serializers.deserialize(value,
+              specifiedType: const FullType(int))! as int;
+          break;
+        case 'reservation_end_custom_field':
+          result.reservationEndCustomField = serializers.deserialize(value,
               specifiedType: const FullType(int))! as int;
           break;
         case 'calculate_expense_tax_by_amount':
@@ -1918,6 +1932,10 @@ class _$CompanyEntity extends CompanyEntity {
   @override
   final int enabledModules;
   @override
+  final int reservationStartCustomField;
+  @override
+  final int reservationEndCustomField;
+  @override
   final bool calculateExpenseTaxByAmount;
   @override
   final bool stopOnUnpaidRecurring;
@@ -2065,6 +2083,8 @@ class _$CompanyEntity extends CompanyEntity {
       required this.showTaskEndDate,
       required this.settings,
       required this.enabledModules,
+      required this.reservationStartCustomField,
+      required this.reservationEndCustomField,
       required this.calculateExpenseTaxByAmount,
       required this.stopOnUnpaidRecurring,
       required this.calculateTaxes,
@@ -2202,6 +2222,8 @@ class _$CompanyEntity extends CompanyEntity {
         showTaskEndDate == other.showTaskEndDate &&
         settings == other.settings &&
         enabledModules == other.enabledModules &&
+        reservationStartCustomField == other.reservationStartCustomField &&
+        reservationEndCustomField == other.reservationEndCustomField &&
         calculateExpenseTaxByAmount == other.calculateExpenseTaxByAmount &&
         stopOnUnpaidRecurring == other.stopOnUnpaidRecurring &&
         calculateTaxes == other.calculateTaxes &&
@@ -2335,6 +2357,8 @@ class _$CompanyEntity extends CompanyEntity {
     _$hash = $jc(_$hash, showTaskEndDate.hashCode);
     _$hash = $jc(_$hash, settings.hashCode);
     _$hash = $jc(_$hash, enabledModules.hashCode);
+    _$hash = $jc(_$hash, reservationStartCustomField.hashCode);
+    _$hash = $jc(_$hash, reservationEndCustomField.hashCode);
     _$hash = $jc(_$hash, calculateExpenseTaxByAmount.hashCode);
     _$hash = $jc(_$hash, stopOnUnpaidRecurring.hashCode);
     _$hash = $jc(_$hash, calculateTaxes.hashCode);
@@ -2467,6 +2491,8 @@ class _$CompanyEntity extends CompanyEntity {
           ..add('showTaskEndDate', showTaskEndDate)
           ..add('settings', settings)
           ..add('enabledModules', enabledModules)
+          ..add('reservationStartCustomField', reservationStartCustomField)
+          ..add('reservationEndCustomField', reservationEndCustomField)
           ..add('calculateExpenseTaxByAmount', calculateExpenseTaxByAmount)
           ..add('stopOnUnpaidRecurring', stopOnUnpaidRecurring)
           ..add('calculateTaxes', calculateTaxes)
@@ -3042,6 +3068,16 @@ class CompanyEntityBuilder
   set enabledModules(int? enabledModules) =>
       _$this._enabledModules = enabledModules;
 
+  int? _reservationStartCustomField;
+  int? get reservationStartCustomField => _$this._reservationStartCustomField;
+  set reservationStartCustomField(int? reservationStartCustomField) =>
+      _$this._reservationStartCustomField = reservationStartCustomField;
+
+  int? _reservationEndCustomField;
+  int? get reservationEndCustomField => _$this._reservationEndCustomField;
+  set reservationEndCustomField(int? reservationEndCustomField) =>
+      _$this._reservationEndCustomField = reservationEndCustomField;
+
   bool? _calculateExpenseTaxByAmount;
   bool? get calculateExpenseTaxByAmount => _$this._calculateExpenseTaxByAmount;
   set calculateExpenseTaxByAmount(bool? calculateExpenseTaxByAmount) =>
@@ -3244,6 +3280,8 @@ class CompanyEntityBuilder
       _showTaskEndDate = $v.showTaskEndDate;
       _settings = $v.settings.toBuilder();
       _enabledModules = $v.enabledModules;
+      _reservationStartCustomField = $v.reservationStartCustomField;
+      _reservationEndCustomField = $v.reservationEndCustomField;
       _calculateExpenseTaxByAmount = $v.calculateExpenseTaxByAmount;
       _stopOnUnpaidRecurring = $v.stopOnUnpaidRecurring;
       _calculateTaxes = $v.calculateTaxes;
@@ -3508,6 +3546,14 @@ class CompanyEntityBuilder
             settings: settings.build(),
             enabledModules: BuiltValueNullFieldError.checkNotNull(
                 enabledModules, r'CompanyEntity', 'enabledModules'),
+            reservationStartCustomField: BuiltValueNullFieldError.checkNotNull(
+                reservationStartCustomField,
+                r'CompanyEntity',
+                'reservationStartCustomField'),
+            reservationEndCustomField: BuiltValueNullFieldError.checkNotNull(
+                reservationEndCustomField,
+                r'CompanyEntity',
+                'reservationEndCustomField'),
             calculateExpenseTaxByAmount: BuiltValueNullFieldError.checkNotNull(
                 calculateExpenseTaxByAmount,
                 r'CompanyEntity',

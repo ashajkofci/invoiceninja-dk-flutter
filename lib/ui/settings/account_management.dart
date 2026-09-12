@@ -229,6 +229,61 @@ class _AccountManagementState extends State<AccountManagement>
                       },
                     );
                   }).toList()),
+              if (company.enabledModules & kModuleProductReservations != 0)
+                FormCard(
+                  isLast: true,
+                  children: [
+                    AppDropdownButton<int>(
+                      labelText: 'Reservation start date field',
+                      value: company.reservationStartCustomField,
+                      showBlank: true,
+                      blankValue: 0,
+                      blankLabel: 'Select an invoice custom field',
+                      items: List.generate(4, (index) => index + 1)
+                          .where((number) =>
+                              number != company.reservationEndCustomField)
+                          .map((number) => DropdownMenuItem<int>(
+                                value: number,
+                                child: Text(company
+                                        .getCustomFieldLabel('invoice$number')
+                                        .isNotEmpty
+                                    ? company
+                                        .getCustomFieldLabel('invoice$number')
+                                    : 'Custom field $number'),
+                              ))
+                          .toList(),
+                      onChanged: (value) => viewModel.onCompanyChanged(
+                        company.rebuild(
+                            (b) => b..reservationStartCustomField = value ?? 0),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    AppDropdownButton<int>(
+                      labelText: 'Reservation end date field',
+                      value: company.reservationEndCustomField,
+                      showBlank: true,
+                      blankValue: 0,
+                      blankLabel: 'Select an invoice custom field',
+                      items: List.generate(4, (index) => index + 1)
+                          .where((number) =>
+                              number != company.reservationStartCustomField)
+                          .map((number) => DropdownMenuItem<int>(
+                                value: number,
+                                child: Text(company
+                                        .getCustomFieldLabel('invoice$number')
+                                        .isNotEmpty
+                                    ? company
+                                        .getCustomFieldLabel('invoice$number')
+                                    : 'Custom field $number'),
+                              ))
+                          .toList(),
+                      onChanged: (value) => viewModel.onCompanyChanged(
+                        company.rebuild(
+                            (b) => b..reservationEndCustomField = value ?? 0),
+                      ),
+                    ),
+                  ],
+                ),
             ],
           ),
           ScrollableListView(primary: true, children: [

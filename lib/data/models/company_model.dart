@@ -65,6 +65,8 @@ abstract class CompanyEntity extends Object
       sizeId: '',
       industryId: '',
       enabledModules: 0,
+      reservationStartCustomField: 0,
+      reservationEndCustomField: 0,
       firstMonthOfYear: '0',
       firstDayOfWeek: '0',
       subdomain: '',
@@ -495,6 +497,12 @@ abstract class CompanyEntity extends Object
   @BuiltValueField(wireName: 'enabled_modules')
   int get enabledModules;
 
+  @BuiltValueField(wireName: 'reservation_start_custom_field')
+  int get reservationStartCustomField;
+
+  @BuiltValueField(wireName: 'reservation_end_custom_field')
+  int get reservationEndCustomField;
+
   @BuiltValueField(wireName: 'calculate_expense_tax_by_amount')
   bool get calculateExpenseTaxByAmount;
 
@@ -889,6 +897,8 @@ abstract class CompanyEntity extends Object
     ..autoStartTasks = false
     ..showTasksTable = false
     ..enabledModules = 0
+    ..reservationStartCustomField = 0
+    ..reservationEndCustomField = 0
     ..createdAt = 0
     ..updatedAt = 0
     ..archivedAt = 0

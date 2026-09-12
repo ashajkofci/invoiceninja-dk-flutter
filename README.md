@@ -49,6 +49,23 @@ Client application for [Invoice Ninja](https://github.com/invoiceninja/invoiceni
 
     `flutter run`
 
+### Local Laravel server and Windows build
+
+For local development, set `Config.DEFAULT_URL` and `Config.TEST_URL` in
+`lib/.env.dart` to `http://127.0.0.1:8000`. This makes both release and debug
+Windows builds use the Laravel server in the adjacent `invoiceninja-dk`
+repository; debug builds also prefill the seeded login credentials.
+
+Start Laravel first, then build from a Windows terminal with the Flutter version
+listed in `.flutter-version`:
+
+```powershell
+flutter pub get
+flutter build windows
+```
+
+The executable is created below `build\windows\x64\runner\Release`.
+
 Note: if you don't have an Invoice Ninja backend setup you can test the app with these credentials:
 
 - Email: `demo@invoiceninja.com`

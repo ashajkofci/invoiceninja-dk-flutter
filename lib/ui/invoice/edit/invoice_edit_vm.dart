@@ -14,6 +14,8 @@ import 'package:redux/redux.dart';
 
 // Project imports:
 import 'package:invoiceninja_flutter/data/models/models.dart';
+import 'package:invoiceninja_flutter/data/repositories/invoice_repository.dart';
+import 'package:invoiceninja_flutter/constants.dart';
 import 'package:invoiceninja_flutter/main_app.dart';
 import 'package:invoiceninja_flutter/redux/app/app_actions.dart';
 import 'package:invoiceninja_flutter/redux/app/app_state.dart';
@@ -108,7 +110,7 @@ class InvoiceEditVM extends AbstractInvoiceEditVM {
       invoiceItemIndex: state.invoiceUIState.editingItemIndex,
       origInvoice: store.state.invoiceState.map[invoice.id],
       onSavePressed: (BuildContext context, [EntityAction? action]) {
-        Debouncer.runOnComplete(() {
+        Debouncer.runOnComplete(() async {
           final invoice = store.state.invoiceUIState.editing!;
           final localization = navigatorKey.localization;
           final navigator = navigatorKey.currentState;
@@ -143,6 +145,57 @@ class InvoiceEditVM extends AbstractInvoiceEditVM {
                     return ErrorDialog(localization!.errorCrossClientExpenses);
                   });
               return null;
+            }
+          }
+
+          final company = state.company;
+          final startValue =
+              _invoiceCustomValue(invoice, company.reservationStartCustomField);
+          final endValue =
+              _invoiceCustomValue(invoice, company.reservationEndCustomField);
+          if (company.enabledModules & kModuleProductReservations != 0 &&
+              startValue.isNotEmpty &&
+              endValue.isNotEmpty) {
+            try {
+              final overbooked = await const InvoiceRepository()
+                  .checkProductAvailability(state.credentials, invoice);
+              if (overbooked.isNotEmpty) {
+                final details = overbooked.map((dynamic item) {
+                  final conflicts = (item['conflicting_invoices'] as List?)
+                          ?.map((dynamic conflict) =>
+                              conflict['invoice_number'].toString())
+                          .where((number) => number.isNotEmpty)
+                          .join(', ') ??
+                      '';
+                  return '${item['product_key']}: ${item['total_quantity']} requested/reserved, '
+                      '${item['stock_quantity']} in stock'
+                      '${conflicts.isEmpty ? '' : ' (invoices: $conflicts)'}';
+                }).join('\n');
+
+                final shouldSave = await showDialog<bool>(
+                  context: navigatorKey.currentContext!,
+                  builder: (context) => AlertDialog(
+                    title: Text('Product availability warning'),
+                    content: Text('$details\n\nSave the invoice anyway?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: Text('CANCEL'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: Text('SAVE ANYWAY'),
+                      ),
+                    ],
+                  ),
+                );
+                if (shouldSave != true) {
+                  return null;
+                }
+              }
+            } catch (error) {
+              // An availability check must never make invoice saving unavailable.
+              print('Product availability check failed: $error');
             }
           }
 
@@ -246,5 +299,20 @@ class InvoiceEditVM extends AbstractInvoiceEditVM {
         });
       },
     );
+  }
+}
+
+String _invoiceCustomValue(InvoiceEntity invoice, int field) {
+  switch (field) {
+    case 1:
+      return invoice.customValue1;
+    case 2:
+      return invoice.customValue2;
+    case 3:
+      return invoice.customValue3;
+    case 4:
+      return invoice.customValue4;
+    default:
+      return '';
   }
 }

@@ -24,6 +24,18 @@ class InvoiceRepository {
 
   final WebClient webClient;
 
+  Future<List<dynamic>> checkProductAvailability(
+      Credentials credentials, InvoiceEntity invoice) async {
+    final data = serializers.serializeWith(InvoiceEntity.serializer, invoice);
+    final dynamic response = await webClient.post(
+      credentials.url + '/product_reservations/check',
+      credentials.token,
+      data: json.encode({'invoice': data}),
+    );
+
+    return response['overbooked'] as List<dynamic>? ?? <dynamic>[];
+  }
+
   Future<InvoiceEntity> loadItem(
       Credentials credentials, String? entityId) async {
     final dynamic response = await webClient.get(
