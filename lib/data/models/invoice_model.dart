@@ -1611,6 +1611,8 @@ class ProductItemFields {
   static const String tax = 'tax';
   static const String taxAmount = 'tax_amount';
   static const String quantity = 'quantity';
+  static const String timeCoefficient = 'time_coefficient';
+  static const String timeCoefficientName = 'time_coefficient_name';
   static const String lineTotal = 'line_total';
   static const String grossLineTotal = 'gross_line_total';
   static const String discount = 'discount';
@@ -1664,6 +1666,8 @@ abstract class InvoiceItemEntity
       productCost: 0,
       quantity:
           (company.defaultQuantity || !company.enableProductQuantity) ? 1 : 0,
+      timeCoefficient: 1,
+      timeCoefficientName: '',
       taxName1: '',
       taxRate1: 0,
       taxName2: '',
@@ -1710,6 +1714,12 @@ abstract class InvoiceItemEntity
   double get productCost;
 
   double get quantity;
+
+  @BuiltValueField(wireName: 'time_coefficient')
+  double get timeCoefficient;
+
+  @BuiltValueField(wireName: 'time_coefficient_name')
+  String get timeCoefficientName;
 
   @BuiltValueField(wireName: 'tax_name1')
   String get taxName1;
@@ -1776,7 +1786,7 @@ abstract class InvoiceItemEntity
       total(invoice, precision) - taxAmount(invoice, precision);
 
   double total(InvoiceEntity invoice, int precision) {
-    var total = quantity * cost;
+    var total = quantity * cost * timeCoefficient;
 
     if (isGroup) {
       total = groupHasPrice
@@ -1784,7 +1794,8 @@ abstract class InvoiceItemEntity
           : invoice.lineItems
               .where((item) => item.groupId == groupId && !item.isGroup)
               .fold<double>(0, (sum, item) {
-              var childTotal = item.quantity * item.cost;
+              var childTotal =
+                  item.quantity * item.cost * item.timeCoefficient;
               if (item.discount != 0) {
                 childTotal -= invoice.isAmountDiscount
                     ? item.discount
@@ -1792,6 +1803,7 @@ abstract class InvoiceItemEntity
               }
               return sum + childTotal;
             });
+      total *= timeCoefficient;
     }
 
     if (discount != 0) {
@@ -1924,6 +1936,8 @@ abstract class InvoiceItemEntity
   // ignore: unused_element
   static void _initializeBuilder(InvoiceItemEntityBuilder builder) => builder
     ..productCost = 0
+    ..timeCoefficient = 1
+    ..timeCoefficientName = ''
     ..taxCategoryId = ''
     ..groupId = ''
     ..groupTitle = ''

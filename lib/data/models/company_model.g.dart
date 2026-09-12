@@ -83,6 +83,12 @@ class _$CompanyEntitySerializer implements StructuredSerializer<CompanyEntity> {
       'enable_product_discount',
       serializers.serialize(object.enableProductDiscount,
           specifiedType: const FullType(bool)),
+      'enable_time_coefficient',
+      serializers.serialize(object.enableTimeCoefficient,
+          specifiedType: const FullType(bool)),
+      'time_coefficients_json',
+      serializers.serialize(object.timeCoefficientsJson,
+          specifiedType: const FullType(String)),
       'default_task_is_date_based',
       serializers.serialize(object.defaultTaskIsDateBased,
           specifiedType: const FullType(bool)),
@@ -557,6 +563,14 @@ class _$CompanyEntitySerializer implements StructuredSerializer<CompanyEntity> {
         case 'enable_product_discount':
           result.enableProductDiscount = serializers.deserialize(value,
               specifiedType: const FullType(bool))! as bool;
+          break;
+        case 'enable_time_coefficient':
+          result.enableTimeCoefficient = serializers.deserialize(value,
+              specifiedType: const FullType(bool))! as bool;
+          break;
+        case 'time_coefficients_json':
+          result.timeCoefficientsJson = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
           break;
         case 'default_task_is_date_based':
           result.defaultTaskIsDateBased = serializers.deserialize(value,
@@ -1764,6 +1778,10 @@ class _$CompanyEntity extends CompanyEntity {
   @override
   final bool enableProductDiscount;
   @override
+  final bool enableTimeCoefficient;
+  @override
+  final String timeCoefficientsJson;
+  @override
   final bool defaultTaskIsDateBased;
   @override
   final bool defaultQuantity;
@@ -2010,6 +2028,8 @@ class _$CompanyEntity extends CompanyEntity {
       required this.enableProductCost,
       required this.enableProductQuantity,
       required this.enableProductDiscount,
+      required this.enableTimeCoefficient,
+      required this.timeCoefficientsJson,
       required this.defaultTaskIsDateBased,
       required this.defaultQuantity,
       required this.showProductDetails,
@@ -2151,6 +2171,8 @@ class _$CompanyEntity extends CompanyEntity {
         enableProductCost == other.enableProductCost &&
         enableProductQuantity == other.enableProductQuantity &&
         enableProductDiscount == other.enableProductDiscount &&
+        enableTimeCoefficient == other.enableTimeCoefficient &&
+        timeCoefficientsJson == other.timeCoefficientsJson &&
         defaultTaskIsDateBased == other.defaultTaskIsDateBased &&
         defaultQuantity == other.defaultQuantity &&
         showProductDetails == other.showProductDetails &&
@@ -2288,6 +2310,8 @@ class _$CompanyEntity extends CompanyEntity {
     _$hash = $jc(_$hash, enableProductCost.hashCode);
     _$hash = $jc(_$hash, enableProductQuantity.hashCode);
     _$hash = $jc(_$hash, enableProductDiscount.hashCode);
+    _$hash = $jc(_$hash, enableTimeCoefficient.hashCode);
+    _$hash = $jc(_$hash, timeCoefficientsJson.hashCode);
     _$hash = $jc(_$hash, defaultTaskIsDateBased.hashCode);
     _$hash = $jc(_$hash, defaultQuantity.hashCode);
     _$hash = $jc(_$hash, showProductDetails.hashCode);
@@ -2424,6 +2448,8 @@ class _$CompanyEntity extends CompanyEntity {
           ..add('enableProductCost', enableProductCost)
           ..add('enableProductQuantity', enableProductQuantity)
           ..add('enableProductDiscount', enableProductDiscount)
+          ..add('enableTimeCoefficient', enableTimeCoefficient)
+          ..add('timeCoefficientsJson', timeCoefficientsJson)
           ..add('defaultTaskIsDateBased', defaultTaskIsDateBased)
           ..add('defaultQuantity', defaultQuantity)
           ..add('showProductDetails', showProductDetails)
@@ -2619,6 +2645,16 @@ class CompanyEntityBuilder
   bool? get enableProductDiscount => _$this._enableProductDiscount;
   set enableProductDiscount(bool? enableProductDiscount) =>
       _$this._enableProductDiscount = enableProductDiscount;
+
+  bool? _enableTimeCoefficient;
+  bool? get enableTimeCoefficient => _$this._enableTimeCoefficient;
+  set enableTimeCoefficient(bool? enableTimeCoefficient) =>
+      _$this._enableTimeCoefficient = enableTimeCoefficient;
+
+  String? _timeCoefficientsJson;
+  String? get timeCoefficientsJson => _$this._timeCoefficientsJson;
+  set timeCoefficientsJson(String? timeCoefficientsJson) =>
+      _$this._timeCoefficientsJson = timeCoefficientsJson;
 
   bool? _defaultTaskIsDateBased;
   bool? get defaultTaskIsDateBased => _$this._defaultTaskIsDateBased;
@@ -3225,6 +3261,8 @@ class CompanyEntityBuilder
       _enableProductCost = $v.enableProductCost;
       _enableProductQuantity = $v.enableProductQuantity;
       _enableProductDiscount = $v.enableProductDiscount;
+      _enableTimeCoefficient = $v.enableTimeCoefficient;
+      _timeCoefficientsJson = $v.timeCoefficientsJson;
       _defaultTaskIsDateBased = $v.defaultTaskIsDateBased;
       _defaultQuantity = $v.defaultQuantity;
       _showProductDetails = $v.showProductDetails;
@@ -3407,6 +3445,12 @@ class CompanyEntityBuilder
                 enableProductDiscount,
                 r'CompanyEntity',
                 'enableProductDiscount'),
+            enableTimeCoefficient: BuiltValueNullFieldError.checkNotNull(
+                enableTimeCoefficient,
+                r'CompanyEntity',
+                'enableTimeCoefficient'),
+            timeCoefficientsJson: BuiltValueNullFieldError.checkNotNull(
+                timeCoefficientsJson, r'CompanyEntity', 'timeCoefficientsJson'),
             defaultTaskIsDateBased: BuiltValueNullFieldError.checkNotNull(
                 defaultTaskIsDateBased,
                 r'CompanyEntity',

@@ -114,45 +114,64 @@ class MyHttpOverrides extends HttpOverrides {
 }
 
 void main({bool isTesting = false}) async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  final prefs = await SharedPreferences.getInstance();
-  HttpOverrides.global =
-      MyHttpOverrides(prefs.getString(kSharedPrefHostOverride) ?? '');
-
-  _registerErrorHandlers();
-
-  try {
-    SecurityContext.defaultContext.setTrustedCertificatesBytes(
-      Uint8List.fromList(isrgRootX1.codeUnits),
-    );
-  } catch (e) {
-    // Ignore CERT_ALREADY_IN_HASH_TABLE
+  final debugFile =
+      File('${Directory.systemTemp.path}/invoiceninja_startup_debug.log');
+  Future<void> debugLog(String msg) async {
+    try {
+      await debugFile.writeAsString(
+          '${DateTime.now().toIso8601String()}  $msg\n',
+          mode: FileMode.append);
+    } catch (_) {}
   }
 
-  if (isDesktopOS()) {
-    await windowManager.ensureInitialized();
+  await debugLog('== app start ==');
 
-    windowManager.waitUntilReadyToShow(
-        WindowOptions(
-          center: true,
-          size: Size(
-            prefs.getDouble(kSharedPrefWidth) ?? 800,
-            prefs.getDouble(kSharedPrefHeight) ?? 600,
-          ),
-        ), () async {
-      await windowManager.show();
-      await windowManager.focus();
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await debugLog('binding initialized');
 
-      if (prefs.getBool(kSharedPrefMaximized) == true) {
-        windowManager.maximize();
-      }
-    });
-  }
+    final prefs = await SharedPreferences.getInstance();
+    await debugLog('prefs loaded');
+    HttpOverrides.global =
+        MyHttpOverrides(prefs.getString(kSharedPrefHostOverride) ?? '');
 
-  final store = Store<AppState>(appReducer,
-      initialState: await _initialState(isTesting, prefs),
-      middleware: []
+    _registerErrorHandlers();
+
+    try {
+      SecurityContext.defaultContext.setTrustedCertificatesBytes(
+        Uint8List.fromList(isrgRootX1.codeUnits),
+      );
+    } catch (e) {
+      // Ignore CERT_ALREADY_IN_HASH_TABLE
+    }
+
+    await debugLog('certs configured, isDesktopOS=${isDesktopOS()}');
+
+    if (isDesktopOS()) {
+      await windowManager.ensureInitialized();
+      await debugLog('window manager initialized');
+
+      windowManager.waitUntilReadyToShow(
+          WindowOptions(
+            center: true,
+            size: Size(
+              prefs.getDouble(kSharedPrefWidth) ?? 800,
+              prefs.getDouble(kSharedPrefHeight) ?? 600,
+            ),
+          ), () async {
+        await debugLog('window ready to show');
+        await windowManager.show();
+        await windowManager.focus();
+
+        if (prefs.getBool(kSharedPrefMaximized) == true) {
+          windowManager.maximize();
+        }
+      });
+    }
+
+    final store = Store<AppState>(appReducer,
+        initialState: await _initialState(isTesting, prefs),
+        middleware: []
         ..addAll(createStoreAuthMiddleware())
         ..addAll(createStoreDocumentsMiddleware())
         ..addAll(createStoreDashboardMiddleware())
@@ -196,7 +215,7 @@ void main({bool isTesting = false}) async {
                 ),
               ]));
 
-  if (!kReleaseMode) {
+  if (!kReleaseMode || Config.SENTRY_DNS.isEmpty) {
     runApp(InvoiceNinjaApp(store: store));
   } else {
     await SentryFlutter.init(

@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:invoiceninja_flutter/data/models/models.dart';
 import 'package:invoiceninja_flutter/data/web_client.dart';
 import 'package:invoiceninja_flutter/redux/app/app_state.dart';
-import 'package:invoiceninja_flutter/redux/invoice/invoice_actions.dart';
+import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_invoice_link.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
 import 'package:redux/redux.dart';
 
@@ -76,6 +76,11 @@ class _ProductReservationCalendarScreenState
               return Center(child: Text(snapshot.error.toString()));
             }
             final data = snapshot.data!;
+            final visibleAvailability = data.availability
+                .where((item) =>
+                    item['is_stock_tracked'] == true &&
+                    (item['reserved_quantity'] as num? ?? 0) > 0)
+                .toList();
             return ListView(padding: const EdgeInsets.all(16), children: [
               Wrap(
                 spacing: 12,
@@ -136,7 +141,15 @@ class _ProductReservationCalendarScreenState
               Text(reservationText(context, 'stockPeriod'),
                   style: Theme.of(context).textTheme.titleMedium),
               SizedBox(height: 8),
-              ...data.availability.map((item) => _AvailabilityCard(item: item)),
+              if (visibleAvailability.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(reservationText(
+                      context, 'noCurrentOrFutureReservations')),
+                )
+              else
+                ...visibleAvailability
+                    .map((item) => _AvailabilityCard(item: item)),
             ]);
           },
         ),
@@ -212,8 +225,8 @@ class _MonthGrid extends StatelessWidget {
                         style: TextStyle(
                             fontWeight: isToday ? FontWeight.bold : null)),
                     ...dayEvents.take(3).map((event) => InkWell(
-                          onTap: () => store.dispatch(ViewInvoice(
-                              invoiceId: event['invoice_id']?.toString())),
+                          onTap: () => openReservationInvoice(context, store,
+                              event['invoice_id']?.toString()),
                           child: Container(
                             margin: const EdgeInsets.only(top: 2),
                             padding: const EdgeInsets.all(3),
@@ -271,10 +284,10 @@ class _AvailabilityCard extends StatelessWidget {
                           '${reservationText(context, 'invoice')} #${reservation['invoice_number']} · ${reservation['client_name']}'),
                       subtitle: Text(
                           '${reservation['start_date']} → ${reservation['end_date']} · ${reservation['quantity']} · ${reservation['status'] ?? ''}'),
-                      onTap: () => StoreProvider.of<AppState>(context).dispatch(
-                          ViewInvoice(
-                              invoiceId:
-                                  reservation['invoice_id']?.toString())),
+                      onTap: () => openReservationInvoice(
+                          context,
+                          StoreProvider.of<AppState>(context),
+                          reservation['invoice_id']?.toString()),
                     ))
                 .toList(),
       ),

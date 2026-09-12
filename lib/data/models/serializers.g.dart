@@ -153,6 +153,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(PrefState.serializer)
       ..add(PrefStateSortField.serializer)
       ..add(ProductEntity.serializer)
+      ..add(ProductGroupItemEntity.serializer)
       ..add(ProductItemResponse.serializer)
       ..add(ProductListResponse.serializer)
       ..add(ProductState.serializer)
@@ -368,12 +369,16 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList, const [const FullType(DocumentEntity)]),
           () => ListBuilder<DocumentEntity>())
       ..addBuilderFactory(
+          const FullType(
+              BuiltList, const [const FullType(ExpenseScheduleEntity)]),
+          () => ListBuilder<ExpenseScheduleEntity>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(DocumentEntity)]),
           () => ListBuilder<DocumentEntity>())
       ..addBuilderFactory(
           const FullType(
-              BuiltList, const [const FullType(ExpenseScheduleEntity)]),
-          () => ListBuilder<ExpenseScheduleEntity>())
+              BuiltList, const [const FullType(ProductGroupItemEntity)]),
+          () => ListBuilder<ProductGroupItemEntity>())
       ..addBuilderFactory(
           const FullType(BuiltList,
               const [const FullType(EInvoiceBillingReferenceEntity)]),
