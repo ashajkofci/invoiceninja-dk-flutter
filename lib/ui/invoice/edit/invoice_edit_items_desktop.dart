@@ -1299,15 +1299,14 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                             initialValue:
                                 lineItems[index].timeCoefficient.toString(),
                             onChanged: (value) => _onChanged(
-                              lineItems[index].rebuild((b) => b
-                                ..timeCoefficient = parseDouble(value)),
+                              lineItems[index].rebuild((b) =>
+                                  b..timeCoefficient = parseDouble(value)),
                               index,
                               debounce: false,
                             ),
                             keyboardType: const TextInputType.numberWithOptions(
                                 decimal: true),
-                            onSavePressed:
-                                widget.entityViewModel.onSavePressed,
+                            onSavePressed: widget.entityViewModel.onSavePressed,
                           ),
                         );
                       } else if (column == COLUMN_DISCOUNT) {

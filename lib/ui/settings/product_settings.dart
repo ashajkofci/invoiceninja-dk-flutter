@@ -101,8 +101,8 @@ class _ProductSettingsState extends State<ProductSettings> {
     final current = index == null ? null : values[index];
     final nameController =
         TextEditingController(text: current?['name']?.toString() ?? '');
-    final valueController = TextEditingController(
-        text: current?['coefficient']?.toString() ?? '1');
+    final valueController =
+        TextEditingController(text: current?['coefficient']?.toString() ?? '1');
 
     final saved = await showDialog<bool>(
       context: context,
@@ -115,8 +115,8 @@ class _ProductSettingsState extends State<ProductSettings> {
           children: [
             TextField(
               controller: nameController,
-              decoration: InputDecoration(
-                  labelText: reservationText(context, 'name')),
+              decoration:
+                  InputDecoration(labelText: reservationText(context, 'name')),
             ),
             TextField(
               controller: valueController,
@@ -148,8 +148,8 @@ class _ProductSettingsState extends State<ProductSettings> {
       } else {
         values[index] = value;
       }
-      widget.viewModel.onCompanyChanged(widget.viewModel.company.rebuild(
-          (b) => b..timeCoefficientsJson = jsonEncode(values)));
+      widget.viewModel.onCompanyChanged(widget.viewModel.company
+          .rebuild((b) => b..timeCoefficientsJson = jsonEncode(values)));
     }
 
     nameController.dispose();
@@ -231,12 +231,11 @@ class _ProductSettingsState extends State<ProductSettings> {
               ),
               SwitchListTile(
                 activeThumbColor: Theme.of(context).colorScheme.secondary,
-                title:
-                    Text(reservationText(context, 'rentalTimeCoefficients')),
+                title: Text(reservationText(context, 'rentalTimeCoefficients')),
                 subtitle: Text(reservationText(context, 'timeCoefficientHelp')),
                 value: company.enableTimeCoefficient,
-                onChanged: (value) => viewModel.onCompanyChanged(company
-                    .rebuild((b) => b..enableTimeCoefficient = value)),
+                onChanged: (value) => viewModel.onCompanyChanged(
+                    company.rebuild((b) => b..enableTimeCoefficient = value)),
               ),
               if (company.enableTimeCoefficient) ...[
                 ..._timeCoefficients().asMap().entries.map((entry) => ListTile(
@@ -249,8 +248,8 @@ class _ProductSettingsState extends State<ProductSettings> {
                         onPressed: () {
                           final values = _timeCoefficients()
                             ..removeAt(entry.key);
-                          viewModel.onCompanyChanged(company.rebuild((b) => b
-                            ..timeCoefficientsJson = jsonEncode(values)));
+                          viewModel.onCompanyChanged(company.rebuild((b) =>
+                              b..timeCoefficientsJson = jsonEncode(values)));
                         },
                       ),
                     )),

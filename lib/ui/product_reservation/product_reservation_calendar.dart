@@ -225,8 +225,8 @@ class _MonthGrid extends StatelessWidget {
                         style: TextStyle(
                             fontWeight: isToday ? FontWeight.bold : null)),
                     ...dayEvents.take(3).map((event) => InkWell(
-                          onTap: () => openReservationInvoice(context, store,
-                              event['invoice_id']?.toString()),
+                          onTap: () => openReservationInvoice(
+                              context, store, event['invoice_id']?.toString()),
                           child: Container(
                             margin: const EdgeInsets.only(top: 2),
                             padding: const EdgeInsets.all(3),

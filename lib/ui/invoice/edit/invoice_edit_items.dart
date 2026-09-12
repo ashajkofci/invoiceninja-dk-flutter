@@ -444,8 +444,8 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
                     .toList(),
                 onChanged: (value) {
                   final name = value ?? '';
-                  final preset = timeCoefficients.where(
-                      (candidate) => candidate['name'] == name);
+                  final preset = timeCoefficients
+                      .where((candidate) => candidate['name'] == name);
                   setState(() {
                     _timeCoefficientName = name;
                     if (preset.isNotEmpty) {

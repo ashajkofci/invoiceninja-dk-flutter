@@ -16,8 +16,7 @@ const _english = <String, String>{
   'details': 'Reservation details',
   'noReservations': 'No reservations in this period',
   'noCurrentReservations': 'No current reservations',
-  'noCurrentOrFutureReservations':
-      'No current or future tracked reservations',
+  'noCurrentOrFutureReservations': 'No current or future tracked reservations',
   'currentStatus': 'Current rental status',
   'startField': 'Reservation start date field',
   'endField': 'Reservation end date field',

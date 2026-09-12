@@ -103,9 +103,9 @@ List<InvoiceItemEntity> convertProductToInvoiceItems({
   if (company.fillProducts) {
     double cost = (invoice.isPurchaseOrder &&
             company.enableProductCost &&
-            product!.cost != 0)
+            product.cost != 0)
         ? product.cost
-        : product!.price;
+        : product.price;
 
     if (company.convertProductExchangeRate &&
         (client?.currencyId ?? '').isNotEmpty) {
