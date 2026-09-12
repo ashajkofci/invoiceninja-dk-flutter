@@ -47,6 +47,7 @@ import 'package:invoiceninja_flutter/ui/app/resources/cached_image.dart';
 import 'package:invoiceninja_flutter/ui/app/scrollable_listview.dart';
 import 'package:invoiceninja_flutter/ui/system/update_dialog.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_calendar.dart';
+import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
 import 'package:invoiceninja_flutter/utils/colors.dart';
 import 'package:invoiceninja_flutter/utils/dialogs.dart';
 import 'package:invoiceninja_flutter/utils/icons.dart';
@@ -629,7 +630,7 @@ class _MenuDrawerState extends State<MenuDrawer> {
                                   DrawerTile(
                                     company: company,
                                     icon: Icons.calendar_month,
-                                    title: 'Reservation calendar',
+                                    title: reservationText(context, 'calendar'),
                                     onTap: () {
                                       store.dispatch(UpdateCurrentRoute(
                                           ProductReservationCalendarScreen

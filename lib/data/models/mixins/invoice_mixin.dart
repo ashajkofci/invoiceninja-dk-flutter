@@ -62,7 +62,7 @@ abstract mixin class CalculateInvoiceTotal {
     return lineItems
         .where((item) => item.groupId == header.groupId && !item.isGroup)
         .fold<double>(0, (sum, item) {
-      var value = item.quantity * item.cost;
+      var value = item.quantity * item.cost * item.timeCoefficient;
       if (item.discount != 0) {
         value -= isAmountDiscount
             ? item.discount
@@ -72,8 +72,9 @@ abstract mixin class CalculateInvoiceTotal {
     });
   }
 
-  double _itemAmount(InvoiceItemEntity item, int precision) =>
-      item.isGroup ? _groupAmount(item, precision) : item.quantity * item.cost;
+  double _itemAmount(InvoiceItemEntity item, int precision) => item.isGroup
+      ? _groupAmount(item, precision) * item.timeCoefficient
+      : item.quantity * item.cost * item.timeCoefficient;
 
   double _calculateTaxAmount(
       double amount, double rate, bool useInclusiveTaxes, int precision) {
@@ -216,8 +217,9 @@ abstract mixin class CalculateInvoiceTotal {
     final double qty = round(item.quantity, 5);
     final double cost = round(item.cost, 5);
     final double itemDiscount = round(item.discount, 5);
-    double lineTotal =
-        item.isGroup ? _groupAmount(item, precision) : qty * cost;
+    double lineTotal = item.isGroup
+        ? _groupAmount(item, precision) * item.timeCoefficient
+        : qty * cost * item.timeCoefficient;
 
     if (discount != 0) {
       if (isAmountDiscount) {
@@ -254,8 +256,9 @@ abstract mixin class CalculateInvoiceTotal {
       final double taxRate1 = round(item.taxRate1, 3);
       final double taxRate2 = round(item.taxRate2, 3);
       final double taxRate3 = round(item.taxRate3, 3);
-      double lineTotal =
-          item.isGroup ? _groupAmount(item, precision) : qty * cost;
+      double lineTotal = item.isGroup
+          ? _groupAmount(item, precision) * item.timeCoefficient
+          : qty * cost * item.timeCoefficient;
 
       if (discount != 0) {
         if (isAmountDiscount) {
@@ -348,8 +351,9 @@ abstract mixin class CalculateInvoiceTotal {
       final double cost = round(item.cost, 5);
       final double discount = round(item.discount, 5);
 
-      double lineTotal =
-          item.isGroup ? _groupAmount(item, precision) : qty * cost;
+      double lineTotal = item.isGroup
+          ? _groupAmount(item, precision) * item.timeCoefficient
+          : qty * cost * item.timeCoefficient;
 
       if (discount != 0) {
         if (isAmountDiscount) {

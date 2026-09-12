@@ -1074,6 +1074,8 @@ class _InvoiceDesignState extends State<InvoiceDesign>
                             ProductItemFields.description,
                             if (company.enableProductQuantity)
                               ProductItemFields.quantity,
+                            ProductItemFields.timeCoefficientName,
+                            ProductItemFields.timeCoefficient,
                             ProductItemFields.unitCost,
                             if (company.hasItemTaxes) ...[
                               ProductItemFields.tax,
@@ -1095,6 +1097,10 @@ class _InvoiceDesignState extends State<InvoiceDesign>
                             ProductItemFields.unitCost,
                             if (company.enableProductQuantity)
                               ProductItemFields.quantity,
+                            if (company.enableTimeCoefficient) ...[
+                              ProductItemFields.timeCoefficientName,
+                              ProductItemFields.timeCoefficient,
+                            ],
                             if (company.enableProductDiscount)
                               ProductItemFields.discount,
                             if (company.hasItemTaxes) ProductItemFields.tax,
@@ -1137,6 +1143,8 @@ class _InvoiceDesignState extends State<InvoiceDesign>
                         ProductItemFields.description,
                         if (company.enableProductQuantity)
                           ProductItemFields.quantity,
+                        ProductItemFields.timeCoefficientName,
+                        ProductItemFields.timeCoefficient,
                         ProductItemFields.unitCost,
                         if (company.hasItemTaxes) ...[
                           ProductItemFields.tax,
@@ -1157,6 +1165,10 @@ class _InvoiceDesignState extends State<InvoiceDesign>
                         ProductItemFields.unitCost,
                         if (company.enableProductQuantity)
                           ProductItemFields.quantity,
+                        if (company.enableTimeCoefficient) ...[
+                          ProductItemFields.timeCoefficientName,
+                          ProductItemFields.timeCoefficient,
+                        ],
                         if (company.enableProductDiscount)
                           ProductItemFields.discount,
                         if (company.hasItemTaxes) ProductItemFields.tax,

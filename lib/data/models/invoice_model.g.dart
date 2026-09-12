@@ -795,6 +795,12 @@ class _$InvoiceItemEntitySerializer
       'quantity',
       serializers.serialize(object.quantity,
           specifiedType: const FullType(double)),
+      'time_coefficient',
+      serializers.serialize(object.timeCoefficient,
+          specifiedType: const FullType(double)),
+      'time_coefficient_name',
+      serializers.serialize(object.timeCoefficientName,
+          specifiedType: const FullType(String)),
       'tax_name1',
       serializers.serialize(object.taxName1,
           specifiedType: const FullType(String)),
@@ -831,6 +837,21 @@ class _$InvoiceItemEntitySerializer
       'tax_id',
       serializers.serialize(object.taxCategoryId,
           specifiedType: const FullType(String)),
+      'group_id',
+      serializers.serialize(object.groupId,
+          specifiedType: const FullType(String)),
+      'group_title',
+      serializers.serialize(object.groupTitle,
+          specifiedType: const FullType(String)),
+      'group_hide_item_prices',
+      serializers.serialize(object.groupHideItemPrices,
+          specifiedType: const FullType(bool)),
+      'group_has_price',
+      serializers.serialize(object.groupHasPrice,
+          specifiedType: const FullType(bool)),
+      'group_price',
+      serializers.serialize(object.groupPrice,
+          specifiedType: const FullType(double)),
     ];
     Object? value;
     value = object.typeId;
@@ -895,6 +916,14 @@ class _$InvoiceItemEntitySerializer
           result.quantity = serializers.deserialize(value,
               specifiedType: const FullType(double))! as double;
           break;
+        case 'time_coefficient':
+          result.timeCoefficient = serializers.deserialize(value,
+              specifiedType: const FullType(double))! as double;
+          break;
+        case 'time_coefficient_name':
+          result.timeCoefficientName = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
         case 'tax_name1':
           result.taxName1 = serializers.deserialize(value,
               specifiedType: const FullType(String))! as String;
@@ -958,6 +987,26 @@ class _$InvoiceItemEntitySerializer
         case 'tax_id':
           result.taxCategoryId = serializers.deserialize(value,
               specifiedType: const FullType(String))! as String;
+          break;
+        case 'group_id':
+          result.groupId = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'group_title':
+          result.groupTitle = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'group_hide_item_prices':
+          result.groupHideItemPrices = serializers.deserialize(value,
+              specifiedType: const FullType(bool))! as bool;
+          break;
+        case 'group_has_price':
+          result.groupHasPrice = serializers.deserialize(value,
+              specifiedType: const FullType(bool))! as bool;
+          break;
+        case 'group_price':
+          result.groupPrice = serializers.deserialize(value,
+              specifiedType: const FullType(double))! as double;
           break;
       }
     }
@@ -2595,6 +2644,10 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
   @override
   final double quantity;
   @override
+  final double timeCoefficient;
+  @override
+  final String timeCoefficientName;
+  @override
   final String taxName1;
   @override
   final double taxRate1;
@@ -2626,6 +2679,16 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
   final int? createdAt;
   @override
   final String taxCategoryId;
+  @override
+  final String groupId;
+  @override
+  final String groupTitle;
+  @override
+  final bool groupHideItemPrices;
+  @override
+  final bool groupHasPrice;
+  @override
+  final double groupPrice;
 
   factory _$InvoiceItemEntity(
           [void Function(InvoiceItemEntityBuilder)? updates]) =>
@@ -2637,6 +2700,8 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
       required this.cost,
       required this.productCost,
       required this.quantity,
+      required this.timeCoefficient,
+      required this.timeCoefficientName,
       required this.taxName1,
       required this.taxRate1,
       required this.taxName2,
@@ -2652,7 +2717,12 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
       this.taskId,
       this.expenseId,
       this.createdAt,
-      required this.taxCategoryId})
+      required this.taxCategoryId,
+      required this.groupId,
+      required this.groupTitle,
+      required this.groupHideItemPrices,
+      required this.groupHasPrice,
+      required this.groupPrice})
       : super._();
   @override
   InvoiceItemEntity rebuild(void Function(InvoiceItemEntityBuilder) updates) =>
@@ -2671,6 +2741,8 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
         cost == other.cost &&
         productCost == other.productCost &&
         quantity == other.quantity &&
+        timeCoefficient == other.timeCoefficient &&
+        timeCoefficientName == other.timeCoefficientName &&
         taxName1 == other.taxName1 &&
         taxRate1 == other.taxRate1 &&
         taxName2 == other.taxName2 &&
@@ -2686,7 +2758,12 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
         taskId == other.taskId &&
         expenseId == other.expenseId &&
         createdAt == other.createdAt &&
-        taxCategoryId == other.taxCategoryId;
+        taxCategoryId == other.taxCategoryId &&
+        groupId == other.groupId &&
+        groupTitle == other.groupTitle &&
+        groupHideItemPrices == other.groupHideItemPrices &&
+        groupHasPrice == other.groupHasPrice &&
+        groupPrice == other.groupPrice;
   }
 
   int? __hashCode;
@@ -2699,6 +2776,8 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
     _$hash = $jc(_$hash, cost.hashCode);
     _$hash = $jc(_$hash, productCost.hashCode);
     _$hash = $jc(_$hash, quantity.hashCode);
+    _$hash = $jc(_$hash, timeCoefficient.hashCode);
+    _$hash = $jc(_$hash, timeCoefficientName.hashCode);
     _$hash = $jc(_$hash, taxName1.hashCode);
     _$hash = $jc(_$hash, taxRate1.hashCode);
     _$hash = $jc(_$hash, taxName2.hashCode);
@@ -2715,6 +2794,11 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
     _$hash = $jc(_$hash, expenseId.hashCode);
     _$hash = $jc(_$hash, createdAt.hashCode);
     _$hash = $jc(_$hash, taxCategoryId.hashCode);
+    _$hash = $jc(_$hash, groupId.hashCode);
+    _$hash = $jc(_$hash, groupTitle.hashCode);
+    _$hash = $jc(_$hash, groupHideItemPrices.hashCode);
+    _$hash = $jc(_$hash, groupHasPrice.hashCode);
+    _$hash = $jc(_$hash, groupPrice.hashCode);
     _$hash = $jf(_$hash);
     return __hashCode ??= _$hash;
   }
@@ -2727,6 +2811,8 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
           ..add('cost', cost)
           ..add('productCost', productCost)
           ..add('quantity', quantity)
+          ..add('timeCoefficient', timeCoefficient)
+          ..add('timeCoefficientName', timeCoefficientName)
           ..add('taxName1', taxName1)
           ..add('taxRate1', taxRate1)
           ..add('taxName2', taxName2)
@@ -2742,7 +2828,12 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
           ..add('taskId', taskId)
           ..add('expenseId', expenseId)
           ..add('createdAt', createdAt)
-          ..add('taxCategoryId', taxCategoryId))
+          ..add('taxCategoryId', taxCategoryId)
+          ..add('groupId', groupId)
+          ..add('groupTitle', groupTitle)
+          ..add('groupHideItemPrices', groupHideItemPrices)
+          ..add('groupHasPrice', groupHasPrice)
+          ..add('groupPrice', groupPrice))
         .toString();
   }
 }
@@ -2770,6 +2861,16 @@ class InvoiceItemEntityBuilder
   double? _quantity;
   double? get quantity => _$this._quantity;
   set quantity(double? quantity) => _$this._quantity = quantity;
+
+  double? _timeCoefficient;
+  double? get timeCoefficient => _$this._timeCoefficient;
+  set timeCoefficient(double? timeCoefficient) =>
+      _$this._timeCoefficient = timeCoefficient;
+
+  String? _timeCoefficientName;
+  String? get timeCoefficientName => _$this._timeCoefficientName;
+  set timeCoefficientName(String? timeCoefficientName) =>
+      _$this._timeCoefficientName = timeCoefficientName;
 
   String? _taxName1;
   String? get taxName1 => _$this._taxName1;
@@ -2836,6 +2937,28 @@ class InvoiceItemEntityBuilder
   set taxCategoryId(String? taxCategoryId) =>
       _$this._taxCategoryId = taxCategoryId;
 
+  String? _groupId;
+  String? get groupId => _$this._groupId;
+  set groupId(String? groupId) => _$this._groupId = groupId;
+
+  String? _groupTitle;
+  String? get groupTitle => _$this._groupTitle;
+  set groupTitle(String? groupTitle) => _$this._groupTitle = groupTitle;
+
+  bool? _groupHideItemPrices;
+  bool? get groupHideItemPrices => _$this._groupHideItemPrices;
+  set groupHideItemPrices(bool? groupHideItemPrices) =>
+      _$this._groupHideItemPrices = groupHideItemPrices;
+
+  bool? _groupHasPrice;
+  bool? get groupHasPrice => _$this._groupHasPrice;
+  set groupHasPrice(bool? groupHasPrice) =>
+      _$this._groupHasPrice = groupHasPrice;
+
+  double? _groupPrice;
+  double? get groupPrice => _$this._groupPrice;
+  set groupPrice(double? groupPrice) => _$this._groupPrice = groupPrice;
+
   InvoiceItemEntityBuilder() {
     InvoiceItemEntity._initializeBuilder(this);
   }
@@ -2848,6 +2971,8 @@ class InvoiceItemEntityBuilder
       _cost = $v.cost;
       _productCost = $v.productCost;
       _quantity = $v.quantity;
+      _timeCoefficient = $v.timeCoefficient;
+      _timeCoefficientName = $v.timeCoefficientName;
       _taxName1 = $v.taxName1;
       _taxRate1 = $v.taxRate1;
       _taxName2 = $v.taxName2;
@@ -2864,6 +2989,11 @@ class InvoiceItemEntityBuilder
       _expenseId = $v.expenseId;
       _createdAt = $v.createdAt;
       _taxCategoryId = $v.taxCategoryId;
+      _groupId = $v.groupId;
+      _groupTitle = $v.groupTitle;
+      _groupHideItemPrices = $v.groupHideItemPrices;
+      _groupHasPrice = $v.groupHasPrice;
+      _groupPrice = $v.groupPrice;
       _$v = null;
     }
     return this;
@@ -2895,6 +3025,10 @@ class InvoiceItemEntityBuilder
               productCost, r'InvoiceItemEntity', 'productCost'),
           quantity: BuiltValueNullFieldError.checkNotNull(
               quantity, r'InvoiceItemEntity', 'quantity'),
+          timeCoefficient: BuiltValueNullFieldError.checkNotNull(
+              timeCoefficient, r'InvoiceItemEntity', 'timeCoefficient'),
+          timeCoefficientName: BuiltValueNullFieldError.checkNotNull(
+              timeCoefficientName, r'InvoiceItemEntity', 'timeCoefficientName'),
           taxName1: BuiltValueNullFieldError.checkNotNull(
               taxName1, r'InvoiceItemEntity', 'taxName1'),
           taxRate1: BuiltValueNullFieldError.checkNotNull(
@@ -2923,6 +3057,16 @@ class InvoiceItemEntityBuilder
           createdAt: createdAt,
           taxCategoryId: BuiltValueNullFieldError.checkNotNull(
               taxCategoryId, r'InvoiceItemEntity', 'taxCategoryId'),
+          groupId: BuiltValueNullFieldError.checkNotNull(
+              groupId, r'InvoiceItemEntity', 'groupId'),
+          groupTitle: BuiltValueNullFieldError.checkNotNull(
+              groupTitle, r'InvoiceItemEntity', 'groupTitle'),
+          groupHideItemPrices: BuiltValueNullFieldError.checkNotNull(
+              groupHideItemPrices, r'InvoiceItemEntity', 'groupHideItemPrices'),
+          groupHasPrice: BuiltValueNullFieldError.checkNotNull(
+              groupHasPrice, r'InvoiceItemEntity', 'groupHasPrice'),
+          groupPrice: BuiltValueNullFieldError.checkNotNull(
+              groupPrice, r'InvoiceItemEntity', 'groupPrice'),
         );
     replace(_$result);
     return _$result;

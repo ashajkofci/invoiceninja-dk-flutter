@@ -12,6 +12,8 @@ Serializer<ProductItemResponse> _$productItemResponseSerializer =
     _$ProductItemResponseSerializer();
 Serializer<ProductEntity> _$productEntitySerializer =
     _$ProductEntitySerializer();
+Serializer<ProductGroupItemEntity> _$productGroupItemEntitySerializer =
+    _$ProductGroupItemEntitySerializer();
 
 class _$ProductListResponseSerializer
     implements StructuredSerializer<ProductListResponse> {
@@ -184,6 +186,22 @@ class _$ProductEntitySerializer implements StructuredSerializer<ProductEntity> {
       serializers.serialize(object.documents,
           specifiedType: const FullType(
               BuiltList, const [const FullType(DocumentEntity)])),
+      'is_group',
+      serializers.serialize(object.isGroup,
+          specifiedType: const FullType(bool)),
+      'group_hide_item_prices',
+      serializers.serialize(object.groupHideItemPrices,
+          specifiedType: const FullType(bool)),
+      'group_has_price',
+      serializers.serialize(object.groupHasPrice,
+          specifiedType: const FullType(bool)),
+      'group_price',
+      serializers.serialize(object.groupPrice,
+          specifiedType: const FullType(double)),
+      'group_items',
+      serializers.serialize(object.groupItems,
+          specifiedType: const FullType(
+              BuiltList, const [const FullType(ProductGroupItemEntity)])),
       'created_at',
       serializers.serialize(object.createdAt,
           specifiedType: const FullType(int)),
@@ -330,6 +348,28 @@ class _$ProductEntitySerializer implements StructuredSerializer<ProductEntity> {
                       BuiltList, const [const FullType(DocumentEntity)]))!
               as BuiltList<Object?>);
           break;
+        case 'is_group':
+          result.isGroup = serializers.deserialize(value,
+              specifiedType: const FullType(bool))! as bool;
+          break;
+        case 'group_hide_item_prices':
+          result.groupHideItemPrices = serializers.deserialize(value,
+              specifiedType: const FullType(bool))! as bool;
+          break;
+        case 'group_has_price':
+          result.groupHasPrice = serializers.deserialize(value,
+              specifiedType: const FullType(bool))! as bool;
+          break;
+        case 'group_price':
+          result.groupPrice = serializers.deserialize(value,
+              specifiedType: const FullType(double))! as double;
+          break;
+        case 'group_items':
+          result.groupItems.replace(serializers.deserialize(value,
+              specifiedType: const FullType(BuiltList, const [
+                const FullType(ProductGroupItemEntity)
+              ]))! as BuiltList<Object?>);
+          break;
         case 'isChanged':
           result.isChanged = serializers.deserialize(value,
               specifiedType: const FullType(bool)) as bool?;
@@ -360,6 +400,163 @@ class _$ProductEntitySerializer implements StructuredSerializer<ProductEntity> {
           break;
         case 'id':
           result.id = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+      }
+    }
+
+    return result.build();
+  }
+}
+
+class _$ProductGroupItemEntitySerializer
+    implements StructuredSerializer<ProductGroupItemEntity> {
+  @override
+  final Iterable<Type> types = const [
+    ProductGroupItemEntity,
+    _$ProductGroupItemEntity
+  ];
+  @override
+  final String wireName = 'ProductGroupItemEntity';
+
+  @override
+  Iterable<Object?> serialize(
+      Serializers serializers, ProductGroupItemEntity object,
+      {FullType specifiedType = FullType.unspecified}) {
+    final result = <Object?>[
+      'product_id',
+      serializers.serialize(object.productId,
+          specifiedType: const FullType(String)),
+      'quantity',
+      serializers.serialize(object.quantity,
+          specifiedType: const FullType(double)),
+      'product_key',
+      serializers.serialize(object.productKey,
+          specifiedType: const FullType(String)),
+      'notes',
+      serializers.serialize(object.notes,
+          specifiedType: const FullType(String)),
+      'cost',
+      serializers.serialize(object.cost, specifiedType: const FullType(double)),
+      'price',
+      serializers.serialize(object.price,
+          specifiedType: const FullType(double)),
+      'tax_id',
+      serializers.serialize(object.taxCategoryId,
+          specifiedType: const FullType(String)),
+      'tax_name1',
+      serializers.serialize(object.taxName1,
+          specifiedType: const FullType(String)),
+      'tax_rate1',
+      serializers.serialize(object.taxRate1,
+          specifiedType: const FullType(double)),
+      'tax_name2',
+      serializers.serialize(object.taxName2,
+          specifiedType: const FullType(String)),
+      'tax_rate2',
+      serializers.serialize(object.taxRate2,
+          specifiedType: const FullType(double)),
+      'tax_name3',
+      serializers.serialize(object.taxName3,
+          specifiedType: const FullType(String)),
+      'tax_rate3',
+      serializers.serialize(object.taxRate3,
+          specifiedType: const FullType(double)),
+      'custom_value1',
+      serializers.serialize(object.customValue1,
+          specifiedType: const FullType(String)),
+      'custom_value2',
+      serializers.serialize(object.customValue2,
+          specifiedType: const FullType(String)),
+      'custom_value3',
+      serializers.serialize(object.customValue3,
+          specifiedType: const FullType(String)),
+      'custom_value4',
+      serializers.serialize(object.customValue4,
+          specifiedType: const FullType(String)),
+    ];
+
+    return result;
+  }
+
+  @override
+  ProductGroupItemEntity deserialize(
+      Serializers serializers, Iterable<Object?> serialized,
+      {FullType specifiedType = FullType.unspecified}) {
+    final result = ProductGroupItemEntityBuilder();
+
+    final iterator = serialized.iterator;
+    while (iterator.moveNext()) {
+      final key = iterator.current! as String;
+      iterator.moveNext();
+      final Object? value = iterator.current;
+      switch (key) {
+        case 'product_id':
+          result.productId = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'quantity':
+          result.quantity = serializers.deserialize(value,
+              specifiedType: const FullType(double))! as double;
+          break;
+        case 'product_key':
+          result.productKey = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'notes':
+          result.notes = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'cost':
+          result.cost = serializers.deserialize(value,
+              specifiedType: const FullType(double))! as double;
+          break;
+        case 'price':
+          result.price = serializers.deserialize(value,
+              specifiedType: const FullType(double))! as double;
+          break;
+        case 'tax_id':
+          result.taxCategoryId = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'tax_name1':
+          result.taxName1 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'tax_rate1':
+          result.taxRate1 = serializers.deserialize(value,
+              specifiedType: const FullType(double))! as double;
+          break;
+        case 'tax_name2':
+          result.taxName2 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'tax_rate2':
+          result.taxRate2 = serializers.deserialize(value,
+              specifiedType: const FullType(double))! as double;
+          break;
+        case 'tax_name3':
+          result.taxName3 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'tax_rate3':
+          result.taxRate3 = serializers.deserialize(value,
+              specifiedType: const FullType(double))! as double;
+          break;
+        case 'custom_value1':
+          result.customValue1 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'custom_value2':
+          result.customValue2 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'custom_value3':
+          result.customValue3 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'custom_value4':
+          result.customValue4 = serializers.deserialize(value,
               specifiedType: const FullType(String))! as String;
           break;
       }
@@ -610,6 +807,16 @@ class _$ProductEntity extends ProductEntity {
   @override
   final BuiltList<DocumentEntity> documents;
   @override
+  final bool isGroup;
+  @override
+  final bool groupHideItemPrices;
+  @override
+  final bool groupHasPrice;
+  @override
+  final double groupPrice;
+  @override
+  final BuiltList<ProductGroupItemEntity> groupItems;
+  @override
   final bool? isChanged;
   @override
   final int createdAt;
@@ -652,6 +859,11 @@ class _$ProductEntity extends ProductEntity {
       required this.maxQuantity,
       required this.taxCategoryId,
       required this.documents,
+      required this.isGroup,
+      required this.groupHideItemPrices,
+      required this.groupHasPrice,
+      required this.groupPrice,
+      required this.groupItems,
       this.isChanged,
       required this.createdAt,
       required this.updatedAt,
@@ -694,6 +906,11 @@ class _$ProductEntity extends ProductEntity {
         maxQuantity == other.maxQuantity &&
         taxCategoryId == other.taxCategoryId &&
         documents == other.documents &&
+        isGroup == other.isGroup &&
+        groupHideItemPrices == other.groupHideItemPrices &&
+        groupHasPrice == other.groupHasPrice &&
+        groupPrice == other.groupPrice &&
+        groupItems == other.groupItems &&
         isChanged == other.isChanged &&
         createdAt == other.createdAt &&
         updatedAt == other.updatedAt &&
@@ -731,6 +948,11 @@ class _$ProductEntity extends ProductEntity {
     _$hash = $jc(_$hash, maxQuantity.hashCode);
     _$hash = $jc(_$hash, taxCategoryId.hashCode);
     _$hash = $jc(_$hash, documents.hashCode);
+    _$hash = $jc(_$hash, isGroup.hashCode);
+    _$hash = $jc(_$hash, groupHideItemPrices.hashCode);
+    _$hash = $jc(_$hash, groupHasPrice.hashCode);
+    _$hash = $jc(_$hash, groupPrice.hashCode);
+    _$hash = $jc(_$hash, groupItems.hashCode);
     _$hash = $jc(_$hash, isChanged.hashCode);
     _$hash = $jc(_$hash, createdAt.hashCode);
     _$hash = $jc(_$hash, updatedAt.hashCode);
@@ -768,6 +990,11 @@ class _$ProductEntity extends ProductEntity {
           ..add('maxQuantity', maxQuantity)
           ..add('taxCategoryId', taxCategoryId)
           ..add('documents', documents)
+          ..add('isGroup', isGroup)
+          ..add('groupHideItemPrices', groupHideItemPrices)
+          ..add('groupHasPrice', groupHasPrice)
+          ..add('groupPrice', groupPrice)
+          ..add('groupItems', groupItems)
           ..add('isChanged', isChanged)
           ..add('createdAt', createdAt)
           ..add('updatedAt', updatedAt)
@@ -878,6 +1105,30 @@ class ProductEntityBuilder
   set documents(ListBuilder<DocumentEntity>? documents) =>
       _$this._documents = documents;
 
+  bool? _isGroup;
+  bool? get isGroup => _$this._isGroup;
+  set isGroup(bool? isGroup) => _$this._isGroup = isGroup;
+
+  bool? _groupHideItemPrices;
+  bool? get groupHideItemPrices => _$this._groupHideItemPrices;
+  set groupHideItemPrices(bool? groupHideItemPrices) =>
+      _$this._groupHideItemPrices = groupHideItemPrices;
+
+  bool? _groupHasPrice;
+  bool? get groupHasPrice => _$this._groupHasPrice;
+  set groupHasPrice(bool? groupHasPrice) =>
+      _$this._groupHasPrice = groupHasPrice;
+
+  double? _groupPrice;
+  double? get groupPrice => _$this._groupPrice;
+  set groupPrice(double? groupPrice) => _$this._groupPrice = groupPrice;
+
+  ListBuilder<ProductGroupItemEntity>? _groupItems;
+  ListBuilder<ProductGroupItemEntity> get groupItems =>
+      _$this._groupItems ??= ListBuilder<ProductGroupItemEntity>();
+  set groupItems(ListBuilder<ProductGroupItemEntity>? groupItems) =>
+      _$this._groupItems = groupItems;
+
   bool? _isChanged;
   bool? get isChanged => _$this._isChanged;
   set isChanged(bool? isChanged) => _$this._isChanged = isChanged;
@@ -941,6 +1192,11 @@ class ProductEntityBuilder
       _maxQuantity = $v.maxQuantity;
       _taxCategoryId = $v.taxCategoryId;
       _documents = $v.documents.toBuilder();
+      _isGroup = $v.isGroup;
+      _groupHideItemPrices = $v.groupHideItemPrices;
+      _groupHasPrice = $v.groupHasPrice;
+      _groupPrice = $v.groupPrice;
+      _groupItems = $v.groupItems.toBuilder();
       _isChanged = $v.isChanged;
       _createdAt = $v.createdAt;
       _updatedAt = $v.updatedAt;
@@ -1017,6 +1273,15 @@ class ProductEntityBuilder
             taxCategoryId: BuiltValueNullFieldError.checkNotNull(
                 taxCategoryId, r'ProductEntity', 'taxCategoryId'),
             documents: documents.build(),
+            isGroup: BuiltValueNullFieldError.checkNotNull(
+                isGroup, r'ProductEntity', 'isGroup'),
+            groupHideItemPrices: BuiltValueNullFieldError.checkNotNull(
+                groupHideItemPrices, r'ProductEntity', 'groupHideItemPrices'),
+            groupHasPrice: BuiltValueNullFieldError.checkNotNull(
+                groupHasPrice, r'ProductEntity', 'groupHasPrice'),
+            groupPrice: BuiltValueNullFieldError.checkNotNull(
+                groupPrice, r'ProductEntity', 'groupPrice'),
+            groupItems: groupItems.build(),
             isChanged: isChanged,
             createdAt: BuiltValueNullFieldError.checkNotNull(
                 createdAt, r'ProductEntity', 'createdAt'),
@@ -1035,12 +1300,310 @@ class ProductEntityBuilder
       try {
         _$failedField = 'documents';
         documents.build();
+
+        _$failedField = 'groupItems';
+        groupItems.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(
             r'ProductEntity', _$failedField, e.toString());
       }
       rethrow;
     }
+    replace(_$result);
+    return _$result;
+  }
+}
+
+class _$ProductGroupItemEntity extends ProductGroupItemEntity {
+  @override
+  final String productId;
+  @override
+  final double quantity;
+  @override
+  final String productKey;
+  @override
+  final String notes;
+  @override
+  final double cost;
+  @override
+  final double price;
+  @override
+  final String taxCategoryId;
+  @override
+  final String taxName1;
+  @override
+  final double taxRate1;
+  @override
+  final String taxName2;
+  @override
+  final double taxRate2;
+  @override
+  final String taxName3;
+  @override
+  final double taxRate3;
+  @override
+  final String customValue1;
+  @override
+  final String customValue2;
+  @override
+  final String customValue3;
+  @override
+  final String customValue4;
+
+  factory _$ProductGroupItemEntity(
+          [void Function(ProductGroupItemEntityBuilder)? updates]) =>
+      (ProductGroupItemEntityBuilder()..update(updates))._build();
+
+  _$ProductGroupItemEntity._(
+      {required this.productId,
+      required this.quantity,
+      required this.productKey,
+      required this.notes,
+      required this.cost,
+      required this.price,
+      required this.taxCategoryId,
+      required this.taxName1,
+      required this.taxRate1,
+      required this.taxName2,
+      required this.taxRate2,
+      required this.taxName3,
+      required this.taxRate3,
+      required this.customValue1,
+      required this.customValue2,
+      required this.customValue3,
+      required this.customValue4})
+      : super._();
+  @override
+  ProductGroupItemEntity rebuild(
+          void Function(ProductGroupItemEntityBuilder) updates) =>
+      (toBuilder()..update(updates)).build();
+
+  @override
+  ProductGroupItemEntityBuilder toBuilder() =>
+      ProductGroupItemEntityBuilder()..replace(this);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(other, this)) return true;
+    return other is ProductGroupItemEntity &&
+        productId == other.productId &&
+        quantity == other.quantity &&
+        productKey == other.productKey &&
+        notes == other.notes &&
+        cost == other.cost &&
+        price == other.price &&
+        taxCategoryId == other.taxCategoryId &&
+        taxName1 == other.taxName1 &&
+        taxRate1 == other.taxRate1 &&
+        taxName2 == other.taxName2 &&
+        taxRate2 == other.taxRate2 &&
+        taxName3 == other.taxName3 &&
+        taxRate3 == other.taxRate3 &&
+        customValue1 == other.customValue1 &&
+        customValue2 == other.customValue2 &&
+        customValue3 == other.customValue3 &&
+        customValue4 == other.customValue4;
+  }
+
+  @override
+  int get hashCode {
+    var _$hash = 0;
+    _$hash = $jc(_$hash, productId.hashCode);
+    _$hash = $jc(_$hash, quantity.hashCode);
+    _$hash = $jc(_$hash, productKey.hashCode);
+    _$hash = $jc(_$hash, notes.hashCode);
+    _$hash = $jc(_$hash, cost.hashCode);
+    _$hash = $jc(_$hash, price.hashCode);
+    _$hash = $jc(_$hash, taxCategoryId.hashCode);
+    _$hash = $jc(_$hash, taxName1.hashCode);
+    _$hash = $jc(_$hash, taxRate1.hashCode);
+    _$hash = $jc(_$hash, taxName2.hashCode);
+    _$hash = $jc(_$hash, taxRate2.hashCode);
+    _$hash = $jc(_$hash, taxName3.hashCode);
+    _$hash = $jc(_$hash, taxRate3.hashCode);
+    _$hash = $jc(_$hash, customValue1.hashCode);
+    _$hash = $jc(_$hash, customValue2.hashCode);
+    _$hash = $jc(_$hash, customValue3.hashCode);
+    _$hash = $jc(_$hash, customValue4.hashCode);
+    _$hash = $jf(_$hash);
+    return _$hash;
+  }
+
+  @override
+  String toString() {
+    return (newBuiltValueToStringHelper(r'ProductGroupItemEntity')
+          ..add('productId', productId)
+          ..add('quantity', quantity)
+          ..add('productKey', productKey)
+          ..add('notes', notes)
+          ..add('cost', cost)
+          ..add('price', price)
+          ..add('taxCategoryId', taxCategoryId)
+          ..add('taxName1', taxName1)
+          ..add('taxRate1', taxRate1)
+          ..add('taxName2', taxName2)
+          ..add('taxRate2', taxRate2)
+          ..add('taxName3', taxName3)
+          ..add('taxRate3', taxRate3)
+          ..add('customValue1', customValue1)
+          ..add('customValue2', customValue2)
+          ..add('customValue3', customValue3)
+          ..add('customValue4', customValue4))
+        .toString();
+  }
+}
+
+class ProductGroupItemEntityBuilder
+    implements Builder<ProductGroupItemEntity, ProductGroupItemEntityBuilder> {
+  _$ProductGroupItemEntity? _$v;
+
+  String? _productId;
+  String? get productId => _$this._productId;
+  set productId(String? productId) => _$this._productId = productId;
+
+  double? _quantity;
+  double? get quantity => _$this._quantity;
+  set quantity(double? quantity) => _$this._quantity = quantity;
+
+  String? _productKey;
+  String? get productKey => _$this._productKey;
+  set productKey(String? productKey) => _$this._productKey = productKey;
+
+  String? _notes;
+  String? get notes => _$this._notes;
+  set notes(String? notes) => _$this._notes = notes;
+
+  double? _cost;
+  double? get cost => _$this._cost;
+  set cost(double? cost) => _$this._cost = cost;
+
+  double? _price;
+  double? get price => _$this._price;
+  set price(double? price) => _$this._price = price;
+
+  String? _taxCategoryId;
+  String? get taxCategoryId => _$this._taxCategoryId;
+  set taxCategoryId(String? taxCategoryId) =>
+      _$this._taxCategoryId = taxCategoryId;
+
+  String? _taxName1;
+  String? get taxName1 => _$this._taxName1;
+  set taxName1(String? taxName1) => _$this._taxName1 = taxName1;
+
+  double? _taxRate1;
+  double? get taxRate1 => _$this._taxRate1;
+  set taxRate1(double? taxRate1) => _$this._taxRate1 = taxRate1;
+
+  String? _taxName2;
+  String? get taxName2 => _$this._taxName2;
+  set taxName2(String? taxName2) => _$this._taxName2 = taxName2;
+
+  double? _taxRate2;
+  double? get taxRate2 => _$this._taxRate2;
+  set taxRate2(double? taxRate2) => _$this._taxRate2 = taxRate2;
+
+  String? _taxName3;
+  String? get taxName3 => _$this._taxName3;
+  set taxName3(String? taxName3) => _$this._taxName3 = taxName3;
+
+  double? _taxRate3;
+  double? get taxRate3 => _$this._taxRate3;
+  set taxRate3(double? taxRate3) => _$this._taxRate3 = taxRate3;
+
+  String? _customValue1;
+  String? get customValue1 => _$this._customValue1;
+  set customValue1(String? customValue1) => _$this._customValue1 = customValue1;
+
+  String? _customValue2;
+  String? get customValue2 => _$this._customValue2;
+  set customValue2(String? customValue2) => _$this._customValue2 = customValue2;
+
+  String? _customValue3;
+  String? get customValue3 => _$this._customValue3;
+  set customValue3(String? customValue3) => _$this._customValue3 = customValue3;
+
+  String? _customValue4;
+  String? get customValue4 => _$this._customValue4;
+  set customValue4(String? customValue4) => _$this._customValue4 = customValue4;
+
+  ProductGroupItemEntityBuilder();
+
+  ProductGroupItemEntityBuilder get _$this {
+    final $v = _$v;
+    if ($v != null) {
+      _productId = $v.productId;
+      _quantity = $v.quantity;
+      _productKey = $v.productKey;
+      _notes = $v.notes;
+      _cost = $v.cost;
+      _price = $v.price;
+      _taxCategoryId = $v.taxCategoryId;
+      _taxName1 = $v.taxName1;
+      _taxRate1 = $v.taxRate1;
+      _taxName2 = $v.taxName2;
+      _taxRate2 = $v.taxRate2;
+      _taxName3 = $v.taxName3;
+      _taxRate3 = $v.taxRate3;
+      _customValue1 = $v.customValue1;
+      _customValue2 = $v.customValue2;
+      _customValue3 = $v.customValue3;
+      _customValue4 = $v.customValue4;
+      _$v = null;
+    }
+    return this;
+  }
+
+  @override
+  void replace(ProductGroupItemEntity other) {
+    _$v = other as _$ProductGroupItemEntity;
+  }
+
+  @override
+  void update(void Function(ProductGroupItemEntityBuilder)? updates) {
+    if (updates != null) updates(this);
+  }
+
+  @override
+  ProductGroupItemEntity build() => _build();
+
+  _$ProductGroupItemEntity _build() {
+    final _$result = _$v ??
+        _$ProductGroupItemEntity._(
+          productId: BuiltValueNullFieldError.checkNotNull(
+              productId, r'ProductGroupItemEntity', 'productId'),
+          quantity: BuiltValueNullFieldError.checkNotNull(
+              quantity, r'ProductGroupItemEntity', 'quantity'),
+          productKey: BuiltValueNullFieldError.checkNotNull(
+              productKey, r'ProductGroupItemEntity', 'productKey'),
+          notes: BuiltValueNullFieldError.checkNotNull(
+              notes, r'ProductGroupItemEntity', 'notes'),
+          cost: BuiltValueNullFieldError.checkNotNull(
+              cost, r'ProductGroupItemEntity', 'cost'),
+          price: BuiltValueNullFieldError.checkNotNull(
+              price, r'ProductGroupItemEntity', 'price'),
+          taxCategoryId: BuiltValueNullFieldError.checkNotNull(
+              taxCategoryId, r'ProductGroupItemEntity', 'taxCategoryId'),
+          taxName1: BuiltValueNullFieldError.checkNotNull(
+              taxName1, r'ProductGroupItemEntity', 'taxName1'),
+          taxRate1: BuiltValueNullFieldError.checkNotNull(
+              taxRate1, r'ProductGroupItemEntity', 'taxRate1'),
+          taxName2: BuiltValueNullFieldError.checkNotNull(
+              taxName2, r'ProductGroupItemEntity', 'taxName2'),
+          taxRate2: BuiltValueNullFieldError.checkNotNull(
+              taxRate2, r'ProductGroupItemEntity', 'taxRate2'),
+          taxName3: BuiltValueNullFieldError.checkNotNull(
+              taxName3, r'ProductGroupItemEntity', 'taxName3'),
+          taxRate3: BuiltValueNullFieldError.checkNotNull(
+              taxRate3, r'ProductGroupItemEntity', 'taxRate3'),
+          customValue1: BuiltValueNullFieldError.checkNotNull(
+              customValue1, r'ProductGroupItemEntity', 'customValue1'),
+          customValue2: BuiltValueNullFieldError.checkNotNull(
+              customValue2, r'ProductGroupItemEntity', 'customValue2'),
+          customValue3: BuiltValueNullFieldError.checkNotNull(
+              customValue3, r'ProductGroupItemEntity', 'customValue3'),
+          customValue4: BuiltValueNullFieldError.checkNotNull(
+              customValue4, r'ProductGroupItemEntity', 'customValue4'),
+        );
     replace(_$result);
     return _$result;
   }

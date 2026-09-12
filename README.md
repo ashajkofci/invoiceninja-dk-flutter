@@ -66,6 +66,29 @@ flutter build windows
 
 The executable is created below `build\windows\x64\runner\Release`.
 
+### Android build from WSL2
+
+Run `./build_android.sh` from the repository root in WSL2 (Ubuntu). On first
+run it installs everything it needs into `~/dev` (no sudo required):
+
+- Temurin JDK 17 (`~/dev/jdk`)
+- Flutter 3.41.9, matching `.flutter-version` (`~/dev/flutter`)
+- Android cmdline-tools + SDK packages: platform-tools, platform 36,
+  build-tools 36.0.0, NDK r28c, CMake 3.22.1 (`~/dev/android-sdk`)
+
+It then performs the project setup (creates `lib/.env.dart` if missing, copies
+`android/app/build.gradle.dev.kts` to `android/app/build.gradle.kts`, refreshes
+`android/local.properties`, runs `flutter pub get`) and builds the release APK:
+
+- Output: `build/app/outputs/flutter-apk/app-release.apk`
+- `./build_android.sh --debug` builds a debug APK instead
+- Without `android/key.properties` the APK is signed with the debug key; add
+  `key.properties` plus a keystore for a properly signed release build
+
+Subsequent runs skip installation and reuse the Gradle caches, so they are
+much faster. Note that building on `/mnt/f` (a Windows drive) is slower than
+the native WSL filesystem, mainly on the first build.
+
 Note: if you don't have an Invoice Ninja backend setup you can test the app with these credentials:
 
 - Email: `demo@invoiceninja.com`

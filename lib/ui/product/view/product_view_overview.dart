@@ -1,10 +1,12 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter_redux/flutter_redux.dart';
 import 'package:invoiceninja_flutter/constants.dart';
 
 // Project imports:
 import 'package:invoiceninja_flutter/data/models/models.dart';
 import 'package:invoiceninja_flutter/data/web_client.dart';
+import 'package:invoiceninja_flutter/redux/app/app_state.dart';
 import 'package:invoiceninja_flutter/ui/app/FieldGrid.dart';
 import 'package:invoiceninja_flutter/ui/app/entity_header.dart';
 import 'package:invoiceninja_flutter/ui/app/lists/list_divider.dart';
@@ -13,6 +15,7 @@ import 'package:invoiceninja_flutter/ui/product/view/product_view_vm.dart';
 import 'package:invoiceninja_flutter/utils/formatting.dart';
 import 'package:invoiceninja_flutter/utils/localization.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
+import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_invoice_link.dart';
 import 'package:intl/intl.dart';
 
 class ProductOverview extends StatefulWidget {
@@ -150,8 +153,10 @@ class _ProductOverviewState extends State<ProductOverview> {
                 }
                 final status = snapshot.data!;
                 final tracked = status['is_stock_tracked'] == true;
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
+                final reservations = List<Map<String, dynamic>>.from(
+                    status['reservations'] ?? []);
+                return ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
                   title: Text(reservationText(context, 'currentStatus')),
                   subtitle: Text(tracked
                       ? '${status['reserved_quantity']} ${reservationText(context, 'reserved')} · ${status['available_quantity']} ${reservationText(context, 'available')}'
@@ -159,6 +164,29 @@ class _ProductOverviewState extends State<ProductOverview> {
                   leading: Icon(tracked
                       ? Icons.event_available
                       : Icons.inventory_2_outlined),
+                  children: reservations.isEmpty
+                      ? [
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(reservationText(
+                                context, 'noCurrentReservations')),
+                          )
+                        ]
+                      : reservations
+                          .map((reservation) => ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: Icon(Icons.receipt_long),
+                                title: Text(
+                                    '${reservationText(context, 'invoice')} #${reservation['invoice_number']} · ${reservation['client_name']}'),
+                                subtitle: Text(
+                                    '${reservation['start_date']} → ${reservation['end_date']} · ${reservation['quantity']} · ${reservation['status'] ?? ''}'),
+                                onTap: () => openReservationInvoice(
+                                  context,
+                                  StoreProvider.of<AppState>(context),
+                                  reservation['invoice_id']?.toString(),
+                                ),
+                              ))
+                          .toList(),
                 );
               },
             ),

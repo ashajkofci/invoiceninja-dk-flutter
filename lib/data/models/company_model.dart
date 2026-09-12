@@ -80,6 +80,8 @@ abstract class CompanyEntity extends Object
       enableProductCost: false,
       enableProductQuantity: true,
       enableProductDiscount: false,
+      enableTimeCoefficient: false,
+      timeCoefficientsJson: '[]',
       defaultQuantity: true,
       defaultTaskIsDateBased: false,
       slackWebhookUrl: '',
@@ -244,6 +246,12 @@ abstract class CompanyEntity extends Object
 
   @BuiltValueField(wireName: 'enable_product_discount')
   bool get enableProductDiscount;
+
+  @BuiltValueField(wireName: 'enable_time_coefficient')
+  bool get enableTimeCoefficient;
+
+  @BuiltValueField(wireName: 'time_coefficients_json')
+  String get timeCoefficientsJson;
 
   @BuiltValueField(wireName: 'default_task_is_date_based')
   bool get defaultTaskIsDateBased;
@@ -835,6 +843,8 @@ abstract class CompanyEntity extends Object
     ..entityType = EntityType.company
     ..calculateExpenseTaxByAmount = false
     ..enableProductDiscount = false
+    ..enableTimeCoefficient = false
+    ..timeCoefficientsJson = '[]'
     ..defaultTaskIsDateBased = false
     ..sessionTimeout = 0
     ..passwordTimeout = 30 * 60 * 1000

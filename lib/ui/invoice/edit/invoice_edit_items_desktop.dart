@@ -54,6 +54,8 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
   static const COLUMN_DESCRIPTION = 'description';
   static const COLUMN_UNIT_COST = 'unit_cost';
   static const COLUMN_QUANTITY = 'quantity';
+  static const COLUMN_TIME_COEFFICIENT = 'time_coefficient';
+  static const COLUMN_TIME_COEFFICIENT_NAME = 'time_coefficient_name';
   static const COLUMN_CUSTOM1 = 'custom1';
   static const COLUMN_CUSTOM2 = 'custom2';
   static const COLUMN_CUSTOM3 = 'custom3';
@@ -201,6 +203,15 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
           !pdfColumns.contains(ProductItemFields.discount)) {
         pdfColumns.add(ProductItemFields.discount);
       }
+
+      if (company.enableTimeCoefficient) {
+        if (!pdfColumns.contains(ProductItemFields.timeCoefficientName)) {
+          pdfColumns.add(ProductItemFields.timeCoefficientName);
+        }
+        if (!pdfColumns.contains(ProductItemFields.timeCoefficient)) {
+          pdfColumns.add(ProductItemFields.timeCoefficient);
+        }
+      }
     }
 
     if (hasAnyTax && !pdfColumns.contains(ProductItemFields.tax)) {
@@ -239,6 +250,14 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
               TaskItemFields.hours == column) &&
           (company.enableProductQuantity || widget.isTasks)) {
         _columns.add(COLUMN_QUANTITY);
+      } else if (ProductItemFields.timeCoefficientName == column &&
+          company.enableTimeCoefficient &&
+          !widget.isTasks) {
+        _columns.add(COLUMN_TIME_COEFFICIENT_NAME);
+      } else if (ProductItemFields.timeCoefficient == column &&
+          company.enableTimeCoefficient &&
+          !widget.isTasks) {
+        _columns.add(COLUMN_TIME_COEFFICIENT);
       } else if ((ProductItemFields.custom1 == column ||
               TaskItemFields.custom1 == column) &&
           company.hasCustomField(customField1)) {
@@ -419,6 +438,11 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
               ? translations['unit_cost']!
               : localization!.unitCost;
         }
+        isNumeric = true;
+      } else if (column == COLUMN_TIME_COEFFICIENT_NAME) {
+        label = reservationText(context, 'timeCoefficientName');
+      } else if (column == COLUMN_TIME_COEFFICIENT) {
+        label = reservationText(context, 'timeCoefficient');
         isNumeric = true;
       } else if (column == COLUMN_DISCOUNT) {
         label = (translations!['discount'] ?? '').isNotEmpty
@@ -1214,6 +1238,75 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                               onSavePressed:
                                   widget.entityViewModel.onSavePressed,
                             ),
+                          ),
+                        );
+                      } else if (column == COLUMN_TIME_COEFFICIENT_NAME) {
+                        final presets = decodeTimeCoefficients(
+                            company.timeCoefficientsJson);
+                        final names = presets
+                            .map((value) => value['name']?.toString() ?? '')
+                            .where((value) => value.isNotEmpty)
+                            .toList();
+                        if (lineItems[index].timeCoefficientName.isNotEmpty &&
+                            !names.contains(
+                                lineItems[index].timeCoefficientName)) {
+                          names.add(lineItems[index].timeCoefficientName);
+                        }
+                        return Padding(
+                          padding:
+                              const EdgeInsets.only(right: kTableColumnGap),
+                          child: AppDropdownButton<String>(
+                            labelText: '',
+                            value: lineItems[index].timeCoefficientName,
+                            showBlank: true,
+                            blankValue: '',
+                            blankLabel: reservationText(context, 'standard'),
+                            items: names
+                                .map((name) => DropdownMenuItem<String>(
+                                      value: name,
+                                      child: Text(name),
+                                    ))
+                                .toList(),
+                            onChanged: (value) {
+                              Map<String, dynamic>? preset;
+                              for (final candidate in presets) {
+                                if (candidate['name'] == value) {
+                                  preset = candidate;
+                                  break;
+                                }
+                              }
+                              _onChanged(
+                                lineItems[index].rebuild((b) => b
+                                  ..timeCoefficientName = value ?? ''
+                                  ..timeCoefficient = preset == null
+                                      ? lineItems[index].timeCoefficient
+                                      : (preset['coefficient'] as num)
+                                          .toDouble()),
+                                index,
+                                debounce: false,
+                              );
+                            },
+                          ),
+                        );
+                      } else if (column == COLUMN_TIME_COEFFICIENT) {
+                        return Padding(
+                          padding:
+                              const EdgeInsets.only(right: kTableColumnGap),
+                          child: DecoratedFormField(
+                            key: ValueKey(
+                                '__line_item_${index}_time_coefficient__'),
+                            textAlign: TextAlign.right,
+                            initialValue:
+                                lineItems[index].timeCoefficient.toString(),
+                            onChanged: (value) => _onChanged(
+                              lineItems[index].rebuild((b) =>
+                                  b..timeCoefficient = parseDouble(value)),
+                              index,
+                              debounce: false,
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            onSavePressed: widget.entityViewModel.onSavePressed,
                           ),
                         );
                       } else if (column == COLUMN_DISCOUNT) {

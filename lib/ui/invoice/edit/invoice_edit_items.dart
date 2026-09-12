@@ -114,6 +114,7 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
   final _notesController = TextEditingController();
   final _costController = TextEditingController();
   final _qtyController = TextEditingController();
+  final _timeCoefficientController = TextEditingController();
   final _discountController = TextEditingController();
   final _groupPriceController = TextEditingController();
   final _custom1Controller = TextEditingController();
@@ -127,6 +128,7 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
   String? _taxCategoryId;
   bool _groupHideItemPrices = false;
   bool _groupHasPrice = false;
+  String _timeCoefficientName = '';
 
   List<TextEditingController> _controllers = [];
   final _debouncer = Debouncer();
@@ -145,6 +147,8 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
         formatNumberType: FormatNumberType.inputMoney)!;
     _qtyController.text = formatNumber(invoiceItem.quantity, context,
         formatNumberType: FormatNumberType.inputAmount)!;
+    _timeCoefficientController.text = invoiceItem.timeCoefficient.toString();
+    _timeCoefficientName = invoiceItem.timeCoefficientName;
     _discountController.text = formatNumber(invoiceItem.discount, context,
         formatNumberType: FormatNumberType.inputMoney)!;
     _groupPriceController.text = formatNumber(invoiceItem.groupPrice, context,
@@ -161,6 +165,7 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
       _notesController,
       _costController,
       _qtyController,
+      _timeCoefficientController,
       _discountController,
       _groupPriceController,
       _custom1Controller,
@@ -234,6 +239,8 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
       ..notes = _notesController.text
       ..cost = parseDouble(_costController.text)
       ..quantity = parseDouble(_qtyController.text)
+      ..timeCoefficient = parseDouble(_timeCoefficientController.text)
+      ..timeCoefficientName = _timeCoefficientName
       ..discount = parseDouble(_discountController.text)
       ..groupTitle = widget.invoiceItem.isGroup
           ? _productKeyController.text.trim()
@@ -274,6 +281,16 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
     final viewModel = widget.viewModel;
     final company = viewModel.company!;
     final invoice = viewModel.invoice;
+    final timeCoefficients =
+        decodeTimeCoefficients(company.timeCoefficientsJson);
+    final timeCoefficientNames = timeCoefficients
+        .map((value) => value['name']?.toString() ?? '')
+        .where((value) => value.isNotEmpty)
+        .toList();
+    if (_timeCoefficientName.isNotEmpty &&
+        !timeCoefficientNames.contains(_timeCoefficientName)) {
+      timeCoefficientNames.add(_timeCoefficientName);
+    }
 
     return AlertDialog(
       actions: [
@@ -412,6 +429,41 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
                   TextInputType.numberWithOptions(decimal: true, signed: true),
               onSavePressed: widget.entityViewModel.onSavePressed,
             ),
+            if (!widget.invoiceItem.isTask && company.enableTimeCoefficient)
+              AppDropdownButton<String>(
+                labelText: reservationText(context, 'timeCoefficientName'),
+                value: _timeCoefficientName,
+                showBlank: true,
+                blankValue: '',
+                blankLabel: reservationText(context, 'standard'),
+                items: timeCoefficientNames
+                    .map((name) => DropdownMenuItem<String>(
+                          value: name,
+                          child: Text(name),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  final name = value ?? '';
+                  final preset = timeCoefficients
+                      .where((candidate) => candidate['name'] == name);
+                  setState(() {
+                    _timeCoefficientName = name;
+                    if (preset.isNotEmpty) {
+                      _timeCoefficientController.text =
+                          (preset.first['coefficient'] as num).toString();
+                    }
+                  });
+                  _onChanged();
+                },
+              ),
+            if (!widget.invoiceItem.isTask && company.enableTimeCoefficient)
+              DecoratedFormField(
+                label: reservationText(context, 'timeCoefficient'),
+                controller: _timeCoefficientController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                onSavePressed: widget.entityViewModel.onSavePressed,
+              ),
             !widget.invoiceItem.isGroup && company.enableProductQuantity
                 ? DecoratedFormField(
                     label: widget.invoiceItem.isTask

@@ -1,4 +1,6 @@
 // Flutter imports:
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 // Project imports:
@@ -8,6 +10,7 @@ import 'package:invoiceninja_flutter/ui/app/forms/app_form.dart';
 import 'package:invoiceninja_flutter/ui/app/forms/bool_dropdown_button.dart';
 import 'package:invoiceninja_flutter/ui/app/forms/decorated_form_field.dart';
 import 'package:invoiceninja_flutter/ui/settings/product_settings_vm.dart';
+import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
 import 'package:invoiceninja_flutter/utils/completers.dart';
 import 'package:invoiceninja_flutter/utils/formatting.dart';
 import 'package:invoiceninja_flutter/utils/localization.dart';
@@ -83,6 +86,76 @@ class _ProductSettingsState extends State<ProductSettings> {
     }
   }
 
+  List<Map<String, dynamic>> _timeCoefficients() {
+    try {
+      return (jsonDecode(widget.viewModel.company.timeCoefficientsJson) as List)
+          .map((value) => Map<String, dynamic>.from(value as Map))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> _editTimeCoefficient([int? index]) async {
+    final values = _timeCoefficients();
+    final current = index == null ? null : values[index];
+    final nameController =
+        TextEditingController(text: current?['name']?.toString() ?? '');
+    final valueController =
+        TextEditingController(text: current?['coefficient']?.toString() ?? '1');
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(index == null
+            ? reservationText(context, 'addTimeCoefficient')
+            : reservationText(context, 'editTimeCoefficient')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration:
+                  InputDecoration(labelText: reservationText(context, 'name')),
+            ),
+            TextField(
+              controller: valueController,
+              decoration: InputDecoration(
+                  labelText: reservationText(context, 'coefficient')),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(reservationText(context, 'cancel'))),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(reservationText(context, 'save'))),
+        ],
+      ),
+    );
+
+    if (saved == true && nameController.text.trim().isNotEmpty) {
+      final value = {
+        'name': nameController.text.trim(),
+        'coefficient': parseDouble(valueController.text),
+      };
+      if (index == null) {
+        values.add(value);
+      } else {
+        values[index] = value;
+      }
+      widget.viewModel.onCompanyChanged(widget.viewModel.company
+          .rebuild((b) => b..timeCoefficientsJson = jsonEncode(values)));
+    }
+
+    nameController.dispose();
+    valueController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalization.of(context)!;
@@ -156,6 +229,36 @@ class _ProductSettingsState extends State<ProductSettings> {
                 onChanged: (value) => viewModel.onCompanyChanged(
                     company.rebuild((b) => b..defaultQuantity = value)),
               ),
+              SwitchListTile(
+                activeThumbColor: Theme.of(context).colorScheme.secondary,
+                title: Text(reservationText(context, 'rentalTimeCoefficients')),
+                subtitle: Text(reservationText(context, 'timeCoefficientHelp')),
+                value: company.enableTimeCoefficient,
+                onChanged: (value) => viewModel.onCompanyChanged(
+                    company.rebuild((b) => b..enableTimeCoefficient = value)),
+              ),
+              if (company.enableTimeCoefficient) ...[
+                ..._timeCoefficients().asMap().entries.map((entry) => ListTile(
+                      title: Text(entry.value['name']?.toString() ?? ''),
+                      subtitle:
+                          Text(entry.value['coefficient']?.toString() ?? '1'),
+                      onTap: () => _editTimeCoefficient(entry.key),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: () {
+                          final values = _timeCoefficients()
+                            ..removeAt(entry.key);
+                          viewModel.onCompanyChanged(company.rebuild((b) =>
+                              b..timeCoefficientsJson = jsonEncode(values)));
+                        },
+                      ),
+                    )),
+                ListTile(
+                  leading: const Icon(Icons.add),
+                  title: Text(reservationText(context, 'addTimeCoefficient')),
+                  onTap: _editTimeCoefficient,
+                ),
+              ],
             ],
           ),
           FormCard(

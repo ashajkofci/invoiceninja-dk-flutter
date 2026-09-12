@@ -134,6 +134,7 @@ dev_dependencies:
   faker: ^2.0.0
   msix: ^3.5.1
   import_sorter: ^4.6.0
+  analyzer: 8.3.0
 
 flutter:
 
@@ -152,11 +153,11 @@ flutter:
         - asset: assets/google_fonts/Roboto-Regular.ttf
 
 msix_config:
-  display_name: Invoice Ninja
-  publisher_display_name: Invoice Ninja
+  display_name: Invoice Ninja DKPROD
+  publisher_display_name: DKPROD
   identity_name: InvoiceNinja.InvoiceNinja
   publisher: CN=2B7AA393-06A0-46F5-AF85-1917142440C3
   architecture: x64
   capabilities: 'internetClient'
-  store: true
+  store: false
   logo_path: assets/images/icon.png
