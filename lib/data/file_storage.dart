@@ -30,7 +30,11 @@ class FileStorage {
     final dir = await getDirectory();
 
     if (isWindows()) {
-      return File('${dir.path}/invoiceninja/$tag.json');
+      final subDir = Directory('${dir.path}/invoiceninja');
+      if (!subDir.existsSync()) {
+        subDir.createSync(recursive: true);
+      }
+      return File('${subDir.path}/$tag.json');
     } else {
       return File('${dir.path}/invoiceninja__$tag.json');
     }
