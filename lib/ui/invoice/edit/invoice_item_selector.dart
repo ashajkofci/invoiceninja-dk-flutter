@@ -70,6 +70,20 @@ class _InvoiceItemSelectorState extends State<InvoiceItemSelector>
     Navigator.pop(context);
   }
 
+  void _addBlankGroup() {
+    final groupId = BaseEntity.nextId;
+    widget.onItemsSelected!([
+      InvoiceItemEntity(
+        productKey: 'Group',
+        typeId: InvoiceItemEntity.TYPE_GROUP,
+      ).rebuild((b) => b
+        ..groupId = groupId
+        ..groupTitle = 'Group'
+        ..quantity = 1)
+    ]);
+    Navigator.pop(context);
+  }
+
   void _onItemsSelected(BuildContext context) {
     final List<InvoiceItemEntity> items = [];
     final state = StoreProvider.of<AppState>(context).state;
@@ -78,8 +92,8 @@ class _InvoiceItemSelectorState extends State<InvoiceItemSelector>
 
     _selected.forEach((entity) {
       if (entity.entityType == EntityType.product) {
-        items.add(
-          convertProductToInvoiceItem(
+        items.addAll(
+          convertProductToInvoiceItems(
             company: company,
             product: entity as ProductEntity?,
             invoice: widget.invoice,
@@ -328,11 +342,20 @@ class _InvoiceItemSelectorState extends State<InvoiceItemSelector>
                           onPressed: () => _onItemsSelected(context),
                         )
                       : !state.prefState.isEditorFullScreen(EntityType.invoice)
-                          ? IconButton(
-                              icon: Icon(Icons.add_circle_outline),
-                              tooltip: localization.createNew,
-                              onPressed: () => _addBlankItem(company),
-                            )
+                          ? Row(mainAxisSize: MainAxisSize.min, children: [
+                              if (_tabController.index == 0)
+                                IconButton(
+                                  icon: Icon(Icons.view_agenda_outlined),
+                                  tooltip:
+                                      '${localization.create} ${localization.group}',
+                                  onPressed: _addBlankGroup,
+                                ),
+                              IconButton(
+                                icon: Icon(Icons.add_circle_outline),
+                                tooltip: localization.createNew,
+                                onPressed: () => _addBlankItem(company),
+                              ),
+                            ])
                           : SizedBox(),
                 ],
               )

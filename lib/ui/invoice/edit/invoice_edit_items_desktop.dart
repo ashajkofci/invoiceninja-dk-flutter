@@ -29,6 +29,9 @@ import 'package:invoiceninja_flutter/utils/colors.dart';
 import 'package:invoiceninja_flutter/utils/completers.dart';
 import 'package:invoiceninja_flutter/utils/formatting.dart';
 import 'package:invoiceninja_flutter/utils/localization.dart';
+import 'package:invoiceninja_flutter/data/repositories/invoice_repository.dart';
+import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_line_status.dart';
+import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
 
 class InvoiceEditItemsDesktop extends StatefulWidget {
   const InvoiceEditItemsDesktop({
@@ -66,12 +69,51 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
   bool _isReordering = false;
   int _autocompleteFocusIndex = -1;
   final _columns = <String>[];
+  Future<List<dynamic>>? _reservationAvailability;
 
   @override
   void initState() {
     super.initState();
 
     _updateColumns();
+    _updateReservationAvailability();
+  }
+
+  bool get _showReservationStatus {
+    final invoice = widget.viewModel.invoice!;
+    final company = widget.viewModel.state!.company;
+    return !widget.isTasks &&
+        (invoice.isInvoice || invoice.isQuote) &&
+        company.enabledModules & kModuleProductReservations != 0;
+  }
+
+  String _customValue(InvoiceEntity invoice, int field) {
+    if (field == 1) {
+      return invoice.customValue1;
+    }
+    if (field == 2) {
+      return invoice.customValue2;
+    }
+    if (field == 3) {
+      return invoice.customValue3;
+    }
+    if (field == 4) {
+      return invoice.customValue4;
+    }
+    return '';
+  }
+
+  void _updateReservationAvailability() {
+    final invoice = widget.viewModel.invoice!;
+    final state = widget.viewModel.state!;
+    final company = state.company;
+    final hasDates =
+        _customValue(invoice, company.reservationStartCustomField).isNotEmpty &&
+            _customValue(invoice, company.reservationEndCustomField).isNotEmpty;
+    _reservationAvailability = _showReservationStatus && hasDates
+        ? const InvoiceRepository()
+            .getProductAvailability(state.credentials, invoice)
+        : null;
   }
 
   void _updateColumns() {
@@ -241,6 +283,10 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
     if (oldWidget.isTasks != widget.isTasks) {
       _isReordering = false;
       _updateColumns();
+    }
+    if (oldWidget.viewModel.invoice != widget.viewModel.invoice ||
+        oldWidget.isTasks != widget.isTasks) {
+      _updateReservationAvailability();
     }
   }
 
@@ -577,6 +623,13 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
 
     lineItems.add(InvoiceItemEntity());
 
+    if (_showReservationStatus) {
+      tableHeaderColumns.add(TableHeader(
+        reservationText(context, 'currentStatus'),
+        isNumeric: false,
+      ));
+    }
+
     tableHeaderColumns.addAll([
       TableHeader(
         localization!.lineTotal,
@@ -601,7 +654,8 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
         columnWidths: {
           _columns.indexOf(COLUMN_ITEM): FlexColumnWidth(1.3),
           _columns.indexOf(COLUMN_DESCRIPTION): FlexColumnWidth(2.2),
-          _columns.length + 1: FixedColumnWidth(40),
+          _columns.length + (_showReservationStatus ? 2 : 1):
+              FixedColumnWidth(40),
         },
         // TODO change to top once we can set maxLines to 2
         defaultVerticalAlignment: TableCellVerticalAlignment.bottom,
@@ -675,6 +729,29 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                                   product.productKey,
                               onSelected: (product) {
                                 Debouncer.cancel();
+                                if (product.isGroup) {
+                                  final groupedItems =
+                                      convertProductToInvoiceItems(
+                                    product: product,
+                                    company: company,
+                                    invoice: invoice,
+                                    currencyMap: state.staticState.currencyMap,
+                                    client:
+                                        state.clientState.get(invoice.clientId),
+                                  );
+                                  _onChanged(groupedItems.first, index,
+                                      debounce: false);
+                                  for (var childIndex = 1;
+                                      childIndex < groupedItems.length;
+                                      childIndex++) {
+                                    viewModel.addLineItem!(
+                                      index + childIndex,
+                                      groupedItems[childIndex],
+                                    );
+                                  }
+                                  _updateTable();
+                                  return;
+                                }
                                 final item = lineItems[index];
                                 final client =
                                     state.clientState.get(invoice.clientId);
@@ -1175,6 +1252,15 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                         return SizedBox();
                       }
                     }).toList(),
+                    if (_showReservationStatus)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            right: kTableColumnGap, bottom: 12),
+                        child: ProductReservationLineStatus(
+                          item: lineItems[index],
+                          availability: _reservationAvailability,
+                        ),
+                      ),
                     Padding(
                       padding: const EdgeInsets.only(right: kTableColumnGap),
                       child: Align(

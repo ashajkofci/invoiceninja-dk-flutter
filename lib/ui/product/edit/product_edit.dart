@@ -48,6 +48,7 @@ class _ProductEditState extends State<ProductEdit> {
   final _notificationThresholdController = TextEditingController();
   final _imageUrlController = TextEditingController();
   final _maxQuantityController = TextEditingController();
+  final _groupPriceController = TextEditingController();
 
   List<TextEditingController> _controllers = [];
   final _debouncer = Debouncer();
@@ -68,6 +69,7 @@ class _ProductEditState extends State<ProductEdit> {
       _notificationThresholdController,
       _imageUrlController,
       _maxQuantityController,
+      _groupPriceController,
     ];
 
     _controllers
@@ -99,6 +101,8 @@ class _ProductEditState extends State<ProductEdit> {
             formatNumberType: FormatNumberType.int,
           )!;
     _imageUrlController.text = product.imageUrl;
+    _groupPriceController.text = formatNumber(product.groupPrice, context,
+        formatNumberType: FormatNumberType.inputMoney)!;
     _notificationThresholdController.text =
         product.stockNotificationThreshold == 0
             ? ''
@@ -140,6 +144,7 @@ class _ProductEditState extends State<ProductEdit> {
       ..stockNotificationThreshold =
           parseInt(_notificationThresholdController.text.trim())
       ..maxQuantity = parseInt(_maxQuantityController.text.trim())
+      ..groupPrice = parseDouble(_groupPriceController.text)
       ..imageUrl = _imageUrlController.text.trim());
 
     if (product != widget.viewModel.product) {
@@ -197,6 +202,92 @@ class _ProductEditState extends State<ProductEdit> {
                   controller: _notesController,
                   maxLines: 6,
                 ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text('${localization.group} ${localization.products}'),
+                  value: product.isGroup,
+                  onChanged: (value) => viewModel
+                      .onChanged(product.rebuild((b) => b..isGroup = value)),
+                ),
+                if (product.isGroup) ...[
+                  DropdownButtonFormField<String>(
+                    decoration: InputDecoration(
+                        labelText:
+                            '${localization.add} ${localization.product}'),
+                    items: viewModel.state.productState.map.values
+                        .where((candidate) =>
+                            candidate.id != product.id &&
+                            candidate.isActive &&
+                            !candidate.isGroup &&
+                            !product.groupItems
+                                .any((item) => item.productId == candidate.id))
+                        .map((candidate) => DropdownMenuItem<String>(
+                              value: candidate.id,
+                              child: Text(candidate.productKey),
+                            ))
+                        .toList(),
+                    onChanged: (productId) {
+                      final child = viewModel.state.productState.map[productId];
+                      if (child == null) return;
+                      final groupItem = ProductGroupItemEntity((b) => b
+                        ..productId = child.id
+                        ..quantity = child.quantity == 0 ? 1 : child.quantity
+                        ..productKey = child.productKey
+                        ..notes = child.notes
+                        ..cost = child.cost
+                        ..price = child.price
+                        ..taxCategoryId = child.taxCategoryId
+                        ..taxName1 = child.taxName1
+                        ..taxRate1 = child.taxRate1
+                        ..taxName2 = child.taxName2
+                        ..taxRate2 = child.taxRate2
+                        ..taxName3 = child.taxName3
+                        ..taxRate3 = child.taxRate3
+                        ..customValue1 = child.customValue1
+                        ..customValue2 = child.customValue2
+                        ..customValue3 = child.customValue3
+                        ..customValue4 = child.customValue4);
+                      viewModel.onChanged(
+                          product.rebuild((b) => b..groupItems.add(groupItem)));
+                    },
+                  ),
+                  for (var index = 0;
+                      index < product.groupItems.length;
+                      index++)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(product.groupItems[index].productKey),
+                      subtitle: Text(
+                          '${localization.quantity}: ${product.groupItems[index].quantity}'),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete_outline),
+                        onPressed: () => viewModel.onChanged(product
+                            .rebuild((b) => b..groupItems.removeAt(index))),
+                      ),
+                    ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text('${localization.hide} ${localization.price}'),
+                    value: product.groupHideItemPrices,
+                    onChanged: (value) => viewModel.onChanged(
+                        product.rebuild((b) => b..groupHideItemPrices = value)),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text('${localization.group} ${localization.price}'),
+                    value: product.groupHasPrice,
+                    onChanged: (value) => viewModel.onChanged(
+                        product.rebuild((b) => b..groupHasPrice = value)),
+                  ),
+                  if (product.groupHasPrice)
+                    DecoratedFormField(
+                      label: localization.price,
+                      controller: _groupPriceController,
+                      keyboardType: TextInputType.numberWithOptions(
+                          decimal: true, signed: true),
+                      onSavePressed: _onSavePressed,
+                    ),
+                ],
                 DecoratedFormField(
                   label: localization.price,
                   controller: _priceController,

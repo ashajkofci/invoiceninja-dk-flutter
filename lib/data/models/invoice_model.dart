@@ -1677,6 +1677,11 @@ abstract class InvoiceItemEntity
       customValue4: '',
       discount: 0,
       taxCategoryId: '',
+      groupId: '',
+      groupTitle: '',
+      groupHideItemPrices: false,
+      groupHasPrice: false,
+      groupPrice: 0,
       createdAt: DateTime.now().microsecondsSinceEpoch,
     );
   }
@@ -1688,6 +1693,7 @@ abstract class InvoiceItemEntity
   static const TYPE_UNPAID_FEE = '3';
   static const TYPE_PAID_FEE = '4';
   static const TYPE_LATE_FEE = '5';
+  static const TYPE_GROUP = '7';
 
   @override
   @memoized
@@ -1751,11 +1757,42 @@ abstract class InvoiceItemEntity
   @BuiltValueField(wireName: 'tax_id')
   String get taxCategoryId;
 
+  @BuiltValueField(wireName: 'group_id')
+  String get groupId;
+
+  @BuiltValueField(wireName: 'group_title')
+  String get groupTitle;
+
+  @BuiltValueField(wireName: 'group_hide_item_prices')
+  bool get groupHideItemPrices;
+
+  @BuiltValueField(wireName: 'group_has_price')
+  bool get groupHasPrice;
+
+  @BuiltValueField(wireName: 'group_price')
+  double get groupPrice;
+
   double netTotal(InvoiceEntity invoice, int precision) =>
       total(invoice, precision) - taxAmount(invoice, precision);
 
   double total(InvoiceEntity invoice, int precision) {
     var total = quantity * cost;
+
+    if (isGroup) {
+      total = groupHasPrice
+          ? groupPrice
+          : invoice.lineItems
+              .where((item) => item.groupId == groupId && !item.isGroup)
+              .fold<double>(0, (sum, item) {
+              var childTotal = item.quantity * item.cost;
+              if (item.discount != 0) {
+                childTotal -= invoice.isAmountDiscount
+                    ? item.discount
+                    : childTotal * item.discount / 100;
+              }
+              return sum + childTotal;
+            });
+    }
 
     if (discount != 0) {
       if (invoice.isAmountDiscount) {
@@ -1769,6 +1806,9 @@ abstract class InvoiceItemEntity
   }
 
   double taxAmount(InvoiceEntity invoice, int precision) {
+    if (isGroupChild(invoice)) {
+      return 0;
+    }
     double calculateTaxAmount(double rate) {
       double taxAmount;
       if (rate == 0) {
@@ -1796,6 +1836,13 @@ abstract class InvoiceItemEntity
     ..taskId = '');
 
   bool get isTask => typeId == TYPE_TASK;
+
+  bool get isGroup => typeId == TYPE_GROUP;
+
+  bool isGroupChild(InvoiceEntity invoice) =>
+      groupId.isNotEmpty &&
+      !isGroup &&
+      invoice.lineItems.any((item) => item.isGroup && item.groupId == groupId);
 
   bool get isExpense => (expenseId ?? '').isNotEmpty;
 
@@ -1877,7 +1924,12 @@ abstract class InvoiceItemEntity
   // ignore: unused_element
   static void _initializeBuilder(InvoiceItemEntityBuilder builder) => builder
     ..productCost = 0
-    ..taxCategoryId = '';
+    ..taxCategoryId = ''
+    ..groupId = ''
+    ..groupTitle = ''
+    ..groupHideItemPrices = false
+    ..groupHasPrice = false
+    ..groupPrice = 0;
 
   static Serializer<InvoiceItemEntity> get serializer =>
       _$invoiceItemEntitySerializer;

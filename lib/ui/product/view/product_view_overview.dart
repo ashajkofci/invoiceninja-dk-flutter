@@ -4,6 +4,7 @@ import 'package:invoiceninja_flutter/constants.dart';
 
 // Project imports:
 import 'package:invoiceninja_flutter/data/models/models.dart';
+import 'package:invoiceninja_flutter/data/web_client.dart';
 import 'package:invoiceninja_flutter/ui/app/FieldGrid.dart';
 import 'package:invoiceninja_flutter/ui/app/entity_header.dart';
 import 'package:invoiceninja_flutter/ui/app/lists/list_divider.dart';
@@ -11,6 +12,8 @@ import 'package:invoiceninja_flutter/ui/app/scrollable_listview.dart';
 import 'package:invoiceninja_flutter/ui/product/view/product_view_vm.dart';
 import 'package:invoiceninja_flutter/utils/formatting.dart';
 import 'package:invoiceninja_flutter/utils/localization.dart';
+import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
+import 'package:intl/intl.dart';
 
 class ProductOverview extends StatefulWidget {
   const ProductOverview({
@@ -25,6 +28,17 @@ class ProductOverview extends StatefulWidget {
 }
 
 class _ProductOverviewState extends State<ProductOverview> {
+  Future<Map<String, dynamic>?> _loadReservationStatus() async {
+    final state = widget.viewModel.state;
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final response = await const WebClient().get(
+      '${state.credentials.url}/product_reservations/availability?start_date=$today&end_date=$today&product_id=${widget.viewModel.product.id}',
+      state.credentials.token,
+    );
+    final data = List<Map<String, dynamic>>.from(response['data']);
+    return data.isEmpty ? null : data.first;
+  }
+
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalization.of(context)!;
@@ -123,6 +137,32 @@ class _ProductOverviewState extends State<ProductOverview> {
         ),
         ListDivider(),
         FieldGrid(fields),
+        if (company.enabledModules & kModuleProductReservations != 0)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            child: FutureBuilder<Map<String, dynamic>?>(
+              future: _loadReservationStatus(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return snapshot.connectionState == ConnectionState.done
+                      ? SizedBox.shrink()
+                      : LinearProgressIndicator();
+                }
+                final status = snapshot.data!;
+                final tracked = status['is_stock_tracked'] == true;
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(reservationText(context, 'currentStatus')),
+                  subtitle: Text(tracked
+                      ? '${status['reserved_quantity']} ${reservationText(context, 'reserved')} · ${status['available_quantity']} ${reservationText(context, 'available')}'
+                      : reservationText(context, 'notTracked')),
+                  leading: Icon(tracked
+                      ? Icons.event_available
+                      : Icons.inventory_2_outlined),
+                );
+              },
+            ),
+          ),
         if (product.notes.isNotEmpty)
           Padding(
             padding: EdgeInsets.only(left: 20, top: 20, right: 20),

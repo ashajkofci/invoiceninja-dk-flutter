@@ -26,14 +26,25 @@ class InvoiceRepository {
 
   Future<List<dynamic>> checkProductAvailability(
       Credentials credentials, InvoiceEntity invoice) async {
+    final availability = await getProductAvailability(credentials, invoice);
+    return availability
+        .where((dynamic item) => item['is_overbooked'] == true)
+        .toList();
+  }
+
+  Future<List<dynamic>> getProductAvailability(
+      Credentials credentials, InvoiceEntity invoice) async {
     final data = serializers.serializeWith(InvoiceEntity.serializer, invoice);
     final dynamic response = await webClient.post(
       credentials.url + '/product_reservations/check',
       credentials.token,
-      data: json.encode({'invoice': data}),
+      data: json.encode({
+        'invoice': data,
+        'entity_type': invoice.isQuote ? 'quote' : 'invoice',
+      }),
     );
 
-    return response['overbooked'] as List<dynamic>? ?? <dynamic>[];
+    return response['data'] as List<dynamic>? ?? <dynamic>[];
   }
 
   Future<InvoiceEntity> loadItem(

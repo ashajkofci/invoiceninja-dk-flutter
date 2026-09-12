@@ -110,6 +110,7 @@ class ProductListItem extends StatelessWidget {
                           children: <Widget>[
                             Text(
                               product.productKey +
+                                  (product.isGroup ? '  ▦' : '') +
                                   (product.documents.isNotEmpty ? '  📎' : ''),
                               style: textStyle,
                               overflow: TextOverflow.ellipsis,
@@ -141,7 +142,8 @@ class ProductListItem extends StatelessWidget {
                       SizedBox(width: 10),
                       Text(
                         formatNumber(
-                            showCost ? product.cost : product.price, context,
+                            showCost ? product.cost : product.displayPrice,
+                            context,
                             roundToPrecision: false)!,
                         style: textStyle,
                         textAlign: TextAlign.end,
@@ -175,13 +177,15 @@ class ProductListItem extends StatelessWidget {
                       Expanded(
                         child: Text(
                           product.productKey +
+                              (product.isGroup ? '  ▦' : '') +
                               (product.documents.isNotEmpty ? '  📎' : ''),
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ),
                       Text(
                           formatNumber(
-                              showCost ? product.cost : product.price, context,
+                              showCost ? product.cost : product.displayPrice,
+                              context,
                               roundToPrecision: false)!,
                           style: Theme.of(context).textTheme.titleMedium),
                     ],

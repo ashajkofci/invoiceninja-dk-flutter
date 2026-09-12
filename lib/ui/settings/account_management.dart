@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 // Flutter imports:
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +15,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
 import 'package:invoiceninja_flutter/constants.dart';
-import 'package:invoiceninja_flutter/data/models/entities.dart';
+import 'package:invoiceninja_flutter/data/models/models.dart';
 import 'package:invoiceninja_flutter/data/web_client.dart';
 import 'package:invoiceninja_flutter/redux/app/app_state.dart';
 import 'package:invoiceninja_flutter/redux/settings/settings_actions.dart';
@@ -37,6 +39,7 @@ import 'package:invoiceninja_flutter/utils/formatting.dart';
 import 'package:invoiceninja_flutter/utils/icons.dart';
 import 'package:invoiceninja_flutter/utils/localization.dart';
 import 'package:invoiceninja_flutter/utils/platforms.dart';
+import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
 
 class AccountManagement extends StatefulWidget {
   const AccountManagement({
@@ -234,14 +237,15 @@ class _AccountManagementState extends State<AccountManagement>
                   isLast: true,
                   children: [
                     AppDropdownButton<int>(
-                      labelText: 'Reservation start date field',
+                      labelText: reservationText(context, 'startField'),
                       value: company.reservationStartCustomField,
                       showBlank: true,
                       blankValue: 0,
-                      blankLabel: 'Select an invoice custom field',
+                      blankLabel: reservationText(context, 'selectField'),
                       items: List.generate(4, (index) => index + 1)
                           .where((number) =>
-                              number != company.reservationEndCustomField)
+                              number != company.reservationEndCustomField &&
+                              number != company.reservationStatusCustomField)
                           .map((number) => DropdownMenuItem<int>(
                                 value: number,
                                 child: Text(company
@@ -259,14 +263,15 @@ class _AccountManagementState extends State<AccountManagement>
                     ),
                     SizedBox(height: 16),
                     AppDropdownButton<int>(
-                      labelText: 'Reservation end date field',
+                      labelText: reservationText(context, 'endField'),
                       value: company.reservationEndCustomField,
                       showBlank: true,
                       blankValue: 0,
-                      blankLabel: 'Select an invoice custom field',
+                      blankLabel: reservationText(context, 'selectField'),
                       items: List.generate(4, (index) => index + 1)
                           .where((number) =>
-                              number != company.reservationStartCustomField)
+                              number != company.reservationStartCustomField &&
+                              number != company.reservationStatusCustomField)
                           .map((number) => DropdownMenuItem<int>(
                                 value: number,
                                 child: Text(company
@@ -282,6 +287,39 @@ class _AccountManagementState extends State<AccountManagement>
                             (b) => b..reservationEndCustomField = value ?? 0),
                       ),
                     ),
+                    SizedBox(height: 16),
+                    AppDropdownButton<int>(
+                      labelText: reservationText(context, 'statusField'),
+                      value: company.reservationStatusCustomField,
+                      showBlank: true,
+                      blankValue: 0,
+                      blankLabel: reservationText(context, 'selectField'),
+                      items: List.generate(4, (index) => index + 1)
+                          .where((number) =>
+                              number != company.reservationStartCustomField &&
+                              number != company.reservationEndCustomField)
+                          .map((number) => DropdownMenuItem<int>(
+                                value: number,
+                                child: Text(company
+                                        .getCustomFieldLabel('invoice$number')
+                                        .isNotEmpty
+                                    ? company
+                                        .getCustomFieldLabel('invoice$number')
+                                    : 'Custom field $number'),
+                              ))
+                          .toList(),
+                      onChanged: (value) => viewModel.onCompanyChanged(
+                        company.rebuild((b) =>
+                            b..reservationStatusCustomField = value ?? 0),
+                      ),
+                    ),
+                    if (company.reservationStatusCustomField > 0) ...[
+                      SizedBox(height: 16),
+                      _ReservationStatusRules(
+                        company: company,
+                        onChanged: viewModel.onCompanyChanged,
+                      ),
+                    ],
                   ],
                 ),
             ],
@@ -403,6 +441,100 @@ class _AccountManagementState extends State<AccountManagement>
     );
   }
 }
+
+class _ReservationStatusRules extends StatelessWidget {
+  const _ReservationStatusRules(
+      {required this.company, required this.onChanged});
+
+  final CompanyEntity company;
+  final Function(CompanyEntity) onChanged;
+
+  List<Map<String, dynamic>> get rules {
+    try {
+      return List<Map<String, dynamic>>.from(
+          jsonDecode(company.reservationStatusesJson) as List);
+    } catch (_) {
+      return [];
+    }
+  }
+
+  void update(List<Map<String, dynamic>> value) => onChanged(
+      company.rebuild((b) => b..reservationStatusesJson = jsonEncode(value)));
+
+  @override
+  Widget build(BuildContext context) {
+    final values = rules;
+    const colors = [
+      '#2563eb',
+      '#16a34a',
+      '#d97706',
+      '#dc2626',
+      '#7c3aed',
+      '#0891b2'
+    ];
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(reservationText(context, 'visibleStatuses'),
+          style: Theme.of(context).textTheme.titleSmall),
+      SizedBox(height: 8),
+      for (var index = 0; index < values.length; index++)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(children: [
+            Expanded(
+              child: TextFormField(
+                key: ValueKey(
+                    'reservation-status-$index-${values[index]['value']}'),
+                initialValue: values[index]['value']?.toString() ?? '',
+                decoration: InputDecoration(
+                    labelText: reservationText(context, 'statusValue')),
+                onChanged: (value) {
+                  final updated = List<Map<String, dynamic>>.from(values);
+                  updated[index] = {...updated[index], 'value': value};
+                  update(updated);
+                },
+              ),
+            ),
+            SizedBox(width: 8),
+            DropdownButton<String>(
+              value: colors.contains(values[index]['color'])
+                  ? values[index]['color'] as String
+                  : colors.first,
+              items: colors
+                  .map((color) => DropdownMenuItem(
+                        value: color,
+                        child: Container(
+                            width: 42, height: 22, color: _hexColor(color)),
+                      ))
+                  .toList(),
+              onChanged: (color) {
+                final updated = List<Map<String, dynamic>>.from(values);
+                updated[index] = {...updated[index], 'color': color};
+                update(updated);
+              },
+            ),
+            IconButton(
+              tooltip: reservationText(context, 'remove'),
+              icon: Icon(Icons.delete_outline),
+              onPressed: () => update(
+                  List<Map<String, dynamic>>.from(values)..removeAt(index)),
+            ),
+          ]),
+        ),
+      TextButton.icon(
+        onPressed: () => update([
+          ...values,
+          {'value': '', 'color': colors.first}
+        ]),
+        icon: Icon(Icons.add),
+        label: Text(reservationText(context, 'addStatus')),
+      ),
+    ]);
+  }
+}
+
+Color _hexColor(String value) =>
+    Color(int.parse('FF${value.substring(1)}', radix: 16));
 
 class _AccountOverview extends StatelessWidget {
   const _AccountOverview({

@@ -81,7 +81,7 @@ class InvoiceEditItemsVM extends EntityEditItemsVM {
     CompanyEntity? company,
     InvoiceEntity? invoice,
     int? invoiceItemIndex,
-    Function([int])? addLineItem,
+    Function([int, InvoiceItemEntity?])? addLineItem,
     Function(int)? cloneLineItem,
     Function(int)? deleteLineItem,
     Function(int)? onRemoveInvoiceItemPressed,
@@ -115,13 +115,14 @@ class InvoiceEditItemsVM extends EntityEditItemsVM {
       company: company,
       invoice: invoice,
       invoiceItemIndex: state.invoiceUIState.editingItemIndex,
-      addLineItem: ([int? index]) {
+      addLineItem: ([int? index, InvoiceItemEntity? suppliedItem]) {
         store.dispatch(AddInvoiceItem(
             index: index,
-            invoiceItem: InvoiceItemEntity().rebuild((b) => b
-              ..typeId = isTasks
-                  ? InvoiceItemEntity.TYPE_TASK
-                  : InvoiceItemEntity.TYPE_STANDARD)));
+            invoiceItem: suppliedItem ??
+                InvoiceItemEntity().rebuild((b) => b
+                  ..typeId = isTasks
+                      ? InvoiceItemEntity.TYPE_TASK
+                      : InvoiceItemEntity.TYPE_STANDARD)));
       },
       cloneLineItem: (int? index) {
         store.dispatch(
@@ -133,7 +134,16 @@ class InvoiceEditItemsVM extends EntityEditItemsVM {
       },
       deleteLineItem: null,
       onRemoveInvoiceItemPressed: (index) {
-        store.dispatch(DeleteInvoiceItem(index));
+        final item = invoice!.lineItems[index];
+        if (item.isGroup) {
+          for (var i = invoice.lineItems.length - 1; i >= 0; i--) {
+            if (invoice.lineItems[i].groupId == item.groupId) {
+              store.dispatch(DeleteInvoiceItem(i));
+            }
+          }
+        } else {
+          store.dispatch(DeleteInvoiceItem(index));
+        }
       },
       clearSelectedInvoiceItem: () => store.dispatch(EditInvoiceItem()),
       onChangedInvoiceItem: (invoiceItem, index) {

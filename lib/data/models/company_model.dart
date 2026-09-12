@@ -67,6 +67,8 @@ abstract class CompanyEntity extends Object
       enabledModules: 0,
       reservationStartCustomField: 0,
       reservationEndCustomField: 0,
+      reservationStatusCustomField: 0,
+      reservationStatusesJson: '[]',
       firstMonthOfYear: '0',
       firstDayOfWeek: '0',
       subdomain: '',
@@ -503,6 +505,12 @@ abstract class CompanyEntity extends Object
   @BuiltValueField(wireName: 'reservation_end_custom_field')
   int get reservationEndCustomField;
 
+  @BuiltValueField(wireName: 'reservation_status_custom_field')
+  int get reservationStatusCustomField;
+
+  @BuiltValueField(wireName: 'reservation_statuses_json')
+  String get reservationStatusesJson;
+
   @BuiltValueField(wireName: 'calculate_expense_tax_by_amount')
   bool get calculateExpenseTaxByAmount;
 
@@ -899,6 +907,8 @@ abstract class CompanyEntity extends Object
     ..enabledModules = 0
     ..reservationStartCustomField = 0
     ..reservationEndCustomField = 0
+    ..reservationStatusCustomField = 0
+    ..reservationStatusesJson = '[]'
     ..createdAt = 0
     ..updatedAt = 0
     ..archivedAt = 0

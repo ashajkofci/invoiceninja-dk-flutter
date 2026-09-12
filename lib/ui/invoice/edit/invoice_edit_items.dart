@@ -17,6 +17,9 @@ import 'package:invoiceninja_flutter/utils/completers.dart';
 import 'package:invoiceninja_flutter/utils/dialogs.dart';
 import 'package:invoiceninja_flutter/utils/formatting.dart';
 import 'package:invoiceninja_flutter/utils/localization.dart';
+import 'package:invoiceninja_flutter/data/repositories/invoice_repository.dart';
+import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_line_status.dart';
+import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
 
 class InvoiceEditItems extends StatefulWidget {
   const InvoiceEditItems({
@@ -112,6 +115,7 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
   final _costController = TextEditingController();
   final _qtyController = TextEditingController();
   final _discountController = TextEditingController();
+  final _groupPriceController = TextEditingController();
   final _custom1Controller = TextEditingController();
   final _custom2Controller = TextEditingController();
   final _custom3Controller = TextEditingController();
@@ -121,9 +125,12 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
   TaxRateEntity? _taxRate2;
   TaxRateEntity? _taxRate3;
   String? _taxCategoryId;
+  bool _groupHideItemPrices = false;
+  bool _groupHasPrice = false;
 
   List<TextEditingController> _controllers = [];
   final _debouncer = Debouncer();
+  Future<List<dynamic>>? _reservationAvailability;
 
   @override
   void didChangeDependencies() {
@@ -140,6 +147,10 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
         formatNumberType: FormatNumberType.inputAmount)!;
     _discountController.text = formatNumber(invoiceItem.discount, context,
         formatNumberType: FormatNumberType.inputMoney)!;
+    _groupPriceController.text = formatNumber(invoiceItem.groupPrice, context,
+        formatNumberType: FormatNumberType.inputMoney)!;
+    _groupHideItemPrices = invoiceItem.groupHideItemPrices;
+    _groupHasPrice = invoiceItem.groupHasPrice;
     _custom1Controller.text = invoiceItem.customValue1;
     _custom2Controller.text = invoiceItem.customValue2;
     _custom3Controller.text = invoiceItem.customValue3;
@@ -151,6 +162,7 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
       _costController,
       _qtyController,
       _discountController,
+      _groupPriceController,
       _custom1Controller,
       _custom2Controller,
       _custom3Controller,
@@ -167,6 +179,33 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
     _taxRate3 =
         TaxRateEntity(name: invoiceItem.taxName3, rate: invoiceItem.taxRate3);
     _taxCategoryId = invoiceItem.taxCategoryId;
+
+    final state = widget.viewModel.state!;
+    final company = state.company;
+    final invoice = widget.viewModel.invoice!;
+    String customValue(int field) {
+      if (field == 1) {
+        return invoice.customValue1;
+      }
+      if (field == 2) {
+        return invoice.customValue2;
+      }
+      if (field == 3) {
+        return invoice.customValue3;
+      }
+      if (field == 4) {
+        return invoice.customValue4;
+      }
+      return '';
+    }
+
+    if (company.enabledModules & kModuleProductReservations != 0 &&
+        (invoice.isInvoice || invoice.isQuote) &&
+        customValue(company.reservationStartCustomField).isNotEmpty &&
+        customValue(company.reservationEndCustomField).isNotEmpty) {
+      _reservationAvailability = const InvoiceRepository()
+          .getProductAvailability(state.credentials, invoice);
+    }
 
     super.didChangeDependencies();
   }
@@ -196,6 +235,12 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
       ..cost = parseDouble(_costController.text)
       ..quantity = parseDouble(_qtyController.text)
       ..discount = parseDouble(_discountController.text)
+      ..groupTitle = widget.invoiceItem.isGroup
+          ? _productKeyController.text.trim()
+          : widget.invoiceItem.groupTitle
+      ..groupPrice = parseDouble(_groupPriceController.text)
+      ..groupHideItemPrices = _groupHideItemPrices
+      ..groupHasPrice = _groupHasPrice
       ..customValue1 = _custom1Controller.text.trim()
       ..customValue2 = _custom2Controller.text.trim()
       ..customValue3 = _custom3Controller.text.trim()
@@ -253,19 +298,79 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
         child: Column(
           children: <Widget>[
             DecoratedFormField(
-              label: widget.invoiceItem.isTask
-                  ? localization.service
-                  : localization.product,
+              label: widget.invoiceItem.isGroup
+                  ? localization.group
+                  : widget.invoiceItem.isTask
+                      ? localization.service
+                      : localization.product,
               controller: _productKeyController,
               onSavePressed: widget.entityViewModel.onSavePressed,
               keyboardType: TextInputType.text,
             ),
-            DecoratedFormField(
-              keyboardType: TextInputType.multiline,
-              label: localization.description,
-              controller: _notesController,
-              maxLines: 4,
-            ),
+            if (widget.invoiceItem.isGroup) ...[
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text('${localization.hide} ${localization.price}'),
+                value: _groupHideItemPrices,
+                onChanged: (value) {
+                  setState(() => _groupHideItemPrices = value);
+                  _onChanged();
+                },
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                    '${localization.overrideTax.split(' ').first} ${localization.price}'),
+                value: _groupHasPrice,
+                onChanged: (value) {
+                  setState(() => _groupHasPrice = value);
+                  _onChanged();
+                },
+              ),
+              if (_groupHasPrice)
+                DecoratedFormField(
+                  label: localization.price,
+                  controller: _groupPriceController,
+                  keyboardType: TextInputType.numberWithOptions(
+                      decimal: true, signed: true),
+                ),
+              TextButton.icon(
+                icon: Icon(Icons.add),
+                label: Text(localization.addItem),
+                onPressed: () {
+                  final items = widget.viewModel.invoice!.lineItems;
+                  var insertAt = widget.index + 1;
+                  for (var i = widget.index + 1; i < items.length; i++) {
+                    if (items[i].groupId == widget.invoiceItem.groupId) {
+                      insertAt = i + 1;
+                    }
+                  }
+                  widget.viewModel.addLineItem!(
+                    insertAt,
+                    InvoiceItemEntity().rebuild(
+                        (b) => b..groupId = widget.invoiceItem.groupId),
+                  );
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+            if (!widget.invoiceItem.isGroup)
+              DecoratedFormField(
+                keyboardType: TextInputType.multiline,
+                label: localization.description,
+                controller: _notesController,
+                maxLines: 4,
+              ),
+            if (company.enabledModules & kModuleProductReservations != 0 &&
+                (invoice!.isInvoice || invoice.isQuote))
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(reservationText(context, 'currentStatus')),
+                subtitle: ProductReservationLineStatus(
+                  item: widget.invoiceItem,
+                  availability: _reservationAvailability,
+                ),
+              ),
             CustomField(
               controller: _custom1Controller,
               field: widget.invoiceItem.isTask
@@ -307,7 +412,7 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
                   TextInputType.numberWithOptions(decimal: true, signed: true),
               onSavePressed: widget.entityViewModel.onSavePressed,
             ),
-            company.enableProductQuantity
+            !widget.invoiceItem.isGroup && company.enableProductQuantity
                 ? DecoratedFormField(
                     label: widget.invoiceItem.isTask
                         ? localization.hours

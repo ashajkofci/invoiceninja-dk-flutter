@@ -25,6 +25,7 @@ import 'package:invoiceninja_flutter/ui/app/dialogs/error_dialog.dart';
 import 'package:invoiceninja_flutter/ui/invoice/edit/invoice_edit.dart';
 import 'package:invoiceninja_flutter/ui/invoice/view/invoice_view_vm.dart';
 import 'package:invoiceninja_flutter/utils/completers.dart';
+import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
 
 class InvoiceEditScreen extends StatelessWidget {
   const InvoiceEditScreen({Key? key}) : super(key: key);
@@ -167,24 +168,37 @@ class InvoiceEditVM extends AbstractInvoiceEditVM {
                           .where((number) => number.isNotEmpty)
                           .join(', ') ??
                       '';
-                  return '${item['product_key']}: ${item['total_quantity']} requested/reserved, '
-                      '${item['stock_quantity']} in stock'
-                      '${conflicts.isEmpty ? '' : ' (invoices: $conflicts)'}';
+                  final context = navigatorKey.currentContext!;
+                  return '${item['product_description']}: ${item['total_quantity']} ${reservationText(context, 'reserved')}, '
+                      '${item['stock_quantity']} ${reservationText(context, 'stock')}'
+                      '${conflicts.isEmpty ? '' : ' (${reservationText(context, 'invoice')}: $conflicts)'}';
                 }).join('\n');
 
                 final shouldSave = await showDialog<bool>(
                   context: navigatorKey.currentContext!,
                   builder: (context) => AlertDialog(
-                    title: Text('Product availability warning'),
-                    content: Text('$details\n\nSave the invoice anyway?'),
+                    title: Text(
+                        Localizations.localeOf(context).languageCode == 'fr'
+                            ? 'Alerte de disponibilité des produits'
+                            : 'Product availability warning'),
+                    content: Text(
+                        Localizations.localeOf(context).languageCode == 'fr'
+                            ? '$details\n\nEnregistrer quand même ?'
+                            : '$details\n\nSave the invoice anyway?'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(false),
-                        child: Text('CANCEL'),
+                        child: Text(
+                            Localizations.localeOf(context).languageCode == 'fr'
+                                ? 'ANNULER'
+                                : 'CANCEL'),
                       ),
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(true),
-                        child: Text('SAVE ANYWAY'),
+                        child: Text(
+                            Localizations.localeOf(context).languageCode == 'fr'
+                                ? 'ENREGISTRER QUAND MÊME'
+                                : 'SAVE ANYWAY'),
                       ),
                     ],
                   ),

@@ -28,6 +28,78 @@ InvoiceItemEntity convertProductToInvoiceItem({
   required BuiltMap<String, CurrencyEntity> currencyMap,
   ClientEntity? client,
 }) {
+  return convertProductToInvoiceItems(
+    product: product,
+    company: company,
+    invoice: invoice,
+    currencyMap: currencyMap,
+    client: client,
+  ).first;
+}
+
+List<InvoiceItemEntity> convertProductToInvoiceItems({
+  required ProductEntity? product,
+  required CompanyEntity company,
+  required InvoiceEntity invoice,
+  required BuiltMap<String, CurrencyEntity> currencyMap,
+  ClientEntity? client,
+}) {
+  double convertCost(double value) {
+    if (company.convertProductExchangeRate &&
+        (client?.currencyId ?? '').isNotEmpty) {
+      double exchangeRate = invoice.exchangeRate;
+      if (!company.convertRateToClient && exchangeRate != 0) {
+        exchangeRate = 1 / exchangeRate;
+      }
+      return round(
+          value * exchangeRate, currencyMap[client!.currencyId]!.precision);
+    }
+    return value;
+  }
+
+  if (product!.isGroup) {
+    final groupId = BaseEntity.nextId;
+    final header = InvoiceItemEntity().rebuild((b) => b
+      ..typeId = InvoiceItemEntity.TYPE_GROUP
+      ..productKey = product.productKey
+      ..notes = product.notes
+      ..quantity = 1
+      ..groupId = groupId
+      ..groupTitle = product.productKey
+      ..groupHideItemPrices = product.groupHideItemPrices
+      ..groupHasPrice = product.groupHasPrice
+      ..groupPrice = convertCost(product.groupPrice)
+      ..taxCategoryId = product.taxCategoryId
+      ..taxName1 = company.numberOfItemTaxRates >= 1 ? product.taxName1 : ''
+      ..taxRate1 = company.numberOfItemTaxRates >= 1 ? product.taxRate1 : 0
+      ..taxName2 = company.numberOfItemTaxRates >= 2 ? product.taxName2 : ''
+      ..taxRate2 = company.numberOfItemTaxRates >= 2 ? product.taxRate2 : 0
+      ..taxName3 = company.numberOfItemTaxRates >= 3 ? product.taxName3 : ''
+      ..taxRate3 = company.numberOfItemTaxRates >= 3 ? product.taxRate3 : 0);
+
+    final children = product.groupItems.map((child) {
+      final price = invoice.isPurchaseOrder &&
+              company.enableProductCost &&
+              child.cost != 0
+          ? child.cost
+          : child.price;
+      return InvoiceItemEntity().rebuild((b) => b
+        ..groupId = groupId
+        ..productKey = child.productKey
+        ..notes = child.notes
+        ..cost = convertCost(price)
+        ..productCost = child.cost
+        ..quantity = child.quantity
+        ..customValue1 = child.customValue1
+        ..customValue2 = child.customValue2
+        ..customValue3 = child.customValue3
+        ..customValue4 = child.customValue4
+        ..taxCategoryId = child.taxCategoryId);
+    });
+
+    return [header, ...children];
+  }
+
   if (company.fillProducts) {
     double cost = (invoice.isPurchaseOrder &&
             company.enableProductCost &&
@@ -45,25 +117,27 @@ InvoiceItemEntity convertProductToInvoiceItem({
           cost * exchangeRate, currencyMap[client!.currencyId]!.precision);
     }
 
-    return InvoiceItemEntity().rebuild((b) => b
-      ..productKey = product.productKey
-      ..notes = product.notes
-      ..cost = cost
-      ..productCost = product.cost
-      ..quantity = product.quantity == 0 ? 1 : product.quantity
-      ..customValue1 = product.customValue1
-      ..customValue2 = product.customValue2
-      ..customValue3 = product.customValue3
-      ..customValue4 = product.customValue4
-      ..taxCategoryId = product.taxCategoryId
-      ..taxName1 = company.numberOfItemTaxRates >= 1 ? product.taxName1 : ''
-      ..taxRate1 = company.numberOfItemTaxRates >= 1 ? product.taxRate1 : 0
-      ..taxName2 = company.numberOfItemTaxRates >= 2 ? product.taxName2 : ''
-      ..taxRate2 = company.numberOfItemTaxRates >= 2 ? product.taxRate2 : 0
-      ..taxName3 = company.numberOfItemTaxRates >= 3 ? product.taxName3 : ''
-      ..taxRate3 = company.numberOfItemTaxRates >= 3 ? product.taxRate3 : 0);
+    return [
+      InvoiceItemEntity().rebuild((b) => b
+        ..productKey = product.productKey
+        ..notes = product.notes
+        ..cost = cost
+        ..productCost = product.cost
+        ..quantity = product.quantity == 0 ? 1 : product.quantity
+        ..customValue1 = product.customValue1
+        ..customValue2 = product.customValue2
+        ..customValue3 = product.customValue3
+        ..customValue4 = product.customValue4
+        ..taxCategoryId = product.taxCategoryId
+        ..taxName1 = company.numberOfItemTaxRates >= 1 ? product.taxName1 : ''
+        ..taxRate1 = company.numberOfItemTaxRates >= 1 ? product.taxRate1 : 0
+        ..taxName2 = company.numberOfItemTaxRates >= 2 ? product.taxName2 : ''
+        ..taxRate2 = company.numberOfItemTaxRates >= 2 ? product.taxRate2 : 0
+        ..taxName3 = company.numberOfItemTaxRates >= 3 ? product.taxName3 : ''
+        ..taxRate3 = company.numberOfItemTaxRates >= 3 ? product.taxRate3 : 0)
+    ];
   } else {
-    return InvoiceItemEntity(productKey: product!.productKey);
+    return [InvoiceItemEntity(productKey: product.productKey)];
   }
 }
 

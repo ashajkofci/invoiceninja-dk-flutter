@@ -89,7 +89,16 @@ class QuoteEditItemsVM extends EntityEditItemsVM {
       invoice: quote,
       invoiceItemIndex: state.quoteUIState.editingItemIndex,
       onRemoveInvoiceItemPressed: (index) {
-        store.dispatch(DeleteQuoteItem(index));
+        final item = quote!.lineItems[index];
+        if (item.isGroup) {
+          for (var i = quote.lineItems.length - 1; i >= 0; i--) {
+            if (quote.lineItems[i].groupId == item.groupId) {
+              store.dispatch(DeleteQuoteItem(i));
+            }
+          }
+        } else {
+          store.dispatch(DeleteQuoteItem(index));
+        }
       },
       onDoneInvoiceItemPressed: () {
         store.dispatch(EditQuoteItem());
@@ -111,11 +120,11 @@ class QuoteEditItemsVM extends EntityEditItemsVM {
           MoveQuoteItem(oldIndex: oldIndex, newIndex: newIndex),
         );
       },
-      addLineItem: ([int? index]) {
+      addLineItem: ([int? index, InvoiceItemEntity? suppliedItem]) {
         store.dispatch(
           AddQuoteItem(
             index: index,
-            quoteItem: InvoiceItemEntity(),
+            quoteItem: suppliedItem ?? InvoiceItemEntity(),
           ),
         );
       },

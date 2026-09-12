@@ -44,6 +44,37 @@ abstract mixin class CalculateInvoiceTotal {
 
   BuiltList<InvoiceItemEntity> get lineItems;
 
+  Map<String, InvoiceItemEntity> get _groupHeaders => {
+        for (final item in lineItems)
+          if (item.isGroup && item.groupId.isNotEmpty) item.groupId: item,
+      };
+
+  bool _isGroupChild(InvoiceItemEntity item) =>
+      item.groupId.isNotEmpty &&
+      !item.isGroup &&
+      _groupHeaders.containsKey(item.groupId);
+
+  double _groupAmount(InvoiceItemEntity header, int precision) {
+    if (header.groupHasPrice) {
+      return header.groupPrice;
+    }
+
+    return lineItems
+        .where((item) => item.groupId == header.groupId && !item.isGroup)
+        .fold<double>(0, (sum, item) {
+      var value = item.quantity * item.cost;
+      if (item.discount != 0) {
+        value -= isAmountDiscount
+            ? item.discount
+            : round(value * item.discount / 100, precision);
+      }
+      return sum + value;
+    });
+  }
+
+  double _itemAmount(InvoiceItemEntity item, int precision) =>
+      item.isGroup ? _groupAmount(item, precision) : item.quantity * item.cost;
+
   double _calculateTaxAmount(
       double amount, double rate, bool useInclusiveTaxes, int precision) {
     double taxAmount;
@@ -62,6 +93,7 @@ abstract mixin class CalculateInvoiceTotal {
     final map = <String, double>{};
 
     lineItems.forEach((item) {
+      if (_isGroupChild(item)) return;
       final double taxRate1 = round(item.taxRate1, 3);
       final double taxRate2 = round(item.taxRate2, 3);
       final double taxRate3 = round(item.taxRate3, 3);
@@ -140,7 +172,8 @@ abstract mixin class CalculateInvoiceTotal {
     double total = 0;
 
     lineItems.forEach((invoiceItem) {
-      double lineTotal = invoiceItem.quantity * invoiceItem.cost;
+      if (_isGroupChild(invoiceItem)) return;
+      double lineTotal = _itemAmount(invoiceItem, precision);
 
       if (invoiceItem.discount != 0) {
         if (isAmountDiscount) {
@@ -183,7 +216,8 @@ abstract mixin class CalculateInvoiceTotal {
     final double qty = round(item.quantity, 5);
     final double cost = round(item.cost, 5);
     final double itemDiscount = round(item.discount, 5);
-    double lineTotal = qty * cost;
+    double lineTotal =
+        item.isGroup ? _groupAmount(item, precision) : qty * cost;
 
     if (discount != 0) {
       if (isAmountDiscount) {
@@ -213,13 +247,15 @@ abstract mixin class CalculateInvoiceTotal {
     double itemTax = 0.0;
 
     lineItems.forEach((item) {
+      if (_isGroupChild(item)) return;
       final double qty = round(item.quantity, 5);
       final double cost = round(item.cost, 5);
       final double itemDiscount = round(item.discount, 5);
       final double taxRate1 = round(item.taxRate1, 3);
       final double taxRate2 = round(item.taxRate2, 3);
       final double taxRate3 = round(item.taxRate3, 3);
-      double lineTotal = qty * cost;
+      double lineTotal =
+          item.isGroup ? _groupAmount(item, precision) : qty * cost;
 
       if (discount != 0) {
         if (isAmountDiscount) {
@@ -307,11 +343,13 @@ abstract mixin class CalculateInvoiceTotal {
     var total = 0.0;
 
     lineItems.forEach((item) {
+      if (_isGroupChild(item)) return;
       final double qty = round(item.quantity, 5);
       final double cost = round(item.cost, 5);
       final double discount = round(item.discount, 5);
 
-      double lineTotal = qty * cost;
+      double lineTotal =
+          item.isGroup ? _groupAmount(item, precision) : qty * cost;
 
       if (discount != 0) {
         if (isAmountDiscount) {

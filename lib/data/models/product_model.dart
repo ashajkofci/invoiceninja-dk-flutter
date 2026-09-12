@@ -108,6 +108,11 @@ abstract class ProductEntity extends Object
       imageUrl: '',
       maxQuantity: 0,
       taxCategoryId: kTaxCategoryPhysical,
+      isGroup: false,
+      groupHideItemPrices: false,
+      groupHasPrice: false,
+      groupPrice: 0,
+      groupItems: BuiltList<ProductGroupItemEntity>(),
       documents: BuiltList<DocumentEntity>(),
     );
   }
@@ -190,13 +195,35 @@ abstract class ProductEntity extends Object
 
   BuiltList<DocumentEntity> get documents;
 
+  @BuiltValueField(wireName: 'is_group')
+  bool get isGroup;
+
+  @BuiltValueField(wireName: 'group_hide_item_prices')
+  bool get groupHideItemPrices;
+
+  @BuiltValueField(wireName: 'group_has_price')
+  bool get groupHasPrice;
+
+  @BuiltValueField(wireName: 'group_price')
+  double get groupPrice;
+
+  @BuiltValueField(wireName: 'group_items')
+  BuiltList<ProductGroupItemEntity> get groupItems;
+
   @override
   String get listDisplayName {
     return productKey;
   }
 
   @override
-  double get listDisplayAmount => price;
+  double get listDisplayAmount => displayPrice;
+
+  double get displayPrice => isGroup
+      ? (groupHasPrice
+          ? groupPrice
+          : groupItems.fold<double>(
+              0, (sum, item) => sum + item.price * item.quantity))
+      : price;
 
   @override
   FormatNumberType get listDisplayAmountType => FormatNumberType.money;
@@ -384,7 +411,55 @@ abstract class ProductEntity extends Object
     ..stockNotificationThreshold = 0
     ..imageUrl = ''
     ..maxQuantity = 0
-    ..taxCategoryId = kTaxCategoryPhysical;
+    ..taxCategoryId = kTaxCategoryPhysical
+    ..isGroup = false
+    ..groupHideItemPrices = false
+    ..groupHasPrice = false
+    ..groupPrice = 0
+    ..groupItems = ListBuilder<ProductGroupItemEntity>();
 
   static Serializer<ProductEntity> get serializer => _$productEntitySerializer;
+}
+
+abstract class ProductGroupItemEntity
+    implements Built<ProductGroupItemEntity, ProductGroupItemEntityBuilder> {
+  factory ProductGroupItemEntity(
+          [void Function(ProductGroupItemEntityBuilder) updates]) =
+      _$ProductGroupItemEntity;
+
+  ProductGroupItemEntity._();
+
+  @BuiltValueField(wireName: 'product_id')
+  String get productId;
+  double get quantity;
+  @BuiltValueField(wireName: 'product_key')
+  String get productKey;
+  String get notes;
+  double get cost;
+  double get price;
+  @BuiltValueField(wireName: 'tax_id')
+  String get taxCategoryId;
+  @BuiltValueField(wireName: 'tax_name1')
+  String get taxName1;
+  @BuiltValueField(wireName: 'tax_rate1')
+  double get taxRate1;
+  @BuiltValueField(wireName: 'tax_name2')
+  String get taxName2;
+  @BuiltValueField(wireName: 'tax_rate2')
+  double get taxRate2;
+  @BuiltValueField(wireName: 'tax_name3')
+  String get taxName3;
+  @BuiltValueField(wireName: 'tax_rate3')
+  double get taxRate3;
+  @BuiltValueField(wireName: 'custom_value1')
+  String get customValue1;
+  @BuiltValueField(wireName: 'custom_value2')
+  String get customValue2;
+  @BuiltValueField(wireName: 'custom_value3')
+  String get customValue3;
+  @BuiltValueField(wireName: 'custom_value4')
+  String get customValue4;
+
+  static Serializer<ProductGroupItemEntity> get serializer =>
+      _$productGroupItemEntitySerializer;
 }

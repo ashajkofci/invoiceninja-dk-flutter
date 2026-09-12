@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:invoiceninja_flutter/constants.dart';
+import 'package:collection/collection.dart';
 
 // Project imports:
 import 'package:invoiceninja_flutter/data/models/entities.dart';
@@ -45,6 +46,15 @@ class InvoiceItemListTile extends StatelessWidget {
         state.staticState.currencyMap[client.currencyId]?.precision ?? 2;
 
     String subtitle = '$qty x $cost';
+    final groupHeader = invoice.lineItems.firstWhereOrNull(
+        (item) => item.isGroup && item.groupId == invoiceItem!.groupId);
+    final isGroupChild = !invoiceItem!.isGroup && groupHeader != null;
+
+    if (invoiceItem!.isGroup) {
+      subtitle = localization!.group;
+    } else if (isGroupChild && groupHeader.groupHideItemPrices) {
+      subtitle = invoiceItem!.notes;
+    }
 
     if (invoiceItem!.discount != 0) {
       subtitle += ' • ${localization!.discount} ';
@@ -132,13 +142,23 @@ class InvoiceItemListTile extends StatelessWidget {
               onTap: onTap as void Function()?,
               title: Row(
                 children: <Widget>[
-                  Expanded(child: Text(invoiceItem!.productKey)),
-                  Text(formatNumber(
-                    invoiceItem!.total(invoice, precision),
-                    context,
-                    clientId: invoice.isPurchaseOrder ? null : invoice.clientId,
-                    vendorId: invoice.isPurchaseOrder ? invoice.vendorId : null,
-                  )!),
+                  Expanded(
+                    child: Text(
+                      '${isGroupChild ? '  ↳ ' : ''}${invoiceItem!.isGroup ? invoiceItem!.groupTitle : invoiceItem!.productKey}',
+                      style: invoiceItem!.isGroup
+                          ? TextStyle(fontWeight: FontWeight.bold)
+                          : null,
+                    ),
+                  ),
+                  if (!(isGroupChild && groupHeader.groupHideItemPrices))
+                    Text(formatNumber(
+                      invoiceItem!.total(invoice, precision),
+                      context,
+                      clientId:
+                          invoice.isPurchaseOrder ? null : invoice.clientId,
+                      vendorId:
+                          invoice.isPurchaseOrder ? invoice.vendorId : null,
+                    )!),
                 ],
               ),
               subtitle: Row(
