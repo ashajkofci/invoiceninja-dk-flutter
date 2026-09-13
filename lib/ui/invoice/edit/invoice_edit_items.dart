@@ -28,7 +28,11 @@ Future<bool> showMoveToGroupDialog({
   required int itemIndex,
 }) async {
   final localization = AppLocalization.of(context)!;
-  final item = viewModel.invoice!.lineItems[itemIndex];
+  final lineItems = viewModel.invoice!.lineItems;
+  if (itemIndex < 0 || itemIndex >= lineItems.length) {
+    return false;
+  }
+  final item = lineItems[itemIndex];
   final groups = viewModel.invoice!.lineItems.where((item) => item.isGroup);
   final groupId = await showDialog<String>(
     context: context,
@@ -76,17 +80,20 @@ class _InvoiceEditItemsState extends State<InvoiceEditItems> {
   int? selectedItemIndex;
 
   void _showInvoiceItemEditor(int? lineItemIndex, BuildContext context) {
+    final viewModel = widget.viewModel;
+    final invoice = viewModel.invoice!;
+    if (lineItemIndex == null || lineItemIndex >= invoice.lineItems.length) {
+      return;
+    }
+
     showDialog<ItemEditDetails>(
         context: context,
         builder: (BuildContext context) {
-          final viewModel = widget.viewModel;
-          final invoice = viewModel.invoice!;
-
           return ItemEditDetails(
             viewModel: viewModel,
             entityViewModel: widget.entityViewModel,
             key: ValueKey('__${lineItemIndex}__'),
-            invoiceItem: invoice.lineItems[lineItemIndex!],
+            invoiceItem: invoice.lineItems[lineItemIndex],
             index: lineItemIndex,
           );
         });
@@ -330,6 +337,17 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
       timeCoefficientNames.add(_timeCoefficientName);
     }
 
+    int precision = 2;
+    if (invoice != null) {
+      final state = viewModel.state!;
+      final client = state.clientState.get(invoice.clientId);
+      precision =
+          state.staticState.currencyMap[client.currencyId]?.precision ?? 2;
+    }
+    final proRataUnitPrice = invoice != null && !widget.invoiceItem.isGroup
+        ? widget.invoiceItem.groupChildProRataUnitPrice(invoice, precision)
+        : null;
+
     return AlertDialog(
       actions: [
         TextButton(
@@ -362,6 +380,25 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
               onSavePressed: widget.entityViewModel.onSavePressed,
               keyboardType: TextInputType.text,
             ),
+            if (proRataUnitPrice != null && invoice != null)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                title: Text(localization.lookup('price_per_unit_pro_rata')),
+                subtitle: Text(
+                  formatNumber(
+                    proRataUnitPrice,
+                    context,
+                    clientId: invoice.isPurchaseOrder
+                        ? null
+                        : invoice.clientId,
+                    vendorId: invoice.isPurchaseOrder
+                        ? invoice.vendorId
+                        : null,
+                  ) ??
+                  '',
+                ),
+              ),
             if (widget.viewModel.onGroupInvoiceItem != null &&
                 !widget.invoiceItem.isGroup &&
                 widget.viewModel.invoice!.lineItems.any((item) => item.isGroup))
@@ -434,6 +471,9 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
                     if (items[i].groupId == widget.invoiceItem.groupId) {
                       insertAt = i + 1;
                     }
+                  }
+                  if (insertAt > items.length) {
+                    insertAt = items.length;
                   }
                   widget.viewModel.addLineItem!(
                     insertAt,

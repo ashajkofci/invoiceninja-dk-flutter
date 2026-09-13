@@ -1,5 +1,6 @@
 // Flutter imports:
 import 'package:flutter/foundation.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:invoiceninja_flutter/constants.dart';
@@ -53,6 +54,8 @@ class _CompanyDetailsState extends State<CompanyDetails>
   final FocusScopeNode _focusNode = FocusScopeNode();
   TabController? _controller;
   final _debouncer = Debouncer();
+  int _exchangeRateYear =
+      DateTime.now().year < 2025 ? 2025 : DateTime.now().year;
 
   final _nameController = TextEditingController();
   final _idNumberController = TextEditingController();
@@ -91,7 +94,7 @@ class _CompanyDetailsState extends State<CompanyDetails>
 
     _controller = TabController(
         vsync: this,
-        length: state.settingsUIState.isFiltered ? 4 : 5,
+        length: state.settingsUIState.isFiltered ? 4 : 6,
         initialIndex: settingsUIState.tabIndex);
     _controller!.addListener(_onTabChanged);
   }
@@ -267,6 +270,14 @@ class _CompanyDetailsState extends State<CompanyDetails>
     final state = viewModel.state;
     final company = viewModel.company;
     final settings = viewModel.settings;
+    final exchangeRateYears = <int>{
+      for (var year = 2025; year <= DateTime.now().year; year++) year,
+      ...company.yearlyExchangeRates
+          .map((rate) => rate['year'])
+          .whereType<num>()
+          .map((year) => year.toInt()),
+    }.toList()
+      ..sort((a, b) => b.compareTo(a));
 
     if (!state.userCompany.isAdmin) {
       return BlankScreen();
@@ -274,7 +285,11 @@ class _CompanyDetailsState extends State<CompanyDetails>
 
     return EditScaffold(
       title: localization!.companyDetails,
-      onSavePressed: viewModel.onSavePressed,
+      onSavePressed: (context) {
+        if (_formKey.currentState?.validate() ?? false) {
+          viewModel.onSavePressed(context);
+        }
+      },
       appBarBottom: TabBar(
         key: ValueKey(state.settingsUIState.updatedAt),
         controller: _controller,
@@ -298,6 +313,8 @@ class _CompanyDetailsState extends State<CompanyDetails>
                   ? localization.documents
                   : '${localization.documents} (${state.company.documents.length})',
             ),
+          if (!state.settingsUIState.isFiltered)
+            const Tab(text: 'Exchange rates'),
         ],
       ),
       body: AppTabForm(
@@ -695,6 +712,85 @@ class _CompanyDetailsState extends State<CompanyDetails>
                   viewModel.onUploadDocuments(context, path, isPrivate),
               onRenamedDocument: () => store.dispatch(RefreshData()),
             ),
+          if (!state.settingsUIState.isFiltered)
+            ScrollableListView(children: [
+              FormCard(children: [
+                DropdownButtonFormField<int>(
+                  initialValue: _exchangeRateYear,
+                  decoration: InputDecoration(labelText: localization.year),
+                  items: exchangeRateYears
+                      .map((year) => DropdownMenuItem(
+                            value: year,
+                            child: Text('$year'),
+                          ))
+                      .toList(),
+                  onChanged: (year) =>
+                      setState(() => _exchangeRateYear = year!),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Text(
+                      'Saving a changed rate overwrites the rate on all existing expenses with that currency and expense year. Blank currencies keep their existing default.'),
+                ),
+                ...state.staticState.currencyMap.values
+                    .where((currency) => currency.id != company.currencyId)
+                    .map((currency) {
+                  final rates = company.yearlyExchangeRates;
+                  bool matches(Map<String, dynamic> rate) =>
+                      rate['year'] == _exchangeRateYear &&
+                      '${rate['currency_id']}' == currency.id &&
+                      '${rate['base_currency_id']}' == company.currencyId;
+                  final matching = rates.where(matches);
+                  final base =
+                      state.staticState.currencyMap[company.currencyId]?.code ??
+                          '';
+                  return TextFormField(
+                    key: ValueKey(
+                        '$_exchangeRateYear-${company.currencyId}-${currency.id}'),
+                    initialValue:
+                        matching.isEmpty ? '' : '${matching.first['rate']}',
+                    decoration: InputDecoration(
+                        labelText: '1 ${currency.code} = … $base'),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return null;
+                      }
+                      final rate = double.tryParse(value.replaceAll(',', '.'));
+                      return rate != null &&
+                              rate.isFinite &&
+                              rate >= 0.000001 &&
+                              rate <= 1000000
+                          ? null
+                          : 'Enter a rate from 0.000001 to 1000000.';
+                    },
+                    onChanged: (value) {
+                      final rate = double.tryParse(value.replaceAll(',', '.'));
+                      if (value.isNotEmpty &&
+                          (rate == null ||
+                              !rate.isFinite ||
+                              rate < 0.000001 ||
+                              rate > 1000000)) {
+                        return;
+                      }
+                      final updated = company.yearlyExchangeRates
+                          .where((rate) => !matches(rate))
+                          .toList();
+                      if (value.isNotEmpty)
+                        updated.add({
+                          'year': _exchangeRateYear,
+                          'currency_id': currency.id,
+                          'base_currency_id': company.currencyId,
+                          'rate': rate
+                        });
+                      viewModel.onCompanyChanged(company.rebuild((b) =>
+                          b..yearlyExchangeRatesJson = jsonEncode(updated)));
+                    },
+                  );
+                }),
+              ]),
+            ]),
         ],
       ),
     );

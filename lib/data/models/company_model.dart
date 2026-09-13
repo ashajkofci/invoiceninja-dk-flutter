@@ -82,6 +82,7 @@ abstract class CompanyEntity extends Object
       enableProductDiscount: false,
       enableTimeCoefficient: false,
       timeCoefficientsJson: '[]',
+      yearlyExchangeRatesJson: '[]',
       defaultQuantity: true,
       defaultTaskIsDateBased: false,
       slackWebhookUrl: '',
@@ -252,6 +253,21 @@ abstract class CompanyEntity extends Object
 
   @BuiltValueField(wireName: 'time_coefficients_json')
   String get timeCoefficientsJson;
+
+  @BuiltValueField(wireName: 'yearly_exchange_rates_json')
+  String get yearlyExchangeRatesJson;
+
+  List<Map<String, dynamic>> get yearlyExchangeRates =>
+      (jsonDecode(yearlyExchangeRatesJson) as List)
+          .cast<Map<String, dynamic>>();
+
+  double? yearlyExchangeRate(String? expenseCurrencyId, String? date) {
+    final rates = yearlyExchangeRates.where((rate) =>
+        rate['year'] == DateTime.tryParse(date ?? '')?.year &&
+        '${rate['currency_id']}' == expenseCurrencyId &&
+        '${rate['base_currency_id']}' == currencyId);
+    return rates.isEmpty ? null : (rates.first['rate'] as num).toDouble();
+  }
 
   @BuiltValueField(wireName: 'default_task_is_date_based')
   bool get defaultTaskIsDateBased;
@@ -845,6 +861,7 @@ abstract class CompanyEntity extends Object
     ..enableProductDiscount = false
     ..enableTimeCoefficient = false
     ..timeCoefficientsJson = '[]'
+    ..yearlyExchangeRatesJson = '[]'
     ..defaultTaskIsDateBased = false
     ..sessionTimeout = 0
     ..passwordTimeout = 30 * 60 * 1000

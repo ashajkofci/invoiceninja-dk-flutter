@@ -191,8 +191,10 @@ InvoiceEntity _addPurchaseOrderItem(
   if (action.index == null) {
     return purchaseOrder!.rebuild((b) => b..lineItems.add(item));
   } else {
-    return purchaseOrder!
-        .rebuild((b) => b..lineItems.insert(action.index!, item));
+    final index =
+        action.index!.clamp(0, purchaseOrder!.lineItems.length).toInt();
+    return purchaseOrder
+        .rebuild((b) => b..lineItems.insert(index, item));
   }
 }
 

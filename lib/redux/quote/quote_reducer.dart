@@ -165,7 +165,8 @@ InvoiceEntity _addQuoteItem(InvoiceEntity? quote, AddQuoteItem action) {
   if (action.index == null) {
     return quote!.rebuild((b) => b..lineItems.add(item));
   } else {
-    return quote!.rebuild((b) => b..lineItems.insert(action.index!, item));
+    final index = action.index!.clamp(0, quote!.lineItems.length).toInt();
+    return quote.rebuild((b) => b..lineItems.insert(index, item));
   }
 }
 

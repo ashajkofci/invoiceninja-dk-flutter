@@ -93,7 +93,7 @@ class CreditEditItemsVM extends EntityEditItemsVM {
       },
       onChangedInvoiceItem: (creditItem, index) {
         final credit = store.state.creditUIState.editing!;
-        if (index == credit.lineItems.length) {
+        if (index < 0 || index >= credit.lineItems.length) {
           store.dispatch(AddCreditItem(
               creditItem: creditItem.rebuild((b) => b
                 ..typeId = isTasks
@@ -118,10 +118,16 @@ class CreditEditItemsVM extends EntityEditItemsVM {
         );
       },
       cloneLineItem: (int? index) {
+        final credit = store.state.creditUIState.editing;
+        if (index == null ||
+            index < 0 ||
+            index >= (credit?.lineItems.length ?? 0)) {
+          return;
+        }
         store.dispatch(
           AddCreditItem(
             index: index,
-            creditItem: credit!.lineItems[index!].clone,
+            creditItem: credit!.lineItems[index].clone,
           ),
         );
       },

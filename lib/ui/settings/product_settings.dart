@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 // Project imports:
+import 'package:invoiceninja_flutter/constants.dart';
 import 'package:invoiceninja_flutter/ui/app/edit_scaffold.dart';
 import 'package:invoiceninja_flutter/ui/app/form_card.dart';
 import 'package:invoiceninja_flutter/ui/app/forms/app_form.dart';
@@ -177,22 +178,43 @@ class _ProductSettingsState extends State<ProductSettings> {
                 value: company.trackInventory,
                 subtitle: Text(localization.trackInventoryHelp),
                 onChanged: (value) => viewModel.onCompanyChanged(
-                    company.rebuild((b) => b..trackInventory = value)),
+                    company.rebuild((b) => b
+                      ..trackInventory = value
+                      ..enabledModules = value
+                          ? company.enabledModules & ~kModuleProductReservations
+                          : company.enabledModules)),
               ),
               SwitchListTile(
                 activeThumbColor: Theme.of(context).colorScheme.secondary,
-                title: Text(localization.stockNotifications),
-                value: company.stockNotification,
-                subtitle: Text(localization.stockNotificationsHelp),
+                title: Text(reservationText(context, 'reservationTracking')),
+                value: !company.trackInventory &&
+                    company.enabledModules & kModuleProductReservations != 0,
+                subtitle:
+                    Text(reservationText(context, 'reservationTrackingHelp')),
                 onChanged: (value) => viewModel.onCompanyChanged(
-                    company.rebuild((b) => b..stockNotification = value)),
+                    company.rebuild((b) => b
+                      ..trackInventory = value ? false : company.trackInventory
+                      ..enabledModules = value
+                          ? company.enabledModules | kModuleProductReservations
+                          : company.enabledModules &
+                              ~kModuleProductReservations)),
               ),
-              if (company.trackInventory && company.stockNotification)
-                DecoratedFormField(
-                  keyboardType: TextInputType.number,
-                  controller: _stockThresholdController,
-                  label: localization.notificationThreshold,
+              if (company.trackInventory) ...[
+                SwitchListTile(
+                  activeThumbColor: Theme.of(context).colorScheme.secondary,
+                  title: Text(localization.stockNotifications),
+                  value: company.stockNotification,
+                  subtitle: Text(localization.stockNotificationsHelp),
+                  onChanged: (value) => viewModel.onCompanyChanged(
+                      company.rebuild((b) => b..stockNotification = value)),
                 ),
+                if (company.stockNotification)
+                  DecoratedFormField(
+                    keyboardType: TextInputType.number,
+                    controller: _stockThresholdController,
+                    label: localization.notificationThreshold,
+                  ),
+              ],
             ],
           ),
           FormCard(

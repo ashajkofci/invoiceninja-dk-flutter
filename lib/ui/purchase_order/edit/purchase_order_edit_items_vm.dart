@@ -91,7 +91,7 @@ class PurchaseOrderEditItemsVM extends EntityEditItemsVM {
       },
       onChangedInvoiceItem: (purchaseOrderItem, index) {
         final purchaseOrder = store.state.purchaseOrderUIState.editing!;
-        if (index == purchaseOrder.lineItems.length) {
+        if (index < 0 || index >= purchaseOrder.lineItems.length) {
           store.dispatch(
               AddPurchaseOrderItem(purchaseOrderItem: purchaseOrderItem));
         } else {
@@ -113,10 +113,16 @@ class PurchaseOrderEditItemsVM extends EntityEditItemsVM {
         );
       },
       cloneLineItem: (int? index) {
+        final purchaseOrder = store.state.purchaseOrderUIState.editing;
+        if (index == null ||
+            index < 0 ||
+            index >= (purchaseOrder?.lineItems.length ?? 0)) {
+          return;
+        }
         store.dispatch(
           AddPurchaseOrderItem(
             index: index,
-            purchaseOrderItem: purchaseOrder!.lineItems[index!].clone,
+            purchaseOrderItem: purchaseOrder!.lineItems[index].clone,
           ),
         );
       },

@@ -109,12 +109,13 @@ class _ProductOverviewState extends State<ProductOverview> {
           value: product.customValue4);
     }
 
-    if (company.trackInventory) {
+    if (company.trackInventory ||
+        company.enabledModules & kModuleProductReservations != 0) {
       fields[localization.stockQuantity] = formatNumber(
           product.stockQuantity.toDouble(), context,
           formatNumberType: FormatNumberType.int);
 
-      if (product.stockNotificationThreshold != 0) {
+      if (company.trackInventory && product.stockNotificationThreshold != 0) {
         fields[localization.notificationThreshold] = formatNumber(
             product.stockNotificationThreshold.toDouble(), context,
             formatNumberType: FormatNumberType.int);

@@ -390,7 +390,8 @@ class _ProductEditState extends State<ProductEdit> {
                 ),
               ],
             ),
-            if (company.trackInventory)
+            if (company.trackInventory ||
+                company.enabledModules & kModuleProductReservations != 0)
               FormCard(
                 children: [
                   DecoratedFormField(
@@ -399,7 +400,7 @@ class _ProductEditState extends State<ProductEdit> {
                     label: localization.stockQuantity,
                     onSavePressed: _onSavePressed,
                   ),
-                  if (company.stockNotification) ...[
+                  if (company.trackInventory && company.stockNotification) ...[
                     SizedBox(height: 16),
                     SwitchListTile(
                       activeThumbColor: Theme.of(context).colorScheme.secondary,

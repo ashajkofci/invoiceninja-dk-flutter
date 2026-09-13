@@ -202,8 +202,10 @@ InvoiceEntity _addRecurringInvoiceItem(
   if (action.index == null) {
     return recurringInvoice!.rebuild((b) => b..lineItems.add(item));
   } else {
-    return recurringInvoice!
-        .rebuild((b) => b..lineItems.insert(action.index!, item));
+    final index =
+        action.index!.clamp(0, recurringInvoice!.lineItems.length).toInt();
+    return recurringInvoice
+        .rebuild((b) => b..lineItems.insert(index, item));
   }
 }
 

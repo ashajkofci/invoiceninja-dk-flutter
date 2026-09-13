@@ -28,10 +28,6 @@ class InvoiceItemListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String? cost = formatNumber(invoiceItem!.cost, context,
-        clientId: invoice.isPurchaseOrder ? null : invoice.clientId,
-        vendorId: invoice.isPurchaseOrder ? invoice.vendorId : null,
-        roundToPrecision: false);
     final String? qty = formatNumber(invoiceItem!.quantity, context,
         clientId: invoice.isPurchaseOrder ? null : invoice.clientId,
         vendorId: invoice.isPurchaseOrder ? invoice.vendorId : null,
@@ -45,16 +41,29 @@ class InvoiceItemListTile extends StatelessWidget {
     final precision =
         state.staticState.currencyMap[client.currencyId]?.precision ?? 2;
 
-    String subtitle = '$qty x $cost';
     final groupHeader = invoice.lineItems.firstWhereOrNull(
         (item) => item.isGroup && item.groupId == invoiceItem!.groupId);
     final isGroupChild = !invoiceItem!.isGroup && groupHeader != null;
     final hideGroupChildPrices = isGroupChild &&
         (groupHeader.groupHasPrice || groupHeader.groupHideItemPrices);
+    final proRataUnitPrice =
+        isGroupChild && groupHeader.groupHasPrice
+            ? invoiceItem!.groupChildProRataUnitPrice(invoice, precision)
+            : null;
+    final proRataAmount = isGroupChild && groupHeader.groupHasPrice
+        ? invoiceItem!.groupChildProRataAmount(invoice, precision)
+        : null;
+    final displayCost = proRataUnitPrice ?? invoiceItem!.cost;
+    final displayTotal = proRataAmount ?? invoiceItem!.total(invoice, precision);
+
+    String subtitle = '$qty x ${formatNumber(displayCost, context,
+        clientId: invoice.isPurchaseOrder ? null : invoice.clientId,
+        vendorId: invoice.isPurchaseOrder ? invoice.vendorId : null,
+        roundToPrecision: false) ?? ''}';
 
     if (invoiceItem!.isGroup) {
       subtitle = localization!.group;
-    } else if (hideGroupChildPrices) {
+    } else if (hideGroupChildPrices && proRataUnitPrice == null) {
       subtitle = invoiceItem!.notes;
     }
 
@@ -152,9 +161,9 @@ class InvoiceItemListTile extends StatelessWidget {
                           : null,
                     ),
                   ),
-                  if (!hideGroupChildPrices)
+                  if (!hideGroupChildPrices || proRataAmount != null)
                     Text(formatNumber(
-                      invoiceItem!.total(invoice, precision),
+                      displayTotal,
                       context,
                       clientId:
                           invoice.isPurchaseOrder ? null : invoice.clientId,

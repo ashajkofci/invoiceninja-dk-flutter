@@ -107,6 +107,16 @@ class ExpenseEditVM extends AbstractExpenseEditVM {
       origExpense: state.expenseState.map[expense.id],
       expense: expense,
       onChanged: (ExpenseEntity expense) {
+        final previous = store.state.expenseUIState.editing!;
+        if (expense.currencyId != previous.currencyId ||
+            expense.date != previous.date) {
+          final company = store.state.company;
+          expense = expense.rebuild((b) => b
+            ..exchangeRate =
+                company.yearlyExchangeRate(expense.currencyId, expense.date) ??
+                    1
+            ..invoiceCurrencyId = company.currencyId);
+        }
         store.dispatch(UpdateExpense(expense));
       },
       onCancelPressed: (BuildContext context) {

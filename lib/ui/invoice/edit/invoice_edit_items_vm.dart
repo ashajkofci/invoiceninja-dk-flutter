@@ -1,4 +1,6 @@
 // Flutter imports:
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -129,16 +131,26 @@ class InvoiceEditItemsVM extends EntityEditItemsVM {
                       : InvoiceItemEntity.TYPE_STANDARD)));
       },
       cloneLineItem: (int? index) {
+        final invoice = store.state.invoiceUIState.editing;
+        if (index == null ||
+            index < 0 ||
+            index >= (invoice?.lineItems.length ?? 0)) {
+          return;
+        }
         store.dispatch(
           AddInvoiceItem(
             index: index,
-            invoiceItem: invoice!.lineItems[index!].clone,
+            invoiceItem: invoice!.lineItems[index].clone,
           ),
         );
       },
       deleteLineItem: null,
       onRemoveInvoiceItemPressed: (index) {
-        final item = invoice!.lineItems[index];
+        final invoice = store.state.invoiceUIState.editing!;
+        if (index < 0 || index >= invoice.lineItems.length) {
+          return;
+        }
+        final item = invoice.lineItems[index];
         if (item.isGroup) {
           for (var i = invoice.lineItems.length - 1; i >= 0; i--) {
             if (invoice.lineItems[i].groupId == item.groupId) {
@@ -152,7 +164,7 @@ class InvoiceEditItemsVM extends EntityEditItemsVM {
       clearSelectedInvoiceItem: () => store.dispatch(EditInvoiceItem()),
       onChangedInvoiceItem: (invoiceItem, index) {
         final invoice = store.state.invoiceUIState.editing!;
-        if (index == invoice.lineItems.length) {
+        if (index < 0 || index >= invoice.lineItems.length) {
           store.dispatch(AddInvoiceItem(
               invoiceItem: invoiceItem.rebuild((b) => b
                 ..typeId = isTasks
@@ -170,6 +182,9 @@ class InvoiceEditItemsVM extends EntityEditItemsVM {
       },
       onGroupInvoiceItem: (index, groupId) {
         final invoice = store.state.invoiceUIState.editing!;
+        if (index < 0 || index >= invoice.lineItems.length) {
+          return;
+        }
         final item = invoice.lineItems[index];
         final oldGroupId = item.groupId;
 
@@ -183,9 +198,10 @@ class InvoiceEditItemsVM extends EntityEditItemsVM {
           (candidate) => candidate.groupId == targetGroupId,
         );
         if (lastIndex != -1 && index != lastIndex) {
+          final newIndex = index < lastIndex ? lastIndex : lastIndex + 1;
           store.dispatch(MoveInvoiceItem(
             oldIndex: index,
-            newIndex: index < lastIndex ? lastIndex : lastIndex + 1,
+            newIndex: min(newIndex, invoice.lineItems.length - 1),
           ));
         }
       },

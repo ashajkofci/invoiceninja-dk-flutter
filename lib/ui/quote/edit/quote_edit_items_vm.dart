@@ -1,4 +1,6 @@
 // Flutter imports:
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -91,7 +93,11 @@ class QuoteEditItemsVM extends EntityEditItemsVM {
       invoice: quote,
       invoiceItemIndex: state.quoteUIState.editingItemIndex,
       onRemoveInvoiceItemPressed: (index) {
-        final item = quote!.lineItems[index];
+        final quote = store.state.quoteUIState.editing!;
+        if (index < 0 || index >= quote.lineItems.length) {
+          return;
+        }
+        final item = quote.lineItems[index];
         if (item.isGroup) {
           for (var i = quote.lineItems.length - 1; i >= 0; i--) {
             if (quote.lineItems[i].groupId == item.groupId) {
@@ -107,7 +113,7 @@ class QuoteEditItemsVM extends EntityEditItemsVM {
       },
       onChangedInvoiceItem: (quoteItem, index) {
         final quote = store.state.quoteUIState.editing!;
-        if (index == quote.lineItems.length) {
+        if (index < 0 || index >= quote.lineItems.length) {
           store.dispatch(AddQuoteItem(
               quoteItem: quoteItem.rebuild((b) => b
                 ..typeId = isTasks
@@ -124,6 +130,9 @@ class QuoteEditItemsVM extends EntityEditItemsVM {
       },
       onGroupInvoiceItem: (index, groupId) {
         final quote = store.state.quoteUIState.editing!;
+        if (index < 0 || index >= quote.lineItems.length) {
+          return;
+        }
         final item = quote.lineItems[index];
         final oldGroupId = item.groupId;
 
@@ -137,9 +146,10 @@ class QuoteEditItemsVM extends EntityEditItemsVM {
           (candidate) => candidate.groupId == targetGroupId,
         );
         if (lastIndex != -1 && index != lastIndex) {
+          final newIndex = index < lastIndex ? lastIndex : lastIndex + 1;
           store.dispatch(MoveQuoteItem(
             oldIndex: index,
-            newIndex: index < lastIndex ? lastIndex : lastIndex + 1,
+            newIndex: min(newIndex, quote.lineItems.length - 1),
           ));
         }
       },
@@ -152,10 +162,16 @@ class QuoteEditItemsVM extends EntityEditItemsVM {
         );
       },
       cloneLineItem: (int? index) {
+        final quote = store.state.quoteUIState.editing;
+        if (index == null ||
+            index < 0 ||
+            index >= (quote?.lineItems.length ?? 0)) {
+          return;
+        }
         store.dispatch(
           AddQuoteItem(
             index: index,
-            quoteItem: quote!.lineItems[index!].clone,
+            quoteItem: quote!.lineItems[index].clone,
           ),
         );
       },

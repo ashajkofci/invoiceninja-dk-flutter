@@ -325,7 +325,7 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
     final viewModel = widget.viewModel;
     final lineItems = viewModel.invoice!.lineItems;
 
-    if (index == lineItems.length) {
+    if (index < 0 || index >= lineItems.length) {
       viewModel.onChangedInvoiceItem!(lineItem, index);
     } else if (lineItem != lineItems[index]) {
       if (debounce) {
@@ -372,6 +372,16 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
           header != null &&
           (header.groupHasPrice || header.groupHideItemPrices);
     }
+
+    double? overrideChildUnitPrice(InvoiceItemEntity item) =>
+        item.isGroup || item.groupId.isEmpty
+            ? null
+            : item.groupChildProRataUnitPrice(invoice, precision);
+
+    double? overrideChildAmount(InvoiceItemEntity item) =>
+        item.isGroup || item.groupId.isEmpty
+            ? null
+            : item.groupChildProRataAmount(invoice, precision);
 
     final includedLineItems = lineItems.where((lineItem) {
       return (lineItem.typeId == InvoiceItemEntity.TYPE_TASK &&
@@ -561,7 +571,7 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                             } else if (column == COLUMN_UNIT_COST) {
                               return Text(
                                 formatNumber(
-                                      item.cost,
+                                      overrideChildUnitPrice(item) ?? item.cost,
                                       context,
                                       formatNumberType:
                                           FormatNumberType.inputMoney,
@@ -976,7 +986,11 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                                                     var label =
                                                         entity.listDisplayName;
                                                     if (state.company
-                                                        .trackInventory) {
+                                                            .trackInventory ||
+                                                        state.company
+                                                                    .enabledModules &
+                                                                kModuleProductReservations !=
+                                                            0) {
                                                       final product = entity
                                                           as ProductEntity;
                                                       label +=
@@ -1227,6 +1241,40 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                           ),
                         );
                       } else if (column == COLUMN_UNIT_COST) {
+                        final proRataUnitPrice =
+                            overrideChildUnitPrice(lineItems[index]);
+                        if (proRataUnitPrice != null) {
+                          return Tooltip(
+                            message:
+                                localization.lookup('price_per_unit_pro_rata'),
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.only(right: kTableColumnGap),
+                              child: Align(
+                                alignment: Alignment.bottomRight,
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 12),
+                                  child: Text(
+                                    formatNumber(
+                                          proRataUnitPrice,
+                                          context,
+                                          clientId: invoice.isPurchaseOrder
+                                              ? null
+                                              : invoice.clientId,
+                                          vendorId: invoice.isPurchaseOrder
+                                              ? invoice.vendorId
+                                              : null,
+                                        ) ??
+                                        '',
+                                    style: TextStyle(color: state.greyColor),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }
                         if (hidesGroupChildPrices(lineItems[index])) {
                           return const SizedBox.shrink();
                         }
@@ -1411,7 +1459,8 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                           availability: _reservationAvailability,
                         ),
                       ),
-                    if (!hidesGroupChildPrices(lineItems[index]))
+                    if (!hidesGroupChildPrices(lineItems[index]) ||
+                        overrideChildAmount(lineItems[index]) != null)
                       Padding(
                         padding: const EdgeInsets.only(right: kTableColumnGap),
                         child: Align(
@@ -1420,7 +1469,9 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             child: Text(
                               formatNumber(
-                                    lineItems[index].total(invoice, precision),
+                                    overrideChildAmount(lineItems[index]) ??
+                                        lineItems[index]
+                                            .total(invoice, precision),
                                     context,
                                     clientId: invoice.isPurchaseOrder
                                         ? null

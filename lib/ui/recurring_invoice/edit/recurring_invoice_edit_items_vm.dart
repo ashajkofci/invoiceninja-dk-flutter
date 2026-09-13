@@ -94,7 +94,7 @@ class RecurringInvoiceEditItemsVM extends EntityEditItemsVM {
       },
       onChangedInvoiceItem: (item, index) {
         final invoice = store.state.recurringInvoiceUIState.editing!;
-        if (index == invoice.lineItems.length) {
+        if (index < 0 || index >= invoice.lineItems.length) {
           store.dispatch(AddRecurringInvoiceItem(
               invoiceItem: item.rebuild((b) => b
                 ..typeId = isTasks
@@ -118,10 +118,16 @@ class RecurringInvoiceEditItemsVM extends EntityEditItemsVM {
         );
       },
       cloneLineItem: (int? index) {
+        final invoice = store.state.recurringInvoiceUIState.editing;
+        if (index == null ||
+            index < 0 ||
+            index >= (invoice?.lineItems.length ?? 0)) {
+          return;
+        }
         store.dispatch(
           AddRecurringInvoiceItem(
             index: index,
-            invoiceItem: invoice!.lineItems[index!].clone,
+            invoiceItem: invoice!.lineItems[index].clone,
           ),
         );
       },

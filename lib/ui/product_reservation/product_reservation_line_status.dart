@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_redux/flutter_redux.dart';
 import 'package:invoiceninja_flutter/data/models/models.dart';
+import 'package:invoiceninja_flutter/redux/app/app_state.dart';
+import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_invoice_link.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
 
 class ProductReservationLineStatus extends StatelessWidget {
@@ -38,14 +41,37 @@ class ProductReservationLineStatus extends StatelessWidget {
               style: TextStyle(color: Colors.grey), maxLines: 2);
         }
         final overbooked = status['is_overbooked'] == true;
-        return Text(
-          overbooked
-              ? '${reservationText(context, 'overbooked')} (${status['total_quantity']}/${status['stock_quantity']})'
-              : '${status['available_quantity']} ${reservationText(context, 'available')}',
-          style: TextStyle(
-              color: overbooked ? Colors.red : Colors.green,
-              fontWeight: FontWeight.w600),
-          maxLines: 2,
+        final label = overbooked
+            ? '${reservationText(context, 'overbooked')} (${status['total_quantity']}/${status['stock_quantity']})'
+            : '${status['available_quantity']} ${reservationText(context, 'available')}';
+        final style = TextStyle(
+            color: overbooked ? Colors.red : Colors.green,
+            fontWeight: FontWeight.w600);
+        final reservations =
+            List<Map<String, dynamic>>.from(status['reservations'] ?? []);
+
+        if (reservations.isEmpty) {
+          return Text(label, style: style, maxLines: 2);
+        }
+
+        return PopupMenuButton<Map<String, dynamic>>(
+          tooltip: reservationText(context, 'reservationDetails'),
+          onSelected: (reservation) => openReservationInvoice(
+              context,
+              StoreProvider.of<AppState>(context),
+              reservation['invoice_id']?.toString()),
+          itemBuilder: (context) => reservations
+              .map((reservation) => PopupMenuItem(
+                    value: reservation,
+                    child: Text(
+                        '${reservationText(context, 'invoice')} #${reservation['invoice_number']} · ${reservation['quantity']}\n${reservation['start_date']} → ${reservation['end_date']}'),
+                  ))
+              .toList(),
+          child: Text(
+            label,
+            style: style.copyWith(decoration: TextDecoration.underline),
+            maxLines: 2,
+          ),
         );
       },
     );

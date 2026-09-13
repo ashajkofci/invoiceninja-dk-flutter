@@ -164,7 +164,8 @@ InvoiceEntity _addCreditItem(InvoiceEntity? credit, AddCreditItem action) {
   if (action.index == null) {
     return credit!.rebuild((b) => b..lineItems.add(item));
   } else {
-    return credit!.rebuild((b) => b..lineItems.insert(action.index!, item));
+    final index = action.index!.clamp(0, credit!.lineItems.length).toInt();
+    return credit.rebuild((b) => b..lineItems.insert(index, item));
   }
 }
 

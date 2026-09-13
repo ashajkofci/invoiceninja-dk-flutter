@@ -19,6 +19,7 @@ mixin LocalizationsProvider on LocaleCodeAware {
     'en': {
       // STARTER: lang key - do not remove comment
       'invoice_outstanding_tasks': 'Invoice Outstanding Tasks',
+      'price_per_unit_pro_rata': 'Price per unit (pro rata)',
       'payment_schedule': 'Payment Schedule',
       'auto_send': 'Auto Send',
       'include_project_tasks': 'Include Project Tasks',
@@ -30478,6 +30479,7 @@ mixin LocalizationsProvider on LocaleCodeAware {
       'load_color_theme': 'Kleurthema laden',
     },
     'en_GB': {
+      'price_per_unit_pro_rata': 'Price per unit (pro rata)',
       'net_cost': 'Net Cost',
       'skip_automatic_emails': 'Skip Automatic Emails',
       'forward_email': 'Forward Email',

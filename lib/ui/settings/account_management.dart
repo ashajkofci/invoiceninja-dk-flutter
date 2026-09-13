@@ -214,7 +214,9 @@ class _AccountManagementState extends State<AccountManagement>
             children: <Widget>[
               FormCard(
                   isLast: true,
-                  children: kModules.keys.map((module) {
+                  children: kModules.keys
+                      .where((module) => module != kModuleProductReservations)
+                      .map((module) {
                     return CheckboxListTile(
                       controlAffinity: ListTileControlAffinity.leading,
                       title: Text(localization.lookup(kModules[module])),

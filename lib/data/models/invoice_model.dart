@@ -280,19 +280,17 @@ abstract class InvoiceEntity extends Object
   String? get idempotencyKey;
 
   InvoiceEntity moveLineItem(int oldIndex, int? newIndex) {
+    if (oldIndex < 0 || oldIndex >= lineItems.length) {
+      return this;
+    }
     final lineItem = lineItems[oldIndex];
-    InvoiceEntity invoice = rebuild((b) => b..lineItems.removeAt(oldIndex));
-    invoice = invoice.rebuild((b) => b
-      ..lineItems.replace(<InvoiceItemEntity?>[
-        ...invoice.lineItems.sublist(0, newIndex),
-        lineItem,
-        ...invoice.lineItems.sublist(
-          newIndex!,
-          invoice.lineItems.length,
-        )
-      ])
+    final invoice = rebuild((b) => b..lineItems.removeAt(oldIndex));
+    final targetIndex = (newIndex ?? invoice.lineItems.length)
+        .clamp(0, invoice.lineItems.length);
+    final result = invoice.rebuild((b) => b
+      ..lineItems.insert(targetIndex, lineItem)
       ..isChanged = true);
-    return invoice;
+    return result;
   }
 
   InvoiceEntity recreateInvitations(AppState state) {
@@ -1855,6 +1853,56 @@ abstract class InvoiceItemEntity
       groupId.isNotEmpty &&
       !isGroup &&
       invoice.lineItems.any((item) => item.isGroup && item.groupId == groupId);
+
+  double? groupChildProRataAmount(InvoiceEntity invoice, int precision) {
+    if (isGroup || groupId.isEmpty) {
+      return null;
+    }
+
+    InvoiceItemEntity? header;
+    for (final item in invoice.lineItems) {
+      if (item.isGroup && item.groupId == groupId) {
+        header = item;
+        break;
+      }
+    }
+
+    if (header == null || !header.groupHasPrice) {
+      return null;
+    }
+
+    final children = <double>[];
+    var totalOriginal = 0.0;
+    for (final item in invoice.lineItems) {
+      if (item.groupId == groupId && !item.isGroup) {
+        final value = item.quantity * item.cost * item.timeCoefficient;
+        children.add(value);
+        totalOriginal += value;
+      }
+    }
+
+    if (children.isEmpty) {
+      return null;
+    }
+
+    final overrideAmount = header.groupPrice * header.timeCoefficient;
+    final share = totalOriginal == 0
+        ? overrideAmount / children.length
+        : overrideAmount * (quantity * cost * timeCoefficient) / totalOriginal;
+
+    return share;
+  }
+
+  double? groupChildProRataUnitPrice(InvoiceEntity invoice, int precision) {
+    final share = groupChildProRataAmount(invoice, precision);
+    if (share == null) {
+      return null;
+    }
+    if (quantity == 0) {
+      return 0;
+    }
+    return round(round(share, precision) / quantity, precision);
+  }
 
   bool get isExpense => (expenseId ?? '').isNotEmpty;
 

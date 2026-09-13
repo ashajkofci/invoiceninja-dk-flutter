@@ -18,6 +18,9 @@ const _english = <String, String>{
   'noCurrentReservations': 'No current reservations',
   'noCurrentOrFutureReservations': 'No current or future tracked reservations',
   'currentStatus': 'Current rental status',
+  'reservationTracking': 'Reservation tracking',
+  'reservationTrackingHelp':
+      'Keep product stock as total capacity and calculate availability from dated invoices.',
   'startField': 'Reservation start date field',
   'endField': 'Reservation end date field',
   'statusField': 'Rental status field',
@@ -59,6 +62,9 @@ const _french = <String, String>{
   'noCurrentOrFutureReservations':
       'Aucune réservation actuelle ou future avec stock suivi',
   'currentStatus': 'État de location actuel',
+  'reservationTracking': 'Suivi des réservations',
+  'reservationTrackingHelp':
+      'Conserver le stock du produit comme capacité totale et calculer la disponibilité selon les factures datées.',
   'startField': 'Champ de date de début de réservation',
   'endField': 'Champ de date de fin de réservation',
   'statusField': 'Champ du statut de location',

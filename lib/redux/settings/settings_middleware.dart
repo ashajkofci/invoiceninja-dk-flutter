@@ -101,11 +101,15 @@ Middleware<AppState> _viewSettings() {
 Middleware<AppState> _saveCompany(SettingsRepository settingsRepository) {
   return (Store<AppState> store, dynamic dynamicAction, NextDispatcher next) {
     final action = dynamicAction as SaveCompanyRequest;
+    final previousRates = store.state.company.yearlyExchangeRatesJson;
 
     settingsRepository
         .saveCompany(store.state.credentials, action.company!)
         .then((company) {
       store.dispatch(SaveCompanySuccess(company));
+      if (previousRates != company.yearlyExchangeRatesJson) {
+        store.dispatch(RefreshData());
+      }
       action.completer!.complete();
       WidgetUtils.updateData();
     }).catchError((Object error) {

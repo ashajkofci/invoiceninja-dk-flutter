@@ -102,10 +102,15 @@ class ExpenseEditSettingsState extends State<ExpenseEditSettings> {
     final viewModel = widget.viewModel;
     final expense = viewModel.expense!;
 
-    final exchangeRate = currency == null
-        ? 1.0
-        : getExchangeRate(viewModel.state!.staticState.currencyMap,
-            fromCurrencyId: expense.currencyId, toCurrencyId: currency.id);
+    final company = viewModel.state!.company;
+    final yearlyRate = currency?.id == company.currencyId
+        ? company.yearlyExchangeRate(expense.currencyId, expense.date)
+        : null;
+    final exchangeRate = yearlyRate ??
+        (currency == null
+            ? 1.0
+            : getExchangeRate(viewModel.state!.staticState.currencyMap,
+                fromCurrencyId: expense.currencyId, toCurrencyId: currency.id));
 
     viewModel.onChanged!(expense.rebuild((b) => b
       ..invoiceCurrencyId = currency?.id ?? ''

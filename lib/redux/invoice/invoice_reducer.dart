@@ -168,7 +168,9 @@ InvoiceEntity _addInvoiceItem(InvoiceEntity? invoice, AddInvoiceItem action) {
   if (action.index == null) {
     return invoice!.rebuild((b) => b..lineItems.add(item));
   } else {
-    return invoice!.rebuild((b) => b..lineItems.insert(action.index!, item));
+    final index =
+        action.index!.clamp(0, invoice!.lineItems.length).toInt();
+    return invoice.rebuild((b) => b..lineItems.insert(index, item));
   }
 }
 
