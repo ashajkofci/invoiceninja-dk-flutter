@@ -61,6 +61,7 @@ class QuoteEditItemsVM extends EntityEditItemsVM {
     Function? onDoneInvoiceItemPressed,
     Function(InvoiceItemEntity, int)? onChangedInvoiceItem,
     Function(int, int)? onMovedInvoiceItem,
+    Function(int, String)? onGroupInvoiceItem,
   }) : super(
           state: state,
           company: company,
@@ -73,6 +74,7 @@ class QuoteEditItemsVM extends EntityEditItemsVM {
           clearSelectedInvoiceItem: onDoneInvoiceItemPressed,
           onChangedInvoiceItem: onChangedInvoiceItem,
           onMovedInvoiceItem: onMovedInvoiceItem,
+          onGroupInvoiceItem: onGroupInvoiceItem,
         );
 
   factory QuoteEditItemsVM.fromStore(
@@ -119,6 +121,27 @@ class QuoteEditItemsVM extends EntityEditItemsVM {
         store.dispatch(
           MoveQuoteItem(oldIndex: oldIndex, newIndex: newIndex),
         );
+      },
+      onGroupInvoiceItem: (index, groupId) {
+        final quote = store.state.quoteUIState.editing!;
+        final item = quote.lineItems[index];
+        final oldGroupId = item.groupId;
+
+        store.dispatch(UpdateQuoteItem(
+          index: index,
+          quoteItem: item.rebuild((b) => b..groupId = groupId),
+        ));
+
+        final targetGroupId = groupId.isNotEmpty ? groupId : oldGroupId;
+        final lastIndex = quote.lineItems.lastIndexWhere(
+          (candidate) => candidate.groupId == targetGroupId,
+        );
+        if (lastIndex != -1 && index != lastIndex) {
+          store.dispatch(MoveQuoteItem(
+            oldIndex: index,
+            newIndex: index < lastIndex ? lastIndex : lastIndex + 1,
+          ));
+        }
       },
       addLineItem: ([int? index, InvoiceItemEntity? suppliedItem]) {
         store.dispatch(

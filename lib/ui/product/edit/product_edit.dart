@@ -268,16 +268,21 @@ class _ProductEditState extends State<ProductEdit> {
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text('${localization.hide} ${localization.price}'),
-                    value: product.groupHideItemPrices,
-                    onChanged: (value) => viewModel.onChanged(
-                        product.rebuild((b) => b..groupHideItemPrices = value)),
+                    value: product.groupHasPrice || product.groupHideItemPrices,
+                    onChanged: product.groupHasPrice
+                        ? null
+                        : (value) => viewModel.onChanged(product
+                            .rebuild((b) => b..groupHideItemPrices = value)),
                   ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text('${localization.group} ${localization.price}'),
                     value: product.groupHasPrice,
-                    onChanged: (value) => viewModel.onChanged(
-                        product.rebuild((b) => b..groupHasPrice = value)),
+                    onChanged: (value) => viewModel.onChanged(product.rebuild(
+                        (b) => b
+                          ..groupHasPrice = value
+                          ..groupHideItemPrices =
+                              value || product.groupHideItemPrices)),
                   ),
                   if (product.groupHasPrice)
                     DecoratedFormField(

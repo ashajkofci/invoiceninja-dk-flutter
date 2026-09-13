@@ -1,6 +1,7 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:invoiceninja_flutter/constants.dart';
+import 'package:collection/collection.dart';
 
 // Project imports:
 import 'package:invoiceninja_flutter/data/models/models.dart';
@@ -20,6 +21,42 @@ import 'package:invoiceninja_flutter/utils/localization.dart';
 import 'package:invoiceninja_flutter/data/repositories/invoice_repository.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_line_status.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
+
+Future<bool> showMoveToGroupDialog({
+  required BuildContext context,
+  required EntityEditItemsVM viewModel,
+  required int itemIndex,
+}) async {
+  final localization = AppLocalization.of(context)!;
+  final item = viewModel.invoice!.lineItems[itemIndex];
+  final groups = viewModel.invoice!.lineItems.where((item) => item.isGroup);
+  final groupId = await showDialog<String>(
+    context: context,
+    builder: (context) => SimpleDialog(
+      title: Text('${localization.select} ${localization.group}'),
+      children: [
+        if (item.groupId.isNotEmpty)
+          SimpleDialogOption(
+            child: Text(
+                '${localization.remove} ${localization.from} ${localization.group}'),
+            onPressed: () => Navigator.pop(context, ''),
+          ),
+        for (final group in groups)
+          SimpleDialogOption(
+            child: Text(group.groupTitle),
+            onPressed: () => Navigator.pop(context, group.groupId),
+          ),
+      ],
+    ),
+  );
+
+  if (groupId == null || groupId == item.groupId) {
+    return false;
+  }
+
+  viewModel.onGroupInvoiceItem!(itemIndex, groupId);
+  return true;
+}
 
 class InvoiceEditItems extends StatefulWidget {
   const InvoiceEditItems({
@@ -153,7 +190,8 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
         formatNumberType: FormatNumberType.inputMoney)!;
     _groupPriceController.text = formatNumber(invoiceItem.groupPrice, context,
         formatNumberType: FormatNumberType.inputMoney)!;
-    _groupHideItemPrices = invoiceItem.groupHideItemPrices;
+    _groupHideItemPrices =
+        invoiceItem.groupHasPrice || invoiceItem.groupHideItemPrices;
     _groupHasPrice = invoiceItem.groupHasPrice;
     _custom1Controller.text = invoiceItem.customValue1;
     _custom2Controller.text = invoiceItem.customValue2;
@@ -246,7 +284,7 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
           ? _productKeyController.text.trim()
           : widget.invoiceItem.groupTitle
       ..groupPrice = parseDouble(_groupPriceController.text)
-      ..groupHideItemPrices = _groupHideItemPrices
+      ..groupHideItemPrices = _groupHasPrice || _groupHideItemPrices
       ..groupHasPrice = _groupHasPrice
       ..customValue1 = _custom1Controller.text.trim()
       ..customValue2 = _custom2Controller.text.trim()
@@ -324,15 +362,45 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
               onSavePressed: widget.entityViewModel.onSavePressed,
               keyboardType: TextInputType.text,
             ),
+            if (widget.viewModel.onGroupInvoiceItem != null &&
+                !widget.invoiceItem.isGroup &&
+                widget.viewModel.invoice!.lineItems.any((item) => item.isGroup))
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.account_tree_outlined),
+                title: Text('${localization.select} ${localization.group}'),
+                subtitle: widget.invoiceItem.groupId.isEmpty
+                    ? Text(localization.none)
+                    : Text(widget.viewModel.invoice!.lineItems
+                            .firstWhereOrNull((item) =>
+                                item.isGroup &&
+                                item.groupId == widget.invoiceItem.groupId)
+                            ?.groupTitle ??
+                        localization.none),
+                onTap: () async {
+                  if (await showMoveToGroupDialog(
+                    context: context,
+                    viewModel: widget.viewModel,
+                    itemIndex: widget.index,
+                  )) {
+                    if (!context.mounted) {
+                      return;
+                    }
+                    Navigator.of(context).pop();
+                  }
+                },
+              ),
             if (widget.invoiceItem.isGroup) ...[
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text('${localization.hide} ${localization.price}'),
-                value: _groupHideItemPrices,
-                onChanged: (value) {
-                  setState(() => _groupHideItemPrices = value);
-                  _onChanged();
-                },
+                value: _groupHasPrice || _groupHideItemPrices,
+                onChanged: _groupHasPrice
+                    ? null
+                    : (value) {
+                        setState(() => _groupHideItemPrices = value);
+                        _onChanged();
+                      },
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
@@ -340,7 +408,12 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
                     '${localization.overrideTax.split(' ').first} ${localization.price}'),
                 value: _groupHasPrice,
                 onChanged: (value) {
-                  setState(() => _groupHasPrice = value);
+                  setState(() {
+                    _groupHasPrice = value;
+                    if (value) {
+                      _groupHideItemPrices = true;
+                    }
+                  });
                   _onChanged();
                 },
               ),

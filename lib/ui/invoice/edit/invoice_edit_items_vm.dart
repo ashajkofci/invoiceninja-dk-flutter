@@ -60,6 +60,7 @@ class EntityEditItemsVM {
     required this.clearSelectedInvoiceItem,
     required this.onChangedInvoiceItem,
     required this.onMovedInvoiceItem,
+    this.onGroupInvoiceItem,
   });
 
   final AppState? state;
@@ -73,6 +74,7 @@ class EntityEditItemsVM {
   final Function? clearSelectedInvoiceItem;
   final Function(InvoiceItemEntity, int)? onChangedInvoiceItem;
   final Function(int, int)? onMovedInvoiceItem;
+  final Function(int, String)? onGroupInvoiceItem;
 }
 
 class InvoiceEditItemsVM extends EntityEditItemsVM {
@@ -88,6 +90,7 @@ class InvoiceEditItemsVM extends EntityEditItemsVM {
     Function? clearSelectedInvoiceItem,
     Function(InvoiceItemEntity, int)? onChangedInvoiceItem,
     Function(int, int)? onMovedInvoiceItem,
+    Function(int, String)? onGroupInvoiceItem,
   }) : super(
           state: state,
           company: company,
@@ -100,6 +103,7 @@ class InvoiceEditItemsVM extends EntityEditItemsVM {
           clearSelectedInvoiceItem: clearSelectedInvoiceItem,
           onChangedInvoiceItem: onChangedInvoiceItem,
           onMovedInvoiceItem: onMovedInvoiceItem,
+          onGroupInvoiceItem: onGroupInvoiceItem,
         );
 
   factory InvoiceEditItemsVM.fromStore(
@@ -163,6 +167,27 @@ class InvoiceEditItemsVM extends EntityEditItemsVM {
         store.dispatch(
           MoveInvoiceItem(oldIndex: oldIndex, newIndex: newIndex),
         );
+      },
+      onGroupInvoiceItem: (index, groupId) {
+        final invoice = store.state.invoiceUIState.editing!;
+        final item = invoice.lineItems[index];
+        final oldGroupId = item.groupId;
+
+        store.dispatch(UpdateInvoiceItem(
+          index: index,
+          invoiceItem: item.rebuild((b) => b..groupId = groupId),
+        ));
+
+        final targetGroupId = groupId.isNotEmpty ? groupId : oldGroupId;
+        final lastIndex = invoice.lineItems.lastIndexWhere(
+          (candidate) => candidate.groupId == targetGroupId,
+        );
+        if (lastIndex != -1 && index != lastIndex) {
+          store.dispatch(MoveInvoiceItem(
+            oldIndex: index,
+            newIndex: index < lastIndex ? lastIndex : lastIndex + 1,
+          ));
+        }
       },
     );
   }

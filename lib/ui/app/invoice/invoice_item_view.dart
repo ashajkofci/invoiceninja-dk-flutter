@@ -49,10 +49,12 @@ class InvoiceItemListTile extends StatelessWidget {
     final groupHeader = invoice.lineItems.firstWhereOrNull(
         (item) => item.isGroup && item.groupId == invoiceItem!.groupId);
     final isGroupChild = !invoiceItem!.isGroup && groupHeader != null;
+    final hideGroupChildPrices = isGroupChild &&
+        (groupHeader.groupHasPrice || groupHeader.groupHideItemPrices);
 
     if (invoiceItem!.isGroup) {
       subtitle = localization!.group;
-    } else if (isGroupChild && groupHeader.groupHideItemPrices) {
+    } else if (hideGroupChildPrices) {
       subtitle = invoiceItem!.notes;
     }
 
@@ -150,7 +152,7 @@ class InvoiceItemListTile extends StatelessWidget {
                           : null,
                     ),
                   ),
-                  if (!(isGroupChild && groupHeader.groupHideItemPrices))
+                  if (!hideGroupChildPrices)
                     Text(formatNumber(
                       invoiceItem!.total(invoice, precision),
                       context,

@@ -24,6 +24,7 @@ import 'package:invoiceninja_flutter/ui/app/icon_text.dart';
 import 'package:invoiceninja_flutter/ui/app/invoice/tax_rate_dropdown.dart';
 import 'package:invoiceninja_flutter/ui/app/scrollable_listview.dart';
 import 'package:invoiceninja_flutter/ui/invoice/edit/invoice_edit_items_vm.dart';
+import 'package:invoiceninja_flutter/ui/invoice/edit/invoice_edit_items.dart';
 import 'package:invoiceninja_flutter/ui/invoice/edit/invoice_edit_vm.dart';
 import 'package:invoiceninja_flutter/utils/colors.dart';
 import 'package:invoiceninja_flutter/utils/completers.dart';
@@ -361,6 +362,17 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
     final precision =
         state.staticState.currencyMap[client.currencyId]?.precision ?? 2;
     final lineItems = invoice.lineItems.toList();
+    final groupHeaders = {
+      for (final item in lineItems)
+        if (item.isGroup && item.groupId.isNotEmpty) item.groupId: item,
+    };
+    bool hidesGroupChildPrices(InvoiceItemEntity item) {
+      final header = groupHeaders[item.groupId];
+      return !item.isGroup &&
+          header != null &&
+          (header.groupHasPrice || header.groupHideItemPrices);
+    }
+
     final includedLineItems = lineItems.where((lineItem) {
       return (lineItem.typeId == InvoiceItemEntity.TYPE_TASK &&
               widget.isTasks) ||
@@ -1215,6 +1227,9 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                           ),
                         );
                       } else if (column == COLUMN_UNIT_COST) {
+                        if (hidesGroupChildPrices(lineItems[index])) {
+                          return const SizedBox.shrink();
+                        }
                         return Focus(
                           onFocusChange: (hasFocus) => _onFocusChange(hasFocus),
                           skipTraversal: true,
@@ -1396,30 +1411,31 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                           availability: _reservationAvailability,
                         ),
                       ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: kTableColumnGap),
-                      child: Align(
-                        alignment: Alignment.bottomRight,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Text(
-                            formatNumber(
-                                  lineItems[index].total(invoice, precision),
-                                  context,
-                                  clientId: invoice.isPurchaseOrder
-                                      ? null
-                                      : invoice.clientId,
-                                  vendorId: invoice.isPurchaseOrder
-                                      ? invoice.vendorId
-                                      : null,
-                                ) ??
-                                '',
-                            style: TextStyle(color: state.greyColor),
-                            textAlign: TextAlign.right,
+                    if (!hidesGroupChildPrices(lineItems[index]))
+                      Padding(
+                        padding: const EdgeInsets.only(right: kTableColumnGap),
+                        child: Align(
+                          alignment: Alignment.bottomRight,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Text(
+                              formatNumber(
+                                    lineItems[index].total(invoice, precision),
+                                    context,
+                                    clientId: invoice.isPurchaseOrder
+                                        ? null
+                                        : invoice.clientId,
+                                    vendorId: invoice.isPurchaseOrder
+                                        ? invoice.vendorId
+                                        : null,
+                                  ) ??
+                                  '',
+                              style: TextStyle(color: state.greyColor),
+                              textAlign: TextAlign.right,
+                            ),
                           ),
                         ),
                       ),
-                    ),
                     PopupMenuButton<String>(
                       icon: Icon(Icons.more_vert),
                       enabled: !lineItems[index].isEmpty ||
@@ -1430,6 +1446,14 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                         final options = {
                           if (!lineItems[index].isEmpty)
                             localization.clone: Icons.control_point_duplicate,
+                          if (canCreateGroup && lineItems[index].isGroup)
+                            localization.editGroup: Icons.edit,
+                          if (canCreateGroup &&
+                              !lineItems[index].isGroup &&
+                              !lineItems[index].isEmpty &&
+                              invoice.lineItems.any((item) => item.isGroup))
+                            '${localization.select} ${localization.group}':
+                                Icons.account_tree_outlined,
                           if (includedLineItems.length > 1)
                             localization.insertBelow: MdiIcons.plus,
                           if (widget.isTasks &&
@@ -1456,7 +1480,7 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                                 ))
                             .toList();
                       },
-                      onSelected: (String action) {
+                      onSelected: (String action) async {
                         if (action == localization.viewTask) {
                           viewEntityById(
                               entityId: lineItems[index].taskId,
@@ -1476,6 +1500,23 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                           viewModel.addLineItem!(index + 1);
                         } else if (action == localization.clone) {
                           viewModel.cloneLineItem!(index);
+                        } else if (action == localization.editGroup) {
+                          await showDialog<ItemEditDetails>(
+                            context: context,
+                            builder: (context) => ItemEditDetails(
+                              viewModel: viewModel,
+                              entityViewModel: widget.entityViewModel,
+                              invoiceItem: lineItems[index],
+                              index: index,
+                            ),
+                          );
+                        } else if (action ==
+                            '${localization.select} ${localization.group}') {
+                          await showMoveToGroupDialog(
+                            context: context,
+                            viewModel: viewModel,
+                            itemIndex: index,
+                          );
                         }
                         _updateTable();
                       },

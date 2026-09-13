@@ -66,7 +66,8 @@ List<InvoiceItemEntity> convertProductToInvoiceItems({
       ..quantity = 1
       ..groupId = groupId
       ..groupTitle = product.productKey
-      ..groupHideItemPrices = product.groupHideItemPrices
+      ..groupHideItemPrices =
+          product.groupHasPrice || product.groupHideItemPrices
       ..groupHasPrice = product.groupHasPrice
       ..groupPrice = convertCost(product.groupPrice)
       ..taxCategoryId = product.taxCategoryId
