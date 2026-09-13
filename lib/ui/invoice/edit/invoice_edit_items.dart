@@ -456,7 +456,9 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
                   _onChanged();
                 },
               ),
-            if (!widget.invoiceItem.isTask && company.enableTimeCoefficient)
+            if (!widget.invoiceItem.isTask &&
+                company.enableTimeCoefficient &&
+                timeCoefficients.isEmpty)
               DecoratedFormField(
                 label: reservationText(context, 'timeCoefficient'),
                 controller: _timeCoefficientController,

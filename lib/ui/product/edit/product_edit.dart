@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:invoiceninja_flutter/constants.dart';
 
 // Project imports:
-import 'package:invoiceninja_flutter/data/models/entities.dart';
 import 'package:invoiceninja_flutter/data/models/models.dart';
 import 'package:invoiceninja_flutter/ui/app/edit_scaffold.dart';
+import 'package:invoiceninja_flutter/ui/app/entity_dropdown.dart';
 import 'package:invoiceninja_flutter/ui/app/form_card.dart';
 import 'package:invoiceninja_flutter/ui/app/forms/app_dropdown_button.dart';
 import 'package:invoiceninja_flutter/ui/app/forms/app_form.dart';
@@ -210,25 +210,25 @@ class _ProductEditState extends State<ProductEdit> {
                       .onChanged(product.rebuild((b) => b..isGroup = value)),
                 ),
                 if (product.isGroup) ...[
-                  DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                        labelText:
-                            '${localization.add} ${localization.product}'),
-                    items: viewModel.state.productState.map.values
+                  EntityDropdown(
+                    entityType: EntityType.product,
+                    entityList: viewModel.state.productState.map.values
                         .where((candidate) =>
                             candidate.id != product.id &&
                             candidate.isActive &&
                             !candidate.isGroup &&
                             !product.groupItems
                                 .any((item) => item.productId == candidate.id))
-                        .map((candidate) => DropdownMenuItem<String>(
-                              value: candidate.id,
-                              child: Text(candidate.productKey),
-                            ))
+                        .map((candidate) => candidate.id)
                         .toList(),
-                    onChanged: (productId) {
-                      final child = viewModel.state.productState.map[productId];
-                      if (child == null) return;
+                    labelText: '${localization.add} ${localization.product}',
+                    allowClearing: false,
+                    clearAfterSelection: true,
+                    onSelected: (entity) {
+                      final child = entity as ProductEntity?;
+                      if (child == null) {
+                        return;
+                      }
                       final groupItem = ProductGroupItemEntity((b) => b
                         ..productId = child.id
                         ..quantity = child.quantity == 0 ? 1 : child.quantity

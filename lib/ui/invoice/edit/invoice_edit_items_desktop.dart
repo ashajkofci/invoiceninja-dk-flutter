@@ -130,6 +130,8 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
           (lineItem.typeId != InvoiceItemEntity.TYPE_TASK && !widget.isTasks) ||
           lineItem.isEmpty;
     }).toList();
+    final hasTimeCoefficientTemplates =
+        decodeTimeCoefficients(company.timeCoefficientsJson).isNotEmpty;
 
     final hasTax1 = company.enableFirstItemTaxRate ||
         includedLineItems.any((item) => item.taxName1.isNotEmpty);
@@ -256,6 +258,7 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
         _columns.add(COLUMN_TIME_COEFFICIENT_NAME);
       } else if (ProductItemFields.timeCoefficient == column &&
           company.enableTimeCoefficient &&
+          !hasTimeCoefficientTemplates &&
           !widget.isTasks) {
         _columns.add(COLUMN_TIME_COEFFICIENT);
       } else if ((ProductItemFields.custom1 == column ||
@@ -352,6 +355,8 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
     final company = state.company;
 
     final invoice = viewModel.invoice!;
+    final canCreateGroup =
+        !widget.isTasks && (invoice.isInvoice || invoice.isQuote);
     final client = state.clientState.get(invoice.clientId);
     final precision =
         state.staticState.currencyMap[client.currencyId]?.precision ?? 2;
@@ -516,7 +521,8 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                       ..._columns
                           .map((column) {
                             if (column == COLUMN_ITEM) {
-                              return Text(item.productKey);
+                              return Text(
+                                  '${item.isGroupChild(invoice) ? '↳ ' : ''}${item.productKey}');
                             } else if (column == COLUMN_DESCRIPTION) {
                               return Text(
                                 item.notes,
@@ -659,16 +665,40 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
         localization!.lineTotal,
         isNumeric: true,
       ),
-      IconButton(
-        icon: Icon(Icons.swap_vert),
-        color: tableFontColor.isNotEmpty
-            ? convertHexStringToColor(tableFontColor)
-            : null,
-        onPressed: includedLineItems.where((item) => !item.isEmpty).length < 2
-            ? null
-            : () {
-                setState(() => _isReordering = !_isReordering);
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (canCreateGroup)
+            IconButton(
+              icon: Icon(Icons.view_agenda_outlined),
+              tooltip: '${localization.create} ${localization.group}',
+              onPressed: () {
+                final groupId = BaseEntity.nextId;
+                viewModel.addLineItem!(
+                  null,
+                  InvoiceItemEntity(
+                    productKey: localization.group,
+                    typeId: InvoiceItemEntity.TYPE_GROUP,
+                  ).rebuild((b) => b
+                    ..groupId = groupId
+                    ..groupTitle = localization.group
+                    ..quantity = 1),
+                );
               },
+            ),
+          IconButton(
+            icon: Icon(Icons.swap_vert),
+            color: tableFontColor.isNotEmpty
+                ? convertHexStringToColor(tableFontColor)
+                : null,
+            onPressed:
+                includedLineItems.where((item) => !item.isEmpty).length < 2
+                    ? null
+                    : () {
+                        setState(() => _isReordering = !_isReordering);
+                      },
+          ),
+        ],
       )
     ]);
 
@@ -679,7 +709,7 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
           _columns.indexOf(COLUMN_ITEM): FlexColumnWidth(1.3),
           _columns.indexOf(COLUMN_DESCRIPTION): FlexColumnWidth(2.2),
           _columns.length + (_showReservationStatus ? 2 : 1):
-              FixedColumnWidth(40),
+              FixedColumnWidth(canCreateGroup ? 96 : 48),
         },
         // TODO change to top once we can set maxLines to 2
         defaultVerticalAlignment: TableCellVerticalAlignment.bottom,
@@ -864,20 +894,32 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                                   TextEditingController textEditingController,
                                   FocusNode focusNode,
                                   VoidCallback onFieldSubmitted) {
-                                return DecoratedFormField(
-                                  showClear: false,
-                                  controller: textEditingController,
-                                  keyboardType: TextInputType.text,
-                                  focusNode: focusNode,
-                                  onFieldSubmitted: (String value) {
-                                    onFieldSubmitted();
-                                  },
-                                  onChanged: (value) {
-                                    _onChanged(
-                                        lineItems[index].rebuild(
-                                            (b) => b..productKey = value),
-                                        index);
-                                  },
+                                return Row(
+                                  children: [
+                                    if (lineItems[index].isGroupChild(invoice))
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 8),
+                                        child: Text('↳'),
+                                      ),
+                                    Expanded(
+                                      child: DecoratedFormField(
+                                        showClear: false,
+                                        controller: textEditingController,
+                                        keyboardType: TextInputType.text,
+                                        focusNode: focusNode,
+                                        onFieldSubmitted: (String value) {
+                                          onFieldSubmitted();
+                                        },
+                                        onChanged: (value) {
+                                          _onChanged(
+                                              lineItems[index].rebuild(
+                                                  (b) => b..productKey = value),
+                                              index);
+                                        },
+                                      ),
+                                    ),
+                                  ],
                                 );
                               },
                               optionsViewBuilder: (BuildContext context,

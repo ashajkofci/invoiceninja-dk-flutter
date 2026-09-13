@@ -42,6 +42,7 @@ class EntityDropdown extends StatefulWidget {
     this.overrideSuggestedLabel,
     this.onCreateNew,
     this.excludeIds = const [],
+    this.clearAfterSelection = false,
   });
 
   final EntityType? entityType;
@@ -60,6 +61,7 @@ class EntityDropdown extends StatefulWidget {
   final Function(SelectableEntity?)? overrideSuggestedLabel;
   final Function(Completer<SelectableEntity> completer, String)? onCreateNew;
   final List<String> excludeIds;
+  final bool clearAfterSelection;
 
   @override
   _EntityDropdownState createState() => _EntityDropdownState();
@@ -196,7 +198,7 @@ class _EntityDropdownState extends State<EntityDropdown> {
                   : entity.listDisplayName;
 
               if (update) {
-                _textController.text = label!;
+                _textController.text = widget.clearAfterSelection ? '' : label!;
               }
 
               if (widget.onFieldSubmitted != null) {
@@ -318,6 +320,9 @@ class _EntityDropdownState extends State<EntityDropdown> {
 
               void _wrapUp(SelectableEntity entity) {
                 widget.onSelected(entity);
+                if (widget.clearAfterSelection) {
+                  _textController.clear();
+                }
                 _focusNode.requestFocus();
 
                 WidgetsBinding.instance.addPostFrameCallback((duration) {
