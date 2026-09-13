@@ -257,8 +257,30 @@ class _ProductEditState extends State<ProductEdit> {
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(product.groupItems[index].productKey),
-                      subtitle: Text(
-                          '${localization.quantity}: ${product.groupItems[index].quantity}'),
+                      subtitle: TextFormField(
+                        key: ValueKey(
+                            'group_quantity_${product.groupItems[index].productId}'),
+                        initialValue: formatNumber(
+                            product.groupItems[index].quantity, context,
+                            formatNumberType: FormatNumberType.inputAmount),
+                        decoration:
+                            InputDecoration(labelText: localization.quantity),
+                        keyboardType: TextInputType.numberWithOptions(
+                            decimal: true, signed: false),
+                        validator: (value) => (parseDouble(value) ?? 0) > 0
+                            ? null
+                            : localization.pleaseEnterAValue,
+                        onChanged: (value) {
+                          final quantity = parseDouble(value) ?? 0;
+                          if (quantity <= 0) {
+                            return;
+                          }
+                          viewModel.onChanged(product.rebuild((b) =>
+                              b.groupItems[index] = product.groupItems[index]
+                                  .rebuild(
+                                      (item) => item..quantity = quantity)));
+                        },
+                      ),
                       trailing: IconButton(
                         icon: Icon(Icons.delete_outline),
                         onPressed: () => viewModel.onChanged(product
