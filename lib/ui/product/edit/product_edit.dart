@@ -14,7 +14,6 @@ import 'package:invoiceninja_flutter/ui/app/forms/decorated_form_field.dart';
 import 'package:invoiceninja_flutter/ui/app/invoice/tax_rate_dropdown.dart';
 import 'package:invoiceninja_flutter/ui/app/scrollable_listview.dart';
 import 'package:invoiceninja_flutter/ui/product/edit/product_edit_vm.dart';
-import 'package:invoiceninja_flutter/utils/completers.dart';
 import 'package:invoiceninja_flutter/utils/formatting.dart';
 import 'package:invoiceninja_flutter/utils/localization.dart';
 
@@ -51,8 +50,6 @@ class _ProductEditState extends State<ProductEdit> {
   final _groupPriceController = TextEditingController();
 
   List<TextEditingController> _controllers = [];
-  final _debouncer = Debouncer();
-
   @override
   void didChangeDependencies() {
     _controllers = [
@@ -148,9 +145,7 @@ class _ProductEditState extends State<ProductEdit> {
       ..imageUrl = _imageUrlController.text.trim());
 
     if (product != widget.viewModel.product) {
-      _debouncer.run(() {
-        widget.viewModel.onChanged(product);
-      });
+      widget.viewModel.onChanged(product);
     }
   }
 
