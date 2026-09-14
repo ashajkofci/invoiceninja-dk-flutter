@@ -37,6 +37,8 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>FLTEnableImpeller</key>
 	<false/>
+	<key>GIDClientID</key>
+	<string>640903115046-t7e4kgi5af6tjjqv75i02pfkgugns3bh.apps.googleusercontent.com</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>

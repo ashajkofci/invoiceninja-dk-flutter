@@ -291,6 +291,15 @@ class CustomFieldsSettings extends StatelessWidget {
           onTaxesChanged: (value) => viewModel.onCompanyChanged(
               company.rebuild((b) => b..enableCustomSurchargeTaxes4 = value)),
         ),
+        if (fieldType == CustomFieldType.product ||
+            fieldType == CustomFieldType.invoice)
+          for (var index = 5; index <= 8; index++)
+            CustomFormField(
+              label: localization.lookup(labelKey),
+              value: company.customFields['$fieldType$index'],
+              onChanged: (value) => viewModel.onCompanyChanged(company
+                  .rebuild((b) => b..customFields['$fieldType$index'] = value)),
+            ),
       ],
     );
   }
