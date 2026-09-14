@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:redux/redux.dart';
 import 'package:redux_logging/redux_logging.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:invoiceninja_flutter/utils/platforms.dart';
 // import 'package:bitsdojo_window/bitsdojo_window.dart';
@@ -196,32 +195,7 @@ void main({bool isTesting = false}) async {
                 ),
               ]));
 
-  if (!kReleaseMode) {
-    runApp(InvoiceNinjaApp(store: store));
-  } else {
-    await SentryFlutter.init(
-      (options) {
-        options.dsn = Config.SENTRY_DNS;
-        options.release = const String.fromEnvironment('SENTRY_RELEASE',
-            defaultValue: kClientVersion);
-        options.dist = kClientVersion;
-        options.beforeSend = (SentryEvent event, Hint hint) {
-          final state = store.state;
-          final account = state.account;
-          final reportErrors = account.reportErrors;
-
-          if (!reportErrors) {
-            return null;
-          }
-
-          event.environment = '${store.state.environment}'.split('.').last;
-
-          return event;
-        };
-      },
-      appRunner: () => runApp(InvoiceNinjaApp(store: store)),
-    );
-  }
+  runApp(InvoiceNinjaApp(store: store));
 
   /*
   if (isWindows()) {

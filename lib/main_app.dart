@@ -20,7 +20,6 @@ import 'package:invoiceninja_flutter/ui/settings/e_invoice_settings_vm.dart';
 import 'package:invoiceninja_flutter/ui/settings/payment_settings_vm.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:redux/redux.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 // Project imports:
@@ -390,9 +389,6 @@ class InvoiceNinjaAppState extends State<InvoiceNinjaApp> {
                       .toList(),
                   debugShowCheckedModeBanner: false,
                   //showPerformanceOverlay: true,
-                  navigatorObservers: [
-                    SentryNavigatorObserver(),
-                  ],
                   localizationsDelegates: [
                     const AppLocalizationsDelegate(),
                     GlobalCupertinoLocalizations.delegate,

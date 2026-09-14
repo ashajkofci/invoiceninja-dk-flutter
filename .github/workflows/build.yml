@@ -16,12 +16,7 @@ jobs:
       commit_secret: ${{secrets.commit_secret}}
       commit_email: ${{secrets.commit_email}}
       commit_name: ${{secrets.commit_name}}
-      app_sentry: ${{secrets.app_sentry}}
       api_secret: ${{secrets.api_secret}}
-      sentry_auth_token: ${{secrets.sentry_auth_token}}
-      sentry_org: ${{secrets.sentry_org}}
-      sentry_project: ${{secrets.sentry_project}}
-      sentry_url: ${{secrets.sentry_url}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -36,10 +31,6 @@ jobs:
         with:
           flutter-version: ${{ steps.flutter-version.outputs.version }}
           #channel: 'stable'
-
-      - name: Install Sentry
-        run: |
-          curl -sL https://sentry.io/get-cli/ | bash
 
       - name: Check Flutter
         run: |
@@ -57,11 +48,7 @@ jobs:
 
       - name: Build Hosted App
         run: |
-          #export SENTRY_RELEASE=$(sentry-cli releases propose-version)
-          #sentry-cli --auth-token ${{secrets.sentry_auth_token}} --url ${{secrets.sentry_url}} releases --org ${{secrets.sentry_org}} new $SENTRY_RELEASE --project ${{secrets.sentry_project}}
-          #sentry-cli --auth-token ${{secrets.sentry_auth_token}} --url ${{secrets.sentry_url}} releases --org ${{secrets.sentry_org}} set-commits --auto $SENTRY_RELEASE
-
-          flutter build web --dart-define=SENTRY_RELEASE=$SENTRY_RELEASE --source-maps
+          flutter build web --source-maps
 
           sed -i '/index.html/d' build/web/flutter_service_worker.js
 
@@ -78,14 +65,6 @@ jobs:
           git commit -m 'Admin Portal - Hosted'
           git push
           cd ..
-
-          #sentry-cli --auth-token ${{secrets.sentry_auth_token}} --url ${{secrets.sentry_url}} releases --project ${{secrets.sentry_project}} --org ${{secrets.sentry_org}} files $SENTRY_RELEASE upload-sourcemaps . --ext dart --rewrite
-          cd ./build/web
-          #sentry-cli --auth-token ${{secrets.sentry_auth_token}} --url ${{secrets.sentry_url}} releases --project ${{secrets.sentry_project}} --org ${{secrets.sentry_org}} files $SENTRY_RELEASE upload-sourcemaps . --ext map --ext js --rewrite
-          cd ../..
-
-          #sentry-cli --auth-token ${{secrets.sentry_auth_token}} --url ${{secrets.sentry_url}} releases --org ${{secrets.sentry_org}} finalize $SENTRY_RELEASE
-          #sentry-cli --auth-token ${{secrets.sentry_auth_token}} --url ${{secrets.sentry_url}} releases --org ${{secrets.sentry_org}} deploys $SENTRY_RELEASE new -e production
 
       - name: Build Profile App
         run: |

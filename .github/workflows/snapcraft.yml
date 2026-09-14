@@ -36,7 +36,6 @@ jobs:
           flutter config --enable-linux-desktop
           flutter build linux --release -t lib/main.dart
           execstack --clear-execstack build/linux/x64/release/bundle/lib/crashpad_handler
-          execstack --clear-execstack build/linux/x64/release/bundle/lib/libsentry.so
 
       - name: Install Snapcraft
         run: |
