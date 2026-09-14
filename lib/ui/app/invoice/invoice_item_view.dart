@@ -11,6 +11,7 @@ import 'package:invoiceninja_flutter/data/models/entities.dart';
 import 'package:invoiceninja_flutter/data/models/invoice_model.dart';
 import 'package:invoiceninja_flutter/redux/app/app_state.dart';
 import 'package:invoiceninja_flutter/ui/app/lists/list_divider.dart';
+import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
 import 'package:invoiceninja_flutter/utils/formatting.dart';
 import 'package:invoiceninja_flutter/utils/localization.dart';
 import 'package:invoiceninja_flutter/utils/strings.dart';
@@ -63,6 +64,11 @@ class InvoiceItemListTile extends StatelessWidget {
       subtitle = localization!.group;
     } else if (hideGroupChildPrices && proRataUnitPrice == null) {
       subtitle = invoiceItem!.notes;
+    }
+
+    if (company.enableTimeCoefficient) {
+      subtitle +=
+          ' • ${invoiceItem!.timeCoefficientName.isNotEmpty ? invoiceItem!.timeCoefficientName : reservationText(context, 'timeCoefficient')}: ${invoiceItem!.timeCoefficient}';
     }
 
     if (invoiceItem!.discount != 0) {
