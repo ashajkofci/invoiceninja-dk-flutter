@@ -153,8 +153,9 @@ flutter:
 
 msix_config:
   display_name: Invoice Ninja DKPROD
+  msix_version: 5.0.194.194
   publisher_display_name: DKPROD
-  identity_name: InvoiceNinja.InvoiceNinja
+  identity_name: DKPROD.InvoiceNinja
   publisher: CN=2B7AA393-06A0-46F5-AF85-1917142440C3
   architecture: x64
   capabilities: 'internetClient'

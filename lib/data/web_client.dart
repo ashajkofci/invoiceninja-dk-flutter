@@ -21,7 +21,13 @@ import 'package:invoiceninja_flutter/utils/formatting.dart';
 import 'package:invoiceninja_flutter/utils/strings.dart';
 
 class WebClient {
-  const WebClient();
+  const WebClient({
+    http.Client Function()? clientFactory,
+    this.requestTimeout = const Duration(seconds: kMaxRequestSeconds),
+  }) : _clientFactory = clientFactory;
+
+  final http.Client Function()? _clientFactory;
+  final Duration requestTimeout;
 
   Future<dynamic> get(
     String url,
@@ -46,12 +52,12 @@ class WebClient {
 
     print('GET: $url');
 
-    final client = http.Client();
-    final http.Response response = await client.get(
-      Uri.parse(url),
-      headers: _getHeaders(url, token),
+    final http.Response response = await _withClient(
+      (client) => client.get(
+        Uri.parse(url),
+        headers: _getHeaders(url, token),
+      ),
     );
-    client.close();
 
     _checkResponse(url, response);
 
@@ -59,7 +65,7 @@ class WebClient {
       return response;
     }
 
-    final dynamic jsonResponse = json.decode(response.body);
+    final dynamic jsonResponse = await compute(_decodeJson, response.body);
 
     return jsonResponse;
   }
@@ -98,19 +104,16 @@ class WebClient {
       );
       //print('Headers: $headers');
 
-      final client = http.Client();
-      response = await client
-          .post(
-            Uri.parse(url),
-            body: data,
-            headers: headers,
-          )
-          .timeout(
-            Duration(
-              seconds: rawResponse ? kMaxRawPostSeconds : kMaxPostSeconds,
-            ),
-          );
-      client.close();
+      response = await _withClient(
+        (client) => client.post(
+          Uri.parse(url),
+          body: data,
+          headers: headers,
+        ),
+        timeout: Duration(
+          seconds: rawResponse ? kMaxRawPostSeconds : kMaxPostSeconds,
+        ),
+      );
     }
 
     _checkResponse(url, response);
@@ -119,7 +122,7 @@ class WebClient {
       return response;
     }
 
-    final dynamic jsonResponse = json.decode(response.body);
+    final dynamic jsonResponse = await compute(_decodeJson, response.body);
 
     return jsonResponse;
   }
@@ -148,23 +151,23 @@ class WebClient {
       response = await _uploadFiles(url, token, [multipartFile],
           data: data, method: 'PUT');
     } else {
-      final client = http.Client();
-      response = await client.put(
-        Uri.parse(url),
-        body: data,
-        headers: _getHeaders(
-          url,
-          token,
-          password: password,
-          idToken: idToken,
+      response = await _withClient(
+        (client) => client.put(
+          Uri.parse(url),
+          body: data,
+          headers: _getHeaders(
+            url,
+            token,
+            password: password,
+            idToken: idToken,
+          ),
         ),
       );
-      client.close();
     }
 
     _checkResponse(url, response);
 
-    return json.decode(response.body);
+    return await compute(_decodeJson, response.body);
   }
 
   Future<dynamic> delete(
@@ -182,22 +185,34 @@ class WebClient {
 
     print('Delete: $url');
 
-    final client = http.Client();
-    final http.Response response = await client.delete(
-      Uri.parse(url),
-      headers: _getHeaders(
-        url,
-        token,
-        password: password,
-        idToken: idToken,
+    final http.Response response = await _withClient(
+      (client) => client.delete(
+        Uri.parse(url),
+        headers: _getHeaders(
+          url,
+          token,
+          password: password,
+          idToken: idToken,
+        ),
+        body: data,
       ),
-      body: data,
     );
-    client.close();
 
     _checkResponse(url, response);
 
-    return json.decode(response.body);
+    return await compute(_decodeJson, response.body);
+  }
+
+  Future<T> _withClient<T>(
+    Future<T> Function(http.Client client) request, {
+    Duration? timeout,
+  }) async {
+    final client = _clientFactory?.call() ?? http.Client();
+    try {
+      return await request(client).timeout(timeout ?? requestTimeout);
+    } finally {
+      client.close();
+    }
   }
 
   Map<String, String> _getHeaders(
@@ -332,3 +347,5 @@ class WebClient {
         .timeout(const Duration(minutes: 10));
   }
 }
+
+dynamic _decodeJson(String body) => json.decode(body);

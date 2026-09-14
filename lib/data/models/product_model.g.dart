@@ -1674,7 +1674,9 @@ class ProductGroupItemEntityBuilder
   String? get customValue8 => _$this._customValue8;
   set customValue8(String? customValue8) => _$this._customValue8 = customValue8;
 
-  ProductGroupItemEntityBuilder();
+  ProductGroupItemEntityBuilder() {
+    ProductGroupItemEntity._initializeBuilder(this);
+  }
 
   ProductGroupItemEntityBuilder get _$this {
     final $v = _$v;

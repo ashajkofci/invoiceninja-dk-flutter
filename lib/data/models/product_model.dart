@@ -464,6 +464,10 @@ abstract class ProductEntity extends Object
     ..groupHideItemPrices = false
     ..groupHasPrice = false
     ..groupPrice = 0
+    ..customValue5 = ''
+    ..customValue6 = ''
+    ..customValue7 = ''
+    ..customValue8 = ''
     ..groupItems = ListBuilder<ProductGroupItemEntity>();
 
   static Serializer<ProductEntity> get serializer => _$productEntitySerializer;
@@ -515,6 +519,14 @@ abstract class ProductGroupItemEntity
   String get customValue7;
   @BuiltValueField(wireName: 'custom_value8')
   String get customValue8;
+
+  // ignore: unused_element
+  static void _initializeBuilder(ProductGroupItemEntityBuilder builder) =>
+      builder
+        ..customValue5 = ''
+        ..customValue6 = ''
+        ..customValue7 = ''
+        ..customValue8 = '';
 
   static Serializer<ProductGroupItemEntity> get serializer =>
       _$productGroupItemEntitySerializer;

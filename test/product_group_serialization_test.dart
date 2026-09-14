@@ -21,7 +21,11 @@ void main() {
       ..customValue1 = ''
       ..customValue2 = ''
       ..customValue3 = ''
-      ..customValue4 = '');
+      ..customValue4 = ''
+      ..customValue5 = ''
+      ..customValue6 = ''
+      ..customValue7 = ''
+      ..customValue8 = '');
     final product = ProductEntity().rebuild((b) => b
       ..isGroup = true
       ..groupItems.add(child));
@@ -33,5 +37,20 @@ void main() {
       containsPair('product_id', 'child_hash'),
     ]);
     expect(data['group_items'][0]['quantity'], 2);
+
+    final legacyItem = Map<String, dynamic>.from(
+      data['group_items'][0] as Map<String, dynamic>,
+    )
+      ..remove('custom_value5')
+      ..remove('custom_value6')
+      ..remove('custom_value7')
+      ..remove('custom_value8');
+    final restored = serializers.deserializeWith(
+      ProductGroupItemEntity.serializer,
+      legacyItem,
+    )!;
+
+    expect(restored.customValue5, '');
+    expect(restored.customValue8, '');
   });
 }

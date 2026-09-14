@@ -231,13 +231,13 @@ Middleware<AppState> _createLoadState(
             ..userCompanyStates.replace(companyStates));
 
       AppBuilder.of(navigatorKey.currentContext!)!.rebuild();
+      final completer = Completer<Null>()
+        ..future.then<Null>((_) {
+          AppBuilder.of(navigatorKey.currentContext!)!.rebuild();
+          store.dispatch(UpdatedSetting());
+        });
       store.dispatch(LoadStateSuccess(appState));
-      store.dispatch(RefreshData(
-          completer: Completer<Null>()
-            ..future.then<Null>((_) {
-              AppBuilder.of(navigatorKey.currentContext!)!.rebuild();
-              store.dispatch(UpdatedSetting());
-            })));
+      store.dispatch(initialDataLoadAction(appState, completer));
 
       if (uiState!.currentRoute != LoginScreen.route &&
           uiState!.currentRoute.isNotEmpty) {
@@ -300,6 +300,15 @@ Middleware<AppState> _createLoadState(
 
     next(action);
   };
+}
+
+@visibleForTesting
+dynamic initialDataLoadAction(AppState state, Completer<Null> completer) {
+  if (state.company.isLarge && !state.isLoaded) {
+    return LoadClients(completer: completer);
+  }
+
+  return RefreshData(completer: completer);
 }
 
 List<String> _getRoutes(AppState state) {

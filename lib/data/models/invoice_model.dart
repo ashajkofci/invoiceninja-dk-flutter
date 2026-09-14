@@ -1648,7 +1648,11 @@ abstract class InvoiceEntity extends Object
     ..taxData.replace(TaxDataEntity())
     ..eInvoice.replace(EInvoiceEntity())
     ..subscriptionId = ''
-    ..locationId = '';
+    ..locationId = ''
+    ..customValue5 = ''
+    ..customValue6 = ''
+    ..customValue7 = ''
+    ..customValue8 = '';
 
   static Serializer<InvoiceEntity> get serializer => _$invoiceEntitySerializer;
 }
@@ -2062,7 +2066,11 @@ abstract class InvoiceItemEntity
     ..groupTitle = ''
     ..groupHideItemPrices = false
     ..groupHasPrice = false
-    ..groupPrice = 0;
+    ..groupPrice = 0
+    ..customValue5 = ''
+    ..customValue6 = ''
+    ..customValue7 = ''
+    ..customValue8 = '';
 
   static Serializer<InvoiceItemEntity> get serializer =>
       _$invoiceItemEntitySerializer;

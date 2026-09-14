@@ -201,6 +201,7 @@ const String kStatementIncludeAging = 'aging';
 
 const int kMaxNumberOfCompanies = 10;
 const int kMaxNumberOfHistory = 50;
+const int kMaxRequestSeconds = 120;
 const int kMaxPostSeconds = 120;
 const int kMaxRawPostSeconds = 600;
 const int kMaxEntitiesPerBulkAction = 100;
