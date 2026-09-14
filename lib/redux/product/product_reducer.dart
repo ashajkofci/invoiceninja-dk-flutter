@@ -30,6 +30,10 @@ final forceSelectedReducer = combineReducers<bool?>([
   TypedReducer<bool?, FilterProductsByCustom2>((completer, action) => false),
   TypedReducer<bool?, FilterProductsByCustom3>((completer, action) => false),
   TypedReducer<bool?, FilterProductsByCustom4>((completer, action) => false),
+  TypedReducer<bool?, FilterProductsByCustom5>((completer, action) => false),
+  TypedReducer<bool?, FilterProductsByCustom6>((completer, action) => false),
+  TypedReducer<bool?, FilterProductsByCustom7>((completer, action) => false),
+  TypedReducer<bool?, FilterProductsByCustom8>((completer, action) => false),
 ]);
 
 final int? Function(int, dynamic) tabIndexReducer = combineReducers<int?>([
@@ -97,6 +101,10 @@ Reducer<String?> selectedIdReducer = combineReducers([
   TypedReducer<String?, FilterProductsByCustom2>((selectedId, action) => ''),
   TypedReducer<String?, FilterProductsByCustom3>((selectedId, action) => ''),
   TypedReducer<String?, FilterProductsByCustom4>((selectedId, action) => ''),
+  TypedReducer<String?, FilterProductsByCustom5>((selectedId, action) => ''),
+  TypedReducer<String?, FilterProductsByCustom6>((selectedId, action) => ''),
+  TypedReducer<String?, FilterProductsByCustom7>((selectedId, action) => ''),
+  TypedReducer<String?, FilterProductsByCustom8>((selectedId, action) => ''),
 ]);
 
 final productListReducer = combineReducers<ListUIState>([
@@ -107,6 +115,14 @@ final productListReducer = combineReducers<ListUIState>([
   TypedReducer<ListUIState, FilterProductsByCustom2>(_filterProductsByCustom2),
   TypedReducer<ListUIState, FilterProductsByCustom3>(_filterProductsByCustom3),
   TypedReducer<ListUIState, FilterProductsByCustom4>(_filterProductsByCustom4),
+  TypedReducer<ListUIState, FilterProductsByCustom5>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 5)),
+  TypedReducer<ListUIState, FilterProductsByCustom6>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 6)),
+  TypedReducer<ListUIState, FilterProductsByCustom7>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 7)),
+  TypedReducer<ListUIState, FilterProductsByCustom8>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 8)),
   TypedReducer<ListUIState, StartProductMultiselect>(_startListMultiselect),
   TypedReducer<ListUIState, AddToProductMultiselect>(_addToListMultiselect),
   TypedReducer<ListUIState, RemoveFromProductMultiselect>(

@@ -100,6 +100,10 @@ class InvoiceEditDesktopState extends State<InvoiceEditDesktop>
   final _custom2Controller = TextEditingController();
   final _custom3Controller = TextEditingController();
   final _custom4Controller = TextEditingController();
+  final _custom5Controller = TextEditingController();
+  final _custom6Controller = TextEditingController();
+  final _custom7Controller = TextEditingController();
+  final _custom8Controller = TextEditingController();
   final _surcharge1Controller = TextEditingController();
   final _surcharge2Controller = TextEditingController();
   final _surcharge3Controller = TextEditingController();
@@ -150,6 +154,10 @@ class InvoiceEditDesktopState extends State<InvoiceEditDesktop>
       _custom2Controller,
       _custom3Controller,
       _custom4Controller,
+      _custom5Controller,
+      _custom6Controller,
+      _custom7Controller,
+      _custom8Controller,
       _surcharge1Controller,
       _surcharge2Controller,
       _surcharge3Controller,
@@ -174,6 +182,10 @@ class InvoiceEditDesktopState extends State<InvoiceEditDesktop>
     _custom2Controller.text = invoice.customValue2;
     _custom3Controller.text = invoice.customValue3;
     _custom4Controller.text = invoice.customValue4;
+    _custom5Controller.text = invoice.customValue5;
+    _custom6Controller.text = invoice.customValue6;
+    _custom7Controller.text = invoice.customValue7;
+    _custom8Controller.text = invoice.customValue8;
     _surcharge1Controller.text = formatNumber(invoice.customSurcharge1, context,
         formatNumberType: FormatNumberType.inputMoney)!;
     _surcharge2Controller.text = formatNumber(invoice.customSurcharge2, context,
@@ -216,6 +228,10 @@ class InvoiceEditDesktopState extends State<InvoiceEditDesktop>
       ..customValue2 = _custom2Controller.text.trim()
       ..customValue3 = _custom3Controller.text.trim()
       ..customValue4 = _custom4Controller.text.trim()
+      ..customValue5 = _custom5Controller.text.trim()
+      ..customValue6 = _custom6Controller.text.trim()
+      ..customValue7 = _custom7Controller.text.trim()
+      ..customValue8 = _custom8Controller.text.trim()
       ..customSurcharge1 = parseDouble(_surcharge1Controller.text)
       ..customSurcharge2 = parseDouble(_surcharge2Controller.text)
       ..customSurcharge3 = parseDouble(_surcharge3Controller.text)
@@ -907,6 +923,30 @@ class InvoiceEditDesktopState extends State<InvoiceEditDesktop>
                             controller: _custom4Controller,
                             field: CustomFieldType.invoice4,
                             value: invoice.customValue4,
+                            onSavePressed: _onSavePressed,
+                          ),
+                          CustomField(
+                            controller: _custom5Controller,
+                            field: CustomFieldType.invoice5,
+                            value: invoice.customValue5,
+                            onSavePressed: _onSavePressed,
+                          ),
+                          CustomField(
+                            controller: _custom6Controller,
+                            field: CustomFieldType.invoice6,
+                            value: invoice.customValue6,
+                            onSavePressed: _onSavePressed,
+                          ),
+                          CustomField(
+                            controller: _custom7Controller,
+                            field: CustomFieldType.invoice7,
+                            value: invoice.customValue7,
+                            onSavePressed: _onSavePressed,
+                          ),
+                          CustomField(
+                            controller: _custom8Controller,
+                            field: CustomFieldType.invoice8,
+                            value: invoice.customValue8,
                             onSavePressed: _onSavePressed,
                           ),
                         ],

@@ -34,11 +34,19 @@ class AppBottomBar extends StatefulWidget {
     this.onSelectedCustom2,
     this.onSelectedCustom3,
     this.onSelectedCustom4,
+    this.onSelectedCustom5,
+    this.onSelectedCustom6,
+    this.onSelectedCustom7,
+    this.onSelectedCustom8,
     this.statuses = const [],
     this.customValues1 = const [],
     this.customValues2 = const [],
     this.customValues3 = const [],
     this.customValues4 = const [],
+    this.customValues5 = const [],
+    this.customValues6 = const [],
+    this.customValues7 = const [],
+    this.customValues8 = const [],
     this.hideListOptions = false,
     this.iconButtons = const [],
     this.onPaymentTypeChanged,
@@ -56,10 +64,18 @@ class AppBottomBar extends StatefulWidget {
   final Function(String)? onSelectedCustom2;
   final Function(String)? onSelectedCustom3;
   final Function(String)? onSelectedCustom4;
+  final Function(String)? onSelectedCustom5;
+  final Function(String)? onSelectedCustom6;
+  final Function(String)? onSelectedCustom7;
+  final Function(String)? onSelectedCustom8;
   final List<String> customValues1;
   final List<String> customValues2;
   final List<String> customValues3;
   final List<String> customValues4;
+  final List<String> customValues5;
+  final List<String> customValues6;
+  final List<String> customValues7;
+  final List<String> customValues8;
   final List<String>? tableColumns;
   final List<String>? defaultTableColumns;
   final bool hideListOptions;
@@ -80,6 +96,10 @@ class _AppBottomBarState extends State<AppBottomBar> {
   PersistentBottomSheetController? _filterCustom2Controller;
   PersistentBottomSheetController? _filterCustom3Controller;
   PersistentBottomSheetController? _filterCustom4Controller;
+  PersistentBottomSheetController? _filterCustom5Controller;
+  PersistentBottomSheetController? _filterCustom6Controller;
+  PersistentBottomSheetController? _filterCustom7Controller;
+  PersistentBottomSheetController? _filterCustom8Controller;
 
   int kSortPanel = 0;
   int kFilterStatePanel = 1;
@@ -89,6 +109,10 @@ class _AppBottomBarState extends State<AppBottomBar> {
   int kCustom2Panel = 5;
   int kCustom3Panel = 6;
   int kCustom4Panel = 7;
+  int kCustom5Panel = 8;
+  int kCustom6Panel = 9;
+  int kCustom7Panel = 10;
+  int kCustom8Panel = 11;
 
   int? closeBottomSheet() {
     if (_filterStateController != null) {
@@ -129,6 +153,26 @@ class _AppBottomBarState extends State<AppBottomBar> {
     if (_filterCustom4Controller != null) {
       _filterCustom4Controller!.close();
       return kCustom4Panel;
+    }
+
+    if (_filterCustom5Controller != null) {
+      _filterCustom5Controller!.close();
+      return kCustom5Panel;
+    }
+
+    if (_filterCustom6Controller != null) {
+      _filterCustom6Controller!.close();
+      return kCustom6Panel;
+    }
+
+    if (_filterCustom7Controller != null) {
+      _filterCustom7Controller!.close();
+      return kCustom7Panel;
+    }
+
+    if (_filterCustom8Controller != null) {
+      _filterCustom8Controller!.close();
+      return kCustom8Panel;
     }
 
     return null;
@@ -355,6 +399,58 @@ class _AppBottomBarState extends State<AppBottomBar> {
       });
     };
 
+    void showAdditionalCustomFilter(int number) {
+      final panel = [
+        kCustom5Panel,
+        kCustom6Panel,
+        kCustom7Panel,
+        kCustom8Panel
+      ][number - 5];
+      if (closeBottomSheet() == panel) {
+        return;
+      }
+
+      final controller = Scaffold.of(context).showBottomSheet((context) {
+        return CustomFieldSelector(
+          customNumber: number,
+          entityType: widget.entityType,
+          customFilters:
+              state.getListState(widget.entityType).getCustomFilters(number)!,
+          onSelected: [
+            widget.onSelectedCustom5,
+            widget.onSelectedCustom6,
+            widget.onSelectedCustom7,
+            widget.onSelectedCustom8,
+          ][number - 5]!,
+          customValues: [
+            widget.customValues5,
+            widget.customValues6,
+            widget.customValues7,
+            widget.customValues8,
+          ][number - 5],
+        );
+      });
+
+      switch (number) {
+        case 5:
+          _filterCustom5Controller = controller;
+          controller.closed.whenComplete(() => _filterCustom5Controller = null);
+          break;
+        case 6:
+          _filterCustom6Controller = controller;
+          controller.closed.whenComplete(() => _filterCustom6Controller = null);
+          break;
+        case 7:
+          _filterCustom7Controller = controller;
+          controller.closed.whenComplete(() => _filterCustom7Controller = null);
+          break;
+        case 8:
+          _filterCustom8Controller = controller;
+          controller.closed.whenComplete(() => _filterCustom8Controller = null);
+          break;
+      }
+    }
+
     return StoreBuilder(builder: (BuildContext context, Store<AppState> store) {
       final localization = AppLocalization.of(context);
       final isList =
@@ -507,6 +603,40 @@ class _AppBottomBarState extends State<AppBottomBar> {
                         ? Theme.of(context).colorScheme.secondary
                         : null,
                   ),
+                for (final number in [5, 6, 7, 8])
+                  if ([
+                    widget.customValues5,
+                    widget.customValues6,
+                    widget.customValues7,
+                    widget.customValues8,
+                  ][number - 5]
+                      .isNotEmpty)
+                    IconButton(
+                      tooltip: prefState.enableTooltips
+                          ? localization!.filteredBy.replaceFirst(
+                              ':value',
+                              [
+                                widget.customValues5,
+                                widget.customValues6,
+                                widget.customValues7,
+                                widget.customValues8,
+                              ][number - 5]
+                                  .join(', '))
+                          : '',
+                      icon: Icon([
+                        Icons.filter_5,
+                        Icons.filter_6,
+                        Icons.filter_7,
+                        Icons.filter_8,
+                      ][number - 5]),
+                      onPressed: () => showAdditionalCustomFilter(number),
+                      color: state
+                              .getListState(widget.entityType)
+                              .getCustomFilters(number)!
+                              .isNotEmpty
+                          ? Theme.of(context).colorScheme.secondary
+                          : null,
+                    ),
                 if (!widget.hideListOptions) ...[
                   if (isList && widget.sortFields.isNotEmpty)
                     IconButton(

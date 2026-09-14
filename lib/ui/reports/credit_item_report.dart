@@ -31,6 +31,10 @@ enum CreditItemReportFields {
   custom2,
   custom3,
   custom4,
+  custom5,
+  custom6,
+  custom7,
+  custom8,
   creditNumber,
   creditDate,
   client,
@@ -160,6 +164,18 @@ ReportResult lineItemReport(
             break;
           case CreditItemReportFields.custom4:
             value = lineItem.customValue4;
+            break;
+          case CreditItemReportFields.custom5:
+            value = lineItem.customValue5;
+            break;
+          case CreditItemReportFields.custom6:
+            value = lineItem.customValue6;
+            break;
+          case CreditItemReportFields.custom7:
+            value = lineItem.customValue7;
+            break;
+          case CreditItemReportFields.custom8:
+            value = lineItem.customValue8;
             break;
           case CreditItemReportFields.description:
             value = lineItem.notes;

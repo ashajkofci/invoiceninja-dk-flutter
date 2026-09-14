@@ -60,11 +60,18 @@ Start Laravel first, then build from a Windows terminal with the Flutter version
 listed in `.flutter-version`:
 
 ```powershell
-flutter pub get
-flutter build windows
+.\build_windows.bat
 ```
 
-The executable is created below `build\windows\x64\runner\Release`.
+The executable, MSIX, matching public certificate, and installer script are
+created below `build\windows\x64\runner\Release`. Copy the full `Release`
+directory to another Windows computer and run `install_msix.bat`; it requests
+administrator access, trusts the certificate in the local machine's `Trusted
+People` store, and installs the MSIX.
+
+The default MSIX development certificate is only suitable for controlled test
+computers. Use a private production code-signing certificate or the Microsoft
+Store before distributing the application publicly.
 
 ### Android build from WSL2
 

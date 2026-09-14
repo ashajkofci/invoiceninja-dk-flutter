@@ -139,6 +139,14 @@ class InvoiceScreen extends StatelessWidget {
             excludeBlank: true),
         customValues4: company.getCustomFieldValues(CustomFieldType.invoice4,
             excludeBlank: true),
+        customValues5: company.getCustomFieldValues(CustomFieldType.invoice5,
+            excludeBlank: true),
+        customValues6: company.getCustomFieldValues(CustomFieldType.invoice6,
+            excludeBlank: true),
+        customValues7: company.getCustomFieldValues(CustomFieldType.invoice7,
+            excludeBlank: true),
+        customValues8: company.getCustomFieldValues(CustomFieldType.invoice8,
+            excludeBlank: true),
         onSelectedCustom1: (value) =>
             store.dispatch(FilterInvoicesByCustom1(value)),
         onSelectedCustom2: (value) =>
@@ -147,6 +155,14 @@ class InvoiceScreen extends StatelessWidget {
             store.dispatch(FilterInvoicesByCustom3(value)),
         onSelectedCustom4: (value) =>
             store.dispatch(FilterInvoicesByCustom4(value)),
+        onSelectedCustom5: (value) =>
+            store.dispatch(FilterInvoicesByCustom5(value)),
+        onSelectedCustom6: (value) =>
+            store.dispatch(FilterInvoicesByCustom6(value)),
+        onSelectedCustom7: (value) =>
+            store.dispatch(FilterInvoicesByCustom7(value)),
+        onSelectedCustom8: (value) =>
+            store.dispatch(FilterInvoicesByCustom8(value)),
         statuses: statuses,
         onCheckboxPressed: () {
           if (store.state.invoiceListState.isInMultiselect()) {

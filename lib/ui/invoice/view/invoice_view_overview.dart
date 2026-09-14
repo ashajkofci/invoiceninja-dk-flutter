@@ -243,6 +243,21 @@ class InvoiceOverview extends StatelessWidget {
           value: invoice.customValue4);
     }
 
+    for (final field in [
+      (CustomFieldType.invoice5, invoice.customValue5),
+      (CustomFieldType.invoice6, invoice.customValue6),
+      (CustomFieldType.invoice7, invoice.customValue7),
+      (CustomFieldType.invoice8, invoice.customValue8),
+    ]) {
+      if (company.hasCustomField(field.$1) && field.$2.isNotEmpty) {
+        fields[company.getCustomFieldLabel(field.$1)] = formatCustomValue(
+          context: context,
+          field: field.$1,
+          value: field.$2,
+        );
+      }
+    }
+
     if (invoice.isPurchaseOrder) {
       widgets.add(
         EntityListTile(

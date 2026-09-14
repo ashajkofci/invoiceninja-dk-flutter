@@ -30,6 +30,10 @@ enum ProductReportFields {
   product2,
   product3,
   product4,
+  product5,
+  product6,
+  product7,
+  product8,
   stock_quantity,
   notification_threshold,
   created_at,
@@ -150,6 +154,30 @@ ReportResult productReport(
             customFieldType: CustomFieldType.product4,
             company: userCompany.company,
           );
+          break;
+        case ProductReportFields.product5:
+          value = presentCustomField(
+              value: product.customValue5,
+              customFieldType: CustomFieldType.product5,
+              company: userCompany.company);
+          break;
+        case ProductReportFields.product6:
+          value = presentCustomField(
+              value: product.customValue6,
+              customFieldType: CustomFieldType.product6,
+              company: userCompany.company);
+          break;
+        case ProductReportFields.product7:
+          value = presentCustomField(
+              value: product.customValue7,
+              customFieldType: CustomFieldType.product7,
+              company: userCompany.company);
+          break;
+        case ProductReportFields.product8:
+          value = presentCustomField(
+              value: product.customValue8,
+              customFieldType: CustomFieldType.product8,
+              company: userCompany.company);
           break;
         case ProductReportFields.stock_quantity:
           value = product.stockQuantity.toDouble();

@@ -326,6 +326,14 @@ String _invoiceCustomValue(InvoiceEntity invoice, int field) {
       return invoice.customValue3;
     case 4:
       return invoice.customValue4;
+    case 5:
+      return invoice.customValue5;
+    case 6:
+      return invoice.customValue6;
+    case 7:
+      return invoice.customValue7;
+    case 8:
+      return invoice.customValue8;
     default:
       return '';
   }

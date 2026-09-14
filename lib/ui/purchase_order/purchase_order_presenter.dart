@@ -43,6 +43,10 @@ class PurchaseOrderPresenter extends EntityPresenter {
       PurchaseOrderFields.customValue2,
       PurchaseOrderFields.customValue3,
       PurchaseOrderFields.customValue4,
+      PurchaseOrderFields.customValue5,
+      PurchaseOrderFields.customValue6,
+      PurchaseOrderFields.customValue7,
+      PurchaseOrderFields.customValue8,
       PurchaseOrderFields.taxAmount,
       PurchaseOrderFields.exchangeRate,
       PurchaseOrderFields.isViewed,
@@ -98,6 +102,14 @@ class PurchaseOrderPresenter extends EntityPresenter {
         return Text(presentCustomField(context, purchaseOrder.customValue3)!);
       case PurchaseOrderFields.customValue4:
         return Text(presentCustomField(context, purchaseOrder.customValue4)!);
+      case PurchaseOrderFields.customValue5:
+        return Text(presentCustomField(context, purchaseOrder.customValue5)!);
+      case PurchaseOrderFields.customValue6:
+        return Text(presentCustomField(context, purchaseOrder.customValue6)!);
+      case PurchaseOrderFields.customValue7:
+        return Text(presentCustomField(context, purchaseOrder.customValue7)!);
+      case PurchaseOrderFields.customValue8:
+        return Text(presentCustomField(context, purchaseOrder.customValue8)!);
       case PurchaseOrderFields.publicNotes:
         return TableTooltip(message: purchaseOrder.publicNotes);
       case PurchaseOrderFields.privateNotes:

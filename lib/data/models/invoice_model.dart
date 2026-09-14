@@ -91,6 +91,10 @@ class InvoiceFields {
   static const String customValue2 = 'custom2';
   static const String customValue3 = 'custom3';
   static const String customValue4 = 'custom4';
+  static const String customValue5 = 'custom5';
+  static const String customValue6 = 'custom6';
+  static const String customValue7 = 'custom7';
+  static const String customValue8 = 'custom8';
   static const String customSurcharge1 = 'custom_surcharge1';
   static const String customSurcharge2 = 'custom_surcharge2';
   static const String customSurcharge3 = 'custom_surcharge3';
@@ -219,6 +223,10 @@ abstract class InvoiceEntity extends Object
       customValue2: '',
       customValue3: '',
       customValue4: '',
+      customValue5: '',
+      customValue6: '',
+      customValue7: '',
+      customValue8: '',
       customTaxes1: company?.enableCustomSurchargeTaxes1 ?? false,
       customTaxes2: company?.enableCustomSurchargeTaxes2 ?? false,
       customTaxes3: company?.enableCustomSurchargeTaxes3 ?? false,
@@ -504,6 +512,18 @@ abstract class InvoiceEntity extends Object
 
   @BuiltValueField(wireName: 'custom_value4')
   String get customValue4;
+
+  @BuiltValueField(wireName: 'custom_value5')
+  String get customValue5;
+
+  @BuiltValueField(wireName: 'custom_value6')
+  String get customValue6;
+
+  @BuiltValueField(wireName: 'custom_value7')
+  String get customValue7;
+
+  @BuiltValueField(wireName: 'custom_value8')
+  String get customValue8;
 
   @override
   @BuiltValueField(wireName: 'custom_surcharge1')
@@ -872,6 +892,26 @@ abstract class InvoiceEntity extends Object
             .toLowerCase()
             .compareTo(invoiceB.customValue4.toLowerCase());
         break;
+      case InvoiceFields.customValue5:
+        response = invoiceA.customValue5
+            .toLowerCase()
+            .compareTo(invoiceB.customValue5.toLowerCase());
+        break;
+      case InvoiceFields.customValue6:
+        response = invoiceA.customValue6
+            .toLowerCase()
+            .compareTo(invoiceB.customValue6.toLowerCase());
+        break;
+      case InvoiceFields.customValue7:
+        response = invoiceA.customValue7
+            .toLowerCase()
+            .compareTo(invoiceB.customValue7.toLowerCase());
+        break;
+      case InvoiceFields.customValue8:
+        response = invoiceA.customValue8
+            .toLowerCase()
+            .compareTo(invoiceB.customValue8.toLowerCase());
+        break;
       case InvoiceFields.client:
         response = removeDiacritics(clientA.listDisplayName)
             .toLowerCase()
@@ -980,6 +1020,10 @@ abstract class InvoiceEntity extends Object
           lineItem.customValue2,
           lineItem.customValue3,
           lineItem.customValue4,
+          lineItem.customValue5,
+          lineItem.customValue6,
+          lineItem.customValue7,
+          lineItem.customValue8,
         ],
         needle: filter,
       );
@@ -999,6 +1043,10 @@ abstract class InvoiceEntity extends Object
         customValue2,
         customValue3,
         customValue4,
+        customValue5,
+        customValue6,
+        customValue7,
+        customValue8,
         formatNumber(amount, navigatorKey.currentContext),
         formatDate(date, navigatorKey.currentContext)
       ],
@@ -1017,6 +1065,10 @@ abstract class InvoiceEntity extends Object
         customValue2,
         customValue3,
         customValue4,
+        customValue5,
+        customValue6,
+        customValue7,
+        customValue8,
         formatNumber(amount, navigatorKey.currentContext),
         formatDate(date, navigatorKey.currentContext)
       ],
@@ -1618,6 +1670,10 @@ class ProductItemFields {
   static const String custom2 = 'product2';
   static const String custom3 = 'product3';
   static const String custom4 = 'product4';
+  static const String custom5 = 'product5';
+  static const String custom6 = 'product6';
+  static const String custom7 = 'product7';
+  static const String custom8 = 'product8';
   static const String netCost = 'net_cost';
   /*
   static const String custom1 = 'custom1';
@@ -1677,6 +1733,10 @@ abstract class InvoiceItemEntity
       customValue2: '',
       customValue3: '',
       customValue4: '',
+      customValue5: '',
+      customValue6: '',
+      customValue7: '',
+      customValue8: '',
       discount: 0,
       taxCategoryId: '',
       groupId: '',
@@ -1752,6 +1812,18 @@ abstract class InvoiceItemEntity
   @BuiltValueField(wireName: 'custom_value4')
   String get customValue4;
 
+  @BuiltValueField(wireName: 'custom_value5')
+  String get customValue5;
+
+  @BuiltValueField(wireName: 'custom_value6')
+  String get customValue6;
+
+  @BuiltValueField(wireName: 'custom_value7')
+  String get customValue7;
+
+  @BuiltValueField(wireName: 'custom_value8')
+  String get customValue8;
+
   double get discount;
 
   @BuiltValueField(wireName: 'task_id')
@@ -1792,8 +1864,7 @@ abstract class InvoiceItemEntity
           : invoice.lineItems
               .where((item) => item.groupId == groupId && !item.isGroup)
               .fold<double>(0, (sum, item) {
-              var childTotal =
-                  item.quantity * item.cost * item.timeCoefficient;
+              var childTotal = item.quantity * item.cost * item.timeCoefficient;
               if (item.discount != 0) {
                 childTotal -= invoice.isAmountDiscount
                     ? item.discount

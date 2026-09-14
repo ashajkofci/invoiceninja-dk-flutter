@@ -440,6 +440,26 @@ class FilterQuotesByCustom4 implements PersistUI {
   final String value;
 }
 
+class FilterQuotesByCustom5 implements PersistUI {
+  FilterQuotesByCustom5(this.value);
+  final String value;
+}
+
+class FilterQuotesByCustom6 implements PersistUI {
+  FilterQuotesByCustom6(this.value);
+  final String value;
+}
+
+class FilterQuotesByCustom7 implements PersistUI {
+  FilterQuotesByCustom7(this.value);
+  final String value;
+}
+
+class FilterQuotesByCustom8 implements PersistUI {
+  FilterQuotesByCustom8(this.value);
+  final String value;
+}
+
 class ConvertQuotesToInvoices implements StartSaving {
   ConvertQuotesToInvoices(this.completer, this.quoteIds);
 

@@ -44,6 +44,10 @@ enum RecurringInvoiceReportFields {
   invoice2,
   invoice3,
   invoice4,
+  invoice5,
+  invoice6,
+  invoice7,
+  invoice8,
   has_expenses,
   has_tasks,
   surcharge1,
@@ -242,6 +246,18 @@ ReportResult recurringInvoiceReport(
           break;
         case RecurringInvoiceReportFields.invoice4:
           value = invoice.customValue4;
+          break;
+        case RecurringInvoiceReportFields.invoice5:
+          value = invoice.customValue5;
+          break;
+        case RecurringInvoiceReportFields.invoice6:
+          value = invoice.customValue6;
+          break;
+        case RecurringInvoiceReportFields.invoice7:
+          value = invoice.customValue7;
+          break;
+        case RecurringInvoiceReportFields.invoice8:
+          value = invoice.customValue8;
           break;
         case RecurringInvoiceReportFields.has_expenses:
           value = invoice.hasExpenses;

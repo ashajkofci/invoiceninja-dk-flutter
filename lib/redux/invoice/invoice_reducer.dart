@@ -36,6 +36,10 @@ final forceSelectedReducer = combineReducers<bool?>([
   TypedReducer<bool?, FilterInvoicesByCustom2>((completer, action) => false),
   TypedReducer<bool?, FilterInvoicesByCustom3>((completer, action) => false),
   TypedReducer<bool?, FilterInvoicesByCustom4>((completer, action) => false),
+  TypedReducer<bool?, FilterInvoicesByCustom5>((completer, action) => false),
+  TypedReducer<bool?, FilterInvoicesByCustom6>((completer, action) => false),
+  TypedReducer<bool?, FilterInvoicesByCustom7>((completer, action) => false),
+  TypedReducer<bool?, FilterInvoicesByCustom8>((completer, action) => false),
 ]);
 
 final int? Function(int, dynamic) tabIndexReducer = combineReducers<int?>([
@@ -91,6 +95,10 @@ Reducer<String?> selectedIdReducer = combineReducers([
   TypedReducer<String?, FilterInvoicesByCustom2>((selectedId, action) => ''),
   TypedReducer<String?, FilterInvoicesByCustom3>((selectedId, action) => ''),
   TypedReducer<String?, FilterInvoicesByCustom4>((selectedId, action) => ''),
+  TypedReducer<String?, FilterInvoicesByCustom5>((selectedId, action) => ''),
+  TypedReducer<String?, FilterInvoicesByCustom6>((selectedId, action) => ''),
+  TypedReducer<String?, FilterInvoicesByCustom7>((selectedId, action) => ''),
+  TypedReducer<String?, FilterInvoicesByCustom8>((selectedId, action) => ''),
   TypedReducer<String?, ClearEntitySelection>((selectedId, action) =>
       action.entityType == EntityType.invoice ? '' : selectedId),
   TypedReducer<String?, FilterByEntity>(
@@ -168,8 +176,7 @@ InvoiceEntity _addInvoiceItem(InvoiceEntity? invoice, AddInvoiceItem action) {
   if (action.index == null) {
     return invoice!.rebuild((b) => b..lineItems.add(item));
   } else {
-    final index =
-        action.index!.clamp(0, invoice!.lineItems.length).toInt();
+    final index = action.index!.clamp(0, invoice!.lineItems.length).toInt();
     return invoice.rebuild((b) => b..lineItems.insert(index, item));
   }
 }
@@ -204,6 +211,14 @@ final invoiceListReducer = combineReducers<ListUIState>([
   TypedReducer<ListUIState, FilterInvoicesByCustom2>(_filterInvoicesByCustom2),
   TypedReducer<ListUIState, FilterInvoicesByCustom3>(_filterInvoicesByCustom3),
   TypedReducer<ListUIState, FilterInvoicesByCustom4>(_filterInvoicesByCustom4),
+  TypedReducer<ListUIState, FilterInvoicesByCustom5>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 5)),
+  TypedReducer<ListUIState, FilterInvoicesByCustom6>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 6)),
+  TypedReducer<ListUIState, FilterInvoicesByCustom7>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 7)),
+  TypedReducer<ListUIState, FilterInvoicesByCustom8>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 8)),
   TypedReducer<ListUIState, StartInvoiceMultiselect>(_startListMultiselect),
   TypedReducer<ListUIState, AddToInvoiceMultiselect>(_addToListMultiselect),
   TypedReducer<ListUIState, RemoveFromInvoiceMultiselect>(

@@ -182,6 +182,18 @@ List<String> filteredCreditsSelector(
     } else if (creditListState.custom4Filters.isNotEmpty &&
         !creditListState.custom4Filters.contains(credit.customValue4)) {
       return false;
+    } else if (creditListState.custom5Filters.isNotEmpty &&
+        !creditListState.custom5Filters.contains(credit.customValue5)) {
+      return false;
+    } else if (creditListState.custom6Filters.isNotEmpty &&
+        !creditListState.custom6Filters.contains(credit.customValue6)) {
+      return false;
+    } else if (creditListState.custom7Filters.isNotEmpty &&
+        !creditListState.custom7Filters.contains(credit.customValue7)) {
+      return false;
+    } else if (creditListState.custom8Filters.isNotEmpty &&
+        !creditListState.custom8Filters.contains(credit.customValue8)) {
+      return false;
     }
 
     return true;

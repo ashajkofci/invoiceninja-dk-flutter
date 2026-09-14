@@ -61,6 +61,10 @@ class ProductFields {
   static const String customValue2 = 'custom2';
   static const String customValue3 = 'custom3';
   static const String customValue4 = 'custom4';
+  static const String customValue5 = 'custom5';
+  static const String customValue6 = 'custom6';
+  static const String customValue7 = 'custom7';
+  static const String customValue8 = 'custom8';
   static const String documents = 'documents';
   static const String taxRate1 = 'tax_rate1';
   static const String taxName1 = 'tax_name1';
@@ -96,6 +100,10 @@ abstract class ProductEntity extends Object
       customValue2: '',
       customValue3: '',
       customValue4: '',
+      customValue5: '',
+      customValue6: '',
+      customValue7: '',
+      customValue8: '',
       updatedAt: 0,
       archivedAt: 0,
       isDeleted: false,
@@ -174,6 +182,18 @@ abstract class ProductEntity extends Object
 
   @BuiltValueField(wireName: 'custom_value4')
   String get customValue4;
+
+  @BuiltValueField(wireName: 'custom_value5')
+  String get customValue5;
+
+  @BuiltValueField(wireName: 'custom_value6')
+  String get customValue6;
+
+  @BuiltValueField(wireName: 'custom_value7')
+  String get customValue7;
+
+  @BuiltValueField(wireName: 'custom_value8')
+  String get customValue8;
 
   @BuiltValueField(wireName: 'in_stock_quantity')
   int get stockQuantity;
@@ -307,6 +327,26 @@ abstract class ProductEntity extends Object
             .toLowerCase()
             .compareTo(productB!.customValue4.toLowerCase());
         break;
+      case ProductFields.customValue5:
+        response = productA!.customValue5
+            .toLowerCase()
+            .compareTo(productB!.customValue5.toLowerCase());
+        break;
+      case ProductFields.customValue6:
+        response = productA!.customValue6
+            .toLowerCase()
+            .compareTo(productB!.customValue6.toLowerCase());
+        break;
+      case ProductFields.customValue7:
+        response = productA!.customValue7
+            .toLowerCase()
+            .compareTo(productB!.customValue7.toLowerCase());
+        break;
+      case ProductFields.customValue8:
+        response = productA!.customValue8
+            .toLowerCase()
+            .compareTo(productB!.customValue8.toLowerCase());
+        break;
       case ProductFields.documents:
         response =
             productA!.documents.length.compareTo(productB!.documents.length);
@@ -336,6 +376,10 @@ abstract class ProductEntity extends Object
         customValue2,
         customValue3,
         customValue4,
+        customValue5,
+        customValue6,
+        customValue7,
+        customValue8,
       ],
       needle: filter,
     );
@@ -350,6 +394,10 @@ abstract class ProductEntity extends Object
         customValue2,
         customValue3,
         customValue4,
+        customValue5,
+        customValue6,
+        customValue7,
+        customValue8,
       ],
       needle: filter,
     );
@@ -459,6 +507,14 @@ abstract class ProductGroupItemEntity
   String get customValue3;
   @BuiltValueField(wireName: 'custom_value4')
   String get customValue4;
+  @BuiltValueField(wireName: 'custom_value5')
+  String get customValue5;
+  @BuiltValueField(wireName: 'custom_value6')
+  String get customValue6;
+  @BuiltValueField(wireName: 'custom_value7')
+  String get customValue7;
+  @BuiltValueField(wireName: 'custom_value8')
+  String get customValue8;
 
   static Serializer<ProductGroupItemEntity> get serializer =>
       _$productGroupItemEntitySerializer;

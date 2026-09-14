@@ -564,6 +564,26 @@ class FilterPurchaseOrdersByCustom4 implements PersistUI {
   final String value;
 }
 
+class FilterPurchaseOrdersByCustom5 implements PersistUI {
+  FilterPurchaseOrdersByCustom5(this.value);
+  final String value;
+}
+
+class FilterPurchaseOrdersByCustom6 implements PersistUI {
+  FilterPurchaseOrdersByCustom6(this.value);
+  final String value;
+}
+
+class FilterPurchaseOrdersByCustom7 implements PersistUI {
+  FilterPurchaseOrdersByCustom7(this.value);
+  final String value;
+}
+
+class FilterPurchaseOrdersByCustom8 implements PersistUI {
+  FilterPurchaseOrdersByCustom8(this.value);
+  final String value;
+}
+
 class StartPurchaseOrderMultiselect {
   StartPurchaseOrderMultiselect();
 }

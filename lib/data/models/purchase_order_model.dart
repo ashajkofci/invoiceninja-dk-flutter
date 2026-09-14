@@ -29,6 +29,10 @@ class PurchaseOrderFields {
   static const String customValue2 = 'custom2';
   static const String customValue3 = 'custom3';
   static const String customValue4 = 'custom4';
+  static const String customValue5 = 'custom5';
+  static const String customValue6 = 'custom6';
+  static const String customValue7 = 'custom7';
+  static const String customValue8 = 'custom8';
   static const String customSurcharge1 = 'custom_surcharge1';
   static const String customSurcharge2 = 'custom_surcharge2';
   static const String customSurcharge3 = 'custom_surcharge3';

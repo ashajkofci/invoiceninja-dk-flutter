@@ -126,6 +126,14 @@ class PurchaseOrderScreen extends StatelessWidget {
             excludeBlank: true),
         customValues4: company.getCustomFieldValues(CustomFieldType.invoice4,
             excludeBlank: true),
+        customValues5: company.getCustomFieldValues(CustomFieldType.invoice5,
+            excludeBlank: true),
+        customValues6: company.getCustomFieldValues(CustomFieldType.invoice6,
+            excludeBlank: true),
+        customValues7: company.getCustomFieldValues(CustomFieldType.invoice7,
+            excludeBlank: true),
+        customValues8: company.getCustomFieldValues(CustomFieldType.invoice8,
+            excludeBlank: true),
         onSelectedCustom1: (value) =>
             store.dispatch(FilterPurchaseOrdersByCustom1(value)),
         onSelectedCustom2: (value) =>
@@ -134,6 +142,14 @@ class PurchaseOrderScreen extends StatelessWidget {
             store.dispatch(FilterPurchaseOrdersByCustom3(value)),
         onSelectedCustom4: (value) =>
             store.dispatch(FilterPurchaseOrdersByCustom4(value)),
+        onSelectedCustom5: (value) =>
+            store.dispatch(FilterPurchaseOrdersByCustom5(value)),
+        onSelectedCustom6: (value) =>
+            store.dispatch(FilterPurchaseOrdersByCustom6(value)),
+        onSelectedCustom7: (value) =>
+            store.dispatch(FilterPurchaseOrdersByCustom7(value)),
+        onSelectedCustom8: (value) =>
+            store.dispatch(FilterPurchaseOrdersByCustom8(value)),
       ),
       floatingActionButton: state.prefState.isMenuFloated &&
               userCompany.canCreate(EntityType.purchaseOrder)

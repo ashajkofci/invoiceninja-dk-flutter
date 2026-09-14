@@ -164,6 +164,18 @@ class _$ProductEntitySerializer implements StructuredSerializer<ProductEntity> {
       'custom_value4',
       serializers.serialize(object.customValue4,
           specifiedType: const FullType(String)),
+      'custom_value5',
+      serializers.serialize(object.customValue5,
+          specifiedType: const FullType(String)),
+      'custom_value6',
+      serializers.serialize(object.customValue6,
+          specifiedType: const FullType(String)),
+      'custom_value7',
+      serializers.serialize(object.customValue7,
+          specifiedType: const FullType(String)),
+      'custom_value8',
+      serializers.serialize(object.customValue8,
+          specifiedType: const FullType(String)),
       'in_stock_quantity',
       serializers.serialize(object.stockQuantity,
           specifiedType: const FullType(int)),
@@ -316,6 +328,22 @@ class _$ProductEntitySerializer implements StructuredSerializer<ProductEntity> {
           break;
         case 'custom_value4':
           result.customValue4 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'custom_value5':
+          result.customValue5 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'custom_value6':
+          result.customValue6 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'custom_value7':
+          result.customValue7 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'custom_value8':
+          result.customValue8 = serializers.deserialize(value,
               specifiedType: const FullType(String))! as String;
           break;
         case 'in_stock_quantity':
@@ -474,6 +502,18 @@ class _$ProductGroupItemEntitySerializer
       'custom_value4',
       serializers.serialize(object.customValue4,
           specifiedType: const FullType(String)),
+      'custom_value5',
+      serializers.serialize(object.customValue5,
+          specifiedType: const FullType(String)),
+      'custom_value6',
+      serializers.serialize(object.customValue6,
+          specifiedType: const FullType(String)),
+      'custom_value7',
+      serializers.serialize(object.customValue7,
+          specifiedType: const FullType(String)),
+      'custom_value8',
+      serializers.serialize(object.customValue8,
+          specifiedType: const FullType(String)),
     ];
 
     return result;
@@ -557,6 +597,22 @@ class _$ProductGroupItemEntitySerializer
           break;
         case 'custom_value4':
           result.customValue4 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'custom_value5':
+          result.customValue5 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'custom_value6':
+          result.customValue6 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'custom_value7':
+          result.customValue7 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'custom_value8':
+          result.customValue8 = serializers.deserialize(value,
               specifiedType: const FullType(String))! as String;
           break;
       }
@@ -793,6 +849,14 @@ class _$ProductEntity extends ProductEntity {
   @override
   final String customValue4;
   @override
+  final String customValue5;
+  @override
+  final String customValue6;
+  @override
+  final String customValue7;
+  @override
+  final String customValue8;
+  @override
   final int stockQuantity;
   @override
   final int stockNotificationThreshold;
@@ -852,6 +916,10 @@ class _$ProductEntity extends ProductEntity {
       required this.customValue2,
       required this.customValue3,
       required this.customValue4,
+      required this.customValue5,
+      required this.customValue6,
+      required this.customValue7,
+      required this.customValue8,
       required this.stockQuantity,
       required this.stockNotificationThreshold,
       required this.stockNotification,
@@ -899,6 +967,10 @@ class _$ProductEntity extends ProductEntity {
         customValue2 == other.customValue2 &&
         customValue3 == other.customValue3 &&
         customValue4 == other.customValue4 &&
+        customValue5 == other.customValue5 &&
+        customValue6 == other.customValue6 &&
+        customValue7 == other.customValue7 &&
+        customValue8 == other.customValue8 &&
         stockQuantity == other.stockQuantity &&
         stockNotificationThreshold == other.stockNotificationThreshold &&
         stockNotification == other.stockNotification &&
@@ -941,6 +1013,10 @@ class _$ProductEntity extends ProductEntity {
     _$hash = $jc(_$hash, customValue2.hashCode);
     _$hash = $jc(_$hash, customValue3.hashCode);
     _$hash = $jc(_$hash, customValue4.hashCode);
+    _$hash = $jc(_$hash, customValue5.hashCode);
+    _$hash = $jc(_$hash, customValue6.hashCode);
+    _$hash = $jc(_$hash, customValue7.hashCode);
+    _$hash = $jc(_$hash, customValue8.hashCode);
     _$hash = $jc(_$hash, stockQuantity.hashCode);
     _$hash = $jc(_$hash, stockNotificationThreshold.hashCode);
     _$hash = $jc(_$hash, stockNotification.hashCode);
@@ -983,6 +1059,10 @@ class _$ProductEntity extends ProductEntity {
           ..add('customValue2', customValue2)
           ..add('customValue3', customValue3)
           ..add('customValue4', customValue4)
+          ..add('customValue5', customValue5)
+          ..add('customValue6', customValue6)
+          ..add('customValue7', customValue7)
+          ..add('customValue8', customValue8)
           ..add('stockQuantity', stockQuantity)
           ..add('stockNotificationThreshold', stockNotificationThreshold)
           ..add('stockNotification', stockNotification)
@@ -1070,6 +1150,22 @@ class ProductEntityBuilder
   String? _customValue4;
   String? get customValue4 => _$this._customValue4;
   set customValue4(String? customValue4) => _$this._customValue4 = customValue4;
+
+  String? _customValue5;
+  String? get customValue5 => _$this._customValue5;
+  set customValue5(String? customValue5) => _$this._customValue5 = customValue5;
+
+  String? _customValue6;
+  String? get customValue6 => _$this._customValue6;
+  set customValue6(String? customValue6) => _$this._customValue6 = customValue6;
+
+  String? _customValue7;
+  String? get customValue7 => _$this._customValue7;
+  set customValue7(String? customValue7) => _$this._customValue7 = customValue7;
+
+  String? _customValue8;
+  String? get customValue8 => _$this._customValue8;
+  set customValue8(String? customValue8) => _$this._customValue8 = customValue8;
 
   int? _stockQuantity;
   int? get stockQuantity => _$this._stockQuantity;
@@ -1185,6 +1281,10 @@ class ProductEntityBuilder
       _customValue2 = $v.customValue2;
       _customValue3 = $v.customValue3;
       _customValue4 = $v.customValue4;
+      _customValue5 = $v.customValue5;
+      _customValue6 = $v.customValue6;
+      _customValue7 = $v.customValue7;
+      _customValue8 = $v.customValue8;
       _stockQuantity = $v.stockQuantity;
       _stockNotificationThreshold = $v.stockNotificationThreshold;
       _stockNotification = $v.stockNotification;
@@ -1258,6 +1358,14 @@ class ProductEntityBuilder
                 customValue3, r'ProductEntity', 'customValue3'),
             customValue4: BuiltValueNullFieldError.checkNotNull(
                 customValue4, r'ProductEntity', 'customValue4'),
+            customValue5: BuiltValueNullFieldError.checkNotNull(
+                customValue5, r'ProductEntity', 'customValue5'),
+            customValue6: BuiltValueNullFieldError.checkNotNull(
+                customValue6, r'ProductEntity', 'customValue6'),
+            customValue7: BuiltValueNullFieldError.checkNotNull(
+                customValue7, r'ProductEntity', 'customValue7'),
+            customValue8: BuiltValueNullFieldError.checkNotNull(
+                customValue8, r'ProductEntity', 'customValue8'),
             stockQuantity: BuiltValueNullFieldError.checkNotNull(
                 stockQuantity, r'ProductEntity', 'stockQuantity'),
             stockNotificationThreshold: BuiltValueNullFieldError.checkNotNull(
@@ -1349,6 +1457,14 @@ class _$ProductGroupItemEntity extends ProductGroupItemEntity {
   final String customValue3;
   @override
   final String customValue4;
+  @override
+  final String customValue5;
+  @override
+  final String customValue6;
+  @override
+  final String customValue7;
+  @override
+  final String customValue8;
 
   factory _$ProductGroupItemEntity(
           [void Function(ProductGroupItemEntityBuilder)? updates]) =>
@@ -1371,7 +1487,11 @@ class _$ProductGroupItemEntity extends ProductGroupItemEntity {
       required this.customValue1,
       required this.customValue2,
       required this.customValue3,
-      required this.customValue4})
+      required this.customValue4,
+      required this.customValue5,
+      required this.customValue6,
+      required this.customValue7,
+      required this.customValue8})
       : super._();
   @override
   ProductGroupItemEntity rebuild(
@@ -1402,7 +1522,11 @@ class _$ProductGroupItemEntity extends ProductGroupItemEntity {
         customValue1 == other.customValue1 &&
         customValue2 == other.customValue2 &&
         customValue3 == other.customValue3 &&
-        customValue4 == other.customValue4;
+        customValue4 == other.customValue4 &&
+        customValue5 == other.customValue5 &&
+        customValue6 == other.customValue6 &&
+        customValue7 == other.customValue7 &&
+        customValue8 == other.customValue8;
   }
 
   @override
@@ -1425,6 +1549,10 @@ class _$ProductGroupItemEntity extends ProductGroupItemEntity {
     _$hash = $jc(_$hash, customValue2.hashCode);
     _$hash = $jc(_$hash, customValue3.hashCode);
     _$hash = $jc(_$hash, customValue4.hashCode);
+    _$hash = $jc(_$hash, customValue5.hashCode);
+    _$hash = $jc(_$hash, customValue6.hashCode);
+    _$hash = $jc(_$hash, customValue7.hashCode);
+    _$hash = $jc(_$hash, customValue8.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -1448,7 +1576,11 @@ class _$ProductGroupItemEntity extends ProductGroupItemEntity {
           ..add('customValue1', customValue1)
           ..add('customValue2', customValue2)
           ..add('customValue3', customValue3)
-          ..add('customValue4', customValue4))
+          ..add('customValue4', customValue4)
+          ..add('customValue5', customValue5)
+          ..add('customValue6', customValue6)
+          ..add('customValue7', customValue7)
+          ..add('customValue8', customValue8))
         .toString();
   }
 }
@@ -1526,6 +1658,22 @@ class ProductGroupItemEntityBuilder
   String? get customValue4 => _$this._customValue4;
   set customValue4(String? customValue4) => _$this._customValue4 = customValue4;
 
+  String? _customValue5;
+  String? get customValue5 => _$this._customValue5;
+  set customValue5(String? customValue5) => _$this._customValue5 = customValue5;
+
+  String? _customValue6;
+  String? get customValue6 => _$this._customValue6;
+  set customValue6(String? customValue6) => _$this._customValue6 = customValue6;
+
+  String? _customValue7;
+  String? get customValue7 => _$this._customValue7;
+  set customValue7(String? customValue7) => _$this._customValue7 = customValue7;
+
+  String? _customValue8;
+  String? get customValue8 => _$this._customValue8;
+  set customValue8(String? customValue8) => _$this._customValue8 = customValue8;
+
   ProductGroupItemEntityBuilder();
 
   ProductGroupItemEntityBuilder get _$this {
@@ -1548,6 +1696,10 @@ class ProductGroupItemEntityBuilder
       _customValue2 = $v.customValue2;
       _customValue3 = $v.customValue3;
       _customValue4 = $v.customValue4;
+      _customValue5 = $v.customValue5;
+      _customValue6 = $v.customValue6;
+      _customValue7 = $v.customValue7;
+      _customValue8 = $v.customValue8;
       _$v = null;
     }
     return this;
@@ -1603,6 +1755,14 @@ class ProductGroupItemEntityBuilder
               customValue3, r'ProductGroupItemEntity', 'customValue3'),
           customValue4: BuiltValueNullFieldError.checkNotNull(
               customValue4, r'ProductGroupItemEntity', 'customValue4'),
+          customValue5: BuiltValueNullFieldError.checkNotNull(
+              customValue5, r'ProductGroupItemEntity', 'customValue5'),
+          customValue6: BuiltValueNullFieldError.checkNotNull(
+              customValue6, r'ProductGroupItemEntity', 'customValue6'),
+          customValue7: BuiltValueNullFieldError.checkNotNull(
+              customValue7, r'ProductGroupItemEntity', 'customValue7'),
+          customValue8: BuiltValueNullFieldError.checkNotNull(
+              customValue8, r'ProductGroupItemEntity', 'customValue8'),
         );
     replace(_$result);
     return _$result;

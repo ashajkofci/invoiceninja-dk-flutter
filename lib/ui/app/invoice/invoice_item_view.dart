@@ -46,20 +46,18 @@ class InvoiceItemListTile extends StatelessWidget {
     final isGroupChild = !invoiceItem!.isGroup && groupHeader != null;
     final hideGroupChildPrices = isGroupChild &&
         (groupHeader.groupHasPrice || groupHeader.groupHideItemPrices);
-    final proRataUnitPrice =
-        isGroupChild && groupHeader.groupHasPrice
-            ? invoiceItem!.groupChildProRataUnitPrice(invoice, precision)
-            : null;
+    final proRataUnitPrice = isGroupChild && groupHeader.groupHasPrice
+        ? invoiceItem!.groupChildProRataUnitPrice(invoice, precision)
+        : null;
     final proRataAmount = isGroupChild && groupHeader.groupHasPrice
         ? invoiceItem!.groupChildProRataAmount(invoice, precision)
         : null;
     final displayCost = proRataUnitPrice ?? invoiceItem!.cost;
-    final displayTotal = proRataAmount ?? invoiceItem!.total(invoice, precision);
+    final displayTotal =
+        proRataAmount ?? invoiceItem!.total(invoice, precision);
 
-    String subtitle = '$qty x ${formatNumber(displayCost, context,
-        clientId: invoice.isPurchaseOrder ? null : invoice.clientId,
-        vendorId: invoice.isPurchaseOrder ? invoice.vendorId : null,
-        roundToPrecision: false) ?? ''}';
+    String subtitle =
+        '$qty x ${formatNumber(displayCost, context, clientId: invoice.isPurchaseOrder ? null : invoice.clientId, vendorId: invoice.isPurchaseOrder ? invoice.vendorId : null, roundToPrecision: false) ?? ''}';
 
     if (invoiceItem!.isGroup) {
       subtitle = localization!.group;
@@ -135,6 +133,20 @@ class InvoiceItemListTile extends StatelessWidget {
           context: context,
           field: CustomFieldType.product4,
           value: invoiceItem!.customValue4));
+    }
+    for (final field in [
+      (CustomFieldType.product5, invoiceItem!.customValue5),
+      (CustomFieldType.product6, invoiceItem!.customValue6),
+      (CustomFieldType.product7, invoiceItem!.customValue7),
+      (CustomFieldType.product8, invoiceItem!.customValue8),
+    ]) {
+      if (company.hasCustomField(field.$1) && field.$2.isNotEmpty) {
+        parts.add(formatCustomValue(
+          context: context,
+          field: field.$1,
+          value: field.$2,
+        ));
+      }
     }
     if (invoiceItem!.notes.isNotEmpty) {
       parts.add(removeAllHtmlTags(invoiceItem!.notes).trim());

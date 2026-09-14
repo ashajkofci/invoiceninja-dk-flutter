@@ -34,6 +34,10 @@ class ProductPresenter extends EntityPresenter {
       ProductFields.customValue2,
       ProductFields.customValue3,
       ProductFields.customValue4,
+      ProductFields.customValue5,
+      ProductFields.customValue6,
+      ProductFields.customValue7,
+      ProductFields.customValue8,
       ProductFields.documents,
       ProductFields.taxRate1,
       ProductFields.taxRate2,
@@ -85,6 +89,14 @@ class ProductPresenter extends EntityPresenter {
         return Text(presentCustomField(context, product!.customValue3)!);
       case ProductFields.customValue4:
         return Text(presentCustomField(context, product!.customValue4)!);
+      case ProductFields.customValue5:
+        return Text(presentCustomField(context, product!.customValue5)!);
+      case ProductFields.customValue6:
+        return Text(presentCustomField(context, product!.customValue6)!);
+      case ProductFields.customValue7:
+        return Text(presentCustomField(context, product!.customValue7)!);
+      case ProductFields.customValue8:
+        return Text(presentCustomField(context, product!.customValue8)!);
       case ProductFields.documents:
         return Text('${product!.documents.length}');
       case ProductFields.taxName1:

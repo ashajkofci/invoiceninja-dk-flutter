@@ -36,6 +36,10 @@ final forceSelectedReducer = combineReducers<bool?>([
   TypedReducer<bool?, FilterQuotesByCustom2>((completer, action) => false),
   TypedReducer<bool?, FilterQuotesByCustom3>((completer, action) => false),
   TypedReducer<bool?, FilterQuotesByCustom4>((completer, action) => false),
+  TypedReducer<bool?, FilterQuotesByCustom5>((completer, action) => false),
+  TypedReducer<bool?, FilterQuotesByCustom6>((completer, action) => false),
+  TypedReducer<bool?, FilterQuotesByCustom7>((completer, action) => false),
+  TypedReducer<bool?, FilterQuotesByCustom8>((completer, action) => false),
 ]);
 
 final int? Function(int, dynamic) tabIndexReducer = combineReducers<int?>([
@@ -89,6 +93,10 @@ Reducer<String?> selectedIdReducer = combineReducers([
   TypedReducer<String?, FilterQuotesByCustom2>((selectedId, action) => ''),
   TypedReducer<String?, FilterQuotesByCustom3>((selectedId, action) => ''),
   TypedReducer<String?, FilterQuotesByCustom4>((selectedId, action) => ''),
+  TypedReducer<String?, FilterQuotesByCustom5>((selectedId, action) => ''),
+  TypedReducer<String?, FilterQuotesByCustom6>((selectedId, action) => ''),
+  TypedReducer<String?, FilterQuotesByCustom7>((selectedId, action) => ''),
+  TypedReducer<String?, FilterQuotesByCustom8>((selectedId, action) => ''),
   TypedReducer<String?, ClearEntitySelection>((selectedId, action) =>
       action.entityType == EntityType.quote ? '' : selectedId),
   TypedReducer<String?, FilterByEntity>(
@@ -197,6 +205,14 @@ final quoteListReducer = combineReducers<ListUIState>([
   TypedReducer<ListUIState, FilterQuotesByCustom2>(_filterQuotesByCustom2),
   TypedReducer<ListUIState, FilterQuotesByCustom3>(_filterQuotesByCustom3),
   TypedReducer<ListUIState, FilterQuotesByCustom4>(_filterQuotesByCustom4),
+  TypedReducer<ListUIState, FilterQuotesByCustom5>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 5)),
+  TypedReducer<ListUIState, FilterQuotesByCustom6>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 6)),
+  TypedReducer<ListUIState, FilterQuotesByCustom7>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 7)),
+  TypedReducer<ListUIState, FilterQuotesByCustom8>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 8)),
   TypedReducer<ListUIState, StartQuoteMultiselect>(_startListMultiselect),
   TypedReducer<ListUIState, AddToQuoteMultiselect>(_addToListMultiselect),
   TypedReducer<ListUIState, RemoveFromQuoteMultiselect>(

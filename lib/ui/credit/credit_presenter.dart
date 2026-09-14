@@ -42,6 +42,10 @@ class CreditPresenter extends EntityPresenter {
       CreditFields.customValue2,
       CreditFields.customValue3,
       CreditFields.customValue4,
+      CreditFields.customValue5,
+      CreditFields.customValue6,
+      CreditFields.customValue7,
+      CreditFields.customValue8,
       CreditFields.taxAmount,
       CreditFields.exchangeRate,
       CreditFields.isViewed,
@@ -100,6 +104,14 @@ class CreditPresenter extends EntityPresenter {
         return Text(presentCustomField(context, credit.customValue3)!);
       case CreditFields.customValue4:
         return Text(presentCustomField(context, credit.customValue4)!);
+      case CreditFields.customValue5:
+        return Text(presentCustomField(context, credit.customValue5)!);
+      case CreditFields.customValue6:
+        return Text(presentCustomField(context, credit.customValue6)!);
+      case CreditFields.customValue7:
+        return Text(presentCustomField(context, credit.customValue7)!);
+      case CreditFields.customValue8:
+        return Text(presentCustomField(context, credit.customValue8)!);
       case CreditFields.publicNotes:
         return TableTooltip(message: credit.publicNotes);
       case CreditFields.privateNotes:

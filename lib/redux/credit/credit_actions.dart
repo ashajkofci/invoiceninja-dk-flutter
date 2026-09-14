@@ -455,6 +455,26 @@ class FilterCreditsByCustom4 implements PersistUI {
   final String value;
 }
 
+class FilterCreditsByCustom5 implements PersistUI {
+  FilterCreditsByCustom5(this.value);
+  final String value;
+}
+
+class FilterCreditsByCustom6 implements PersistUI {
+  FilterCreditsByCustom6(this.value);
+  final String value;
+}
+
+class FilterCreditsByCustom7 implements PersistUI {
+  FilterCreditsByCustom7(this.value);
+  final String value;
+}
+
+class FilterCreditsByCustom8 implements PersistUI {
+  FilterCreditsByCustom8(this.value);
+  final String value;
+}
+
 class SaveCreditDocumentRequest implements StartSaving {
   SaveCreditDocumentRequest({
     required this.isPrivate,

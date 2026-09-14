@@ -53,6 +53,10 @@ enum InvoiceReportFields {
   invoice2,
   invoice3,
   invoice4,
+  invoice5,
+  invoice6,
+  invoice7,
+  invoice8,
   has_expenses,
   has_tasks,
   surcharge1,
@@ -316,6 +320,30 @@ ReportResult invoiceReport(
             customFieldType: CustomFieldType.invoice4,
             company: userCompany.company,
           );
+          break;
+        case InvoiceReportFields.invoice5:
+          value = presentCustomField(
+              value: invoice.customValue5,
+              customFieldType: CustomFieldType.invoice5,
+              company: userCompany.company);
+          break;
+        case InvoiceReportFields.invoice6:
+          value = presentCustomField(
+              value: invoice.customValue6,
+              customFieldType: CustomFieldType.invoice6,
+              company: userCompany.company);
+          break;
+        case InvoiceReportFields.invoice7:
+          value = presentCustomField(
+              value: invoice.customValue7,
+              customFieldType: CustomFieldType.invoice7,
+              company: userCompany.company);
+          break;
+        case InvoiceReportFields.invoice8:
+          value = presentCustomField(
+              value: invoice.customValue8,
+              customFieldType: CustomFieldType.invoice8,
+              company: userCompany.company);
           break;
         case InvoiceReportFields.has_expenses:
           value = invoice.hasExpenses;

@@ -219,6 +219,18 @@ List<String> filteredProductsSelector(
     } else if (productListState.custom4Filters.isNotEmpty &&
         !productListState.custom4Filters.contains(product.customValue4)) {
       return false;
+    } else if (productListState.custom5Filters.isNotEmpty &&
+        !productListState.custom5Filters.contains(product.customValue5)) {
+      return false;
+    } else if (productListState.custom6Filters.isNotEmpty &&
+        !productListState.custom6Filters.contains(product.customValue6)) {
+      return false;
+    } else if (productListState.custom7Filters.isNotEmpty &&
+        !productListState.custom7Filters.contains(product.customValue7)) {
+      return false;
+    } else if (productListState.custom8Filters.isNotEmpty &&
+        !productListState.custom8Filters.contains(product.customValue8)) {
+      return false;
     }
 
     return true;

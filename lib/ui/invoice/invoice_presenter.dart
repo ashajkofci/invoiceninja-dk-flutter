@@ -42,6 +42,10 @@ class InvoicePresenter extends EntityPresenter {
       InvoiceFields.customValue2,
       InvoiceFields.customValue3,
       InvoiceFields.customValue4,
+      InvoiceFields.customValue5,
+      InvoiceFields.customValue6,
+      InvoiceFields.customValue7,
+      InvoiceFields.customValue8,
       InvoiceFields.taxAmount,
       InvoiceFields.reminder1Sent,
       InvoiceFields.reminder2Sent,
@@ -130,6 +134,14 @@ class InvoicePresenter extends EntityPresenter {
         return Text(presentCustomField(context, invoice.customValue3)!);
       case InvoiceFields.customValue4:
         return Text(presentCustomField(context, invoice.customValue4)!);
+      case InvoiceFields.customValue5:
+        return Text(presentCustomField(context, invoice.customValue5)!);
+      case InvoiceFields.customValue6:
+        return Text(presentCustomField(context, invoice.customValue6)!);
+      case InvoiceFields.customValue7:
+        return Text(presentCustomField(context, invoice.customValue7)!);
+      case InvoiceFields.customValue8:
+        return Text(presentCustomField(context, invoice.customValue8)!);
       case InvoiceFields.publicNotes:
         return TableTooltip(message: invoice.publicNotes);
       case InvoiceFields.privateNotes:

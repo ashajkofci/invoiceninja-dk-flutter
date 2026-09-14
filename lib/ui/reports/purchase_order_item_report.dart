@@ -26,6 +26,10 @@ enum PurchaseOrderItemReportFields {
   custom2,
   custom3,
   custom4,
+  custom5,
+  custom6,
+  custom7,
+  custom8,
   purchaseOrderNumber,
   purchaseOrderDate,
   client,
@@ -150,6 +154,18 @@ ReportResult lineItemReport(
             break;
           case PurchaseOrderItemReportFields.custom4:
             value = lineItem.customValue4;
+            break;
+          case PurchaseOrderItemReportFields.custom5:
+            value = lineItem.customValue5;
+            break;
+          case PurchaseOrderItemReportFields.custom6:
+            value = lineItem.customValue6;
+            break;
+          case PurchaseOrderItemReportFields.custom7:
+            value = lineItem.customValue7;
+            break;
+          case PurchaseOrderItemReportFields.custom8:
+            value = lineItem.customValue8;
             break;
           case PurchaseOrderItemReportFields.description:
             value = lineItem.notes;

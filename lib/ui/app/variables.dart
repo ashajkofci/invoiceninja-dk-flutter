@@ -122,6 +122,14 @@ class _VariablesHelpState extends State<VariablesHelp>
                     InvoiceFields.customValue3,
                   if (company.hasCustomField(CustomFieldType.invoice4))
                     InvoiceFields.customValue4,
+                  if (company.hasCustomField(CustomFieldType.invoice5))
+                    InvoiceFields.customValue5,
+                  if (company.hasCustomField(CustomFieldType.invoice6))
+                    InvoiceFields.customValue6,
+                  if (company.hasCustomField(CustomFieldType.invoice7))
+                    InvoiceFields.customValue7,
+                  if (company.hasCustomField(CustomFieldType.invoice8))
+                    InvoiceFields.customValue8,
                   if (company.hasCustomField(CustomFieldType.surcharge1))
                     InvoiceFields.customSurcharge1,
                   if (company.hasCustomField(CustomFieldType.surcharge2))

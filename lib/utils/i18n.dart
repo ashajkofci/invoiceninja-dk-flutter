@@ -1749,6 +1749,10 @@ mixin LocalizationsProvider on LocaleCodeAware {
       'product2': 'Custom Product 2',
       'product3': 'Custom Product 3',
       'product4': 'Custom Product 4',
+      'product5': 'Custom Product 5',
+      'product6': 'Custom Product 6',
+      'product7': 'Custom Product 7',
+      'product8': 'Custom Product 8',
       'client1': 'Custom Client 1',
       'client2': 'Custom Client 2',
       'client3': 'Custom Client 3',
@@ -1777,6 +1781,10 @@ mixin LocalizationsProvider on LocaleCodeAware {
       'invoice2': 'Custom Invoice 2',
       'invoice3': 'Custom Invoice 3',
       'invoice4': 'Custom Invoice 4',
+      'invoice5': 'Custom Invoice 5',
+      'invoice6': 'Custom Invoice 6',
+      'invoice7': 'Custom Invoice 7',
+      'invoice8': 'Custom Invoice 8',
       'payment1': 'Custom Payment 1',
       'payment2': 'Custom Payment 2',
       'payment3': 'Custom Payment 3',
@@ -127738,6 +127746,14 @@ mixin LocalizationsProvider on LocaleCodeAware {
 
   String get product4 => _localizedValues[localeCode]!['product4']!;
 
+  String get product5 => lookup('product5');
+
+  String get product6 => lookup('product6');
+
+  String get product7 => lookup('product7');
+
+  String get product8 => lookup('product8');
+
   String get contact1 => _localizedValues[localeCode]!['contact1']!;
 
   String get contact2 => _localizedValues[localeCode]!['contact2']!;
@@ -127785,6 +127801,14 @@ mixin LocalizationsProvider on LocaleCodeAware {
   String get invoice3 => _localizedValues[localeCode]!['invoice3']!;
 
   String get invoice4 => _localizedValues[localeCode]!['invoice4']!;
+
+  String get invoice5 => lookup('invoice5');
+
+  String get invoice6 => lookup('invoice6');
+
+  String get invoice7 => lookup('invoice7');
+
+  String get invoice8 => lookup('invoice8');
 
   String get payment1 => _localizedValues[localeCode]!['payment1']!;
 

@@ -85,6 +85,14 @@ class ProductScreen extends StatelessWidget {
             excludeBlank: true),
         customValues4: company.getCustomFieldValues(CustomFieldType.product4,
             excludeBlank: true),
+        customValues5: company.getCustomFieldValues(CustomFieldType.product5,
+            excludeBlank: true),
+        customValues6: company.getCustomFieldValues(CustomFieldType.product6,
+            excludeBlank: true),
+        customValues7: company.getCustomFieldValues(CustomFieldType.product7,
+            excludeBlank: true),
+        customValues8: company.getCustomFieldValues(CustomFieldType.product8,
+            excludeBlank: true),
         onSelectedCustom1: (value) =>
             store.dispatch(FilterProductsByCustom1(value)),
         onSelectedCustom2: (value) =>
@@ -93,6 +101,14 @@ class ProductScreen extends StatelessWidget {
             store.dispatch(FilterProductsByCustom3(value)),
         onSelectedCustom4: (value) =>
             store.dispatch(FilterProductsByCustom4(value)),
+        onSelectedCustom5: (value) =>
+            store.dispatch(FilterProductsByCustom5(value)),
+        onSelectedCustom6: (value) =>
+            store.dispatch(FilterProductsByCustom6(value)),
+        onSelectedCustom7: (value) =>
+            store.dispatch(FilterProductsByCustom7(value)),
+        onSelectedCustom8: (value) =>
+            store.dispatch(FilterProductsByCustom8(value)),
         sortFields: [
           ProductFields.productKey,
           ProductFields.cost,

@@ -42,6 +42,10 @@ final forceSelectedReducer = combineReducers<bool?>([
       (completer, action) => false),
   TypedReducer<bool?, FilterRecurringInvoicesByCustom4>(
       (completer, action) => false),
+  TypedReducer<bool?, FilterRecurringInvoicesByCustom5>((_, __) => false),
+  TypedReducer<bool?, FilterRecurringInvoicesByCustom6>((_, __) => false),
+  TypedReducer<bool?, FilterRecurringInvoicesByCustom7>((_, __) => false),
+  TypedReducer<bool?, FilterRecurringInvoicesByCustom8>((_, __) => false),
 ]);
 
 final int? Function(int, dynamic) tabIndexReducer = combineReducers<int?>([
@@ -110,6 +114,10 @@ Reducer<String?> selectedIdReducer = combineReducers([
       (selectedId, action) => ''),
   TypedReducer<String?, FilterRecurringInvoicesByCustom4>(
       (selectedId, action) => ''),
+  TypedReducer<String?, FilterRecurringInvoicesByCustom5>((_, __) => ''),
+  TypedReducer<String?, FilterRecurringInvoicesByCustom6>((_, __) => ''),
+  TypedReducer<String?, FilterRecurringInvoicesByCustom7>((_, __) => ''),
+  TypedReducer<String?, FilterRecurringInvoicesByCustom8>((_, __) => ''),
   TypedReducer<String?, ClearEntitySelection>((selectedId, action) =>
       action.entityType == EntityType.recurringInvoice ? '' : selectedId),
   TypedReducer<String?, FilterByEntity>(
@@ -204,8 +212,7 @@ InvoiceEntity _addRecurringInvoiceItem(
   } else {
     final index =
         action.index!.clamp(0, recurringInvoice!.lineItems.length).toInt();
-    return recurringInvoice
-        .rebuild((b) => b..lineItems.insert(index, item));
+    return recurringInvoice.rebuild((b) => b..lineItems.insert(index, item));
   }
 }
 
@@ -246,6 +253,14 @@ final recurringInvoiceListReducer = combineReducers<ListUIState>([
       _filterRecurringInvoicesByCustom3),
   TypedReducer<ListUIState, FilterRecurringInvoicesByCustom4>(
       _filterRecurringInvoicesByCustom4),
+  TypedReducer<ListUIState, FilterRecurringInvoicesByCustom5>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 5)),
+  TypedReducer<ListUIState, FilterRecurringInvoicesByCustom6>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 6)),
+  TypedReducer<ListUIState, FilterRecurringInvoicesByCustom7>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 7)),
+  TypedReducer<ListUIState, FilterRecurringInvoicesByCustom8>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 8)),
   TypedReducer<ListUIState, StartRecurringInvoiceMultiselect>(
       _startListMultiselect),
   TypedReducer<ListUIState, AddToRecurringInvoiceMultiselect>(

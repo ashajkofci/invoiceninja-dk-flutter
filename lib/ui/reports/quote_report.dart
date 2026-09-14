@@ -46,6 +46,10 @@ enum QuoteReportFields {
   invoice2,
   invoice3,
   invoice4,
+  invoice5,
+  invoice6,
+  invoice7,
+  invoice8,
   surcharge1,
   surcharge2,
   surcharge3,
@@ -235,6 +239,30 @@ ReportResult quoteReport(
             customFieldType: CustomFieldType.invoice4,
             company: userCompany.company,
           );
+          break;
+        case QuoteReportFields.invoice5:
+          value = presentCustomField(
+              value: quote.customValue5,
+              customFieldType: CustomFieldType.invoice5,
+              company: userCompany.company);
+          break;
+        case QuoteReportFields.invoice6:
+          value = presentCustomField(
+              value: quote.customValue6,
+              customFieldType: CustomFieldType.invoice6,
+              company: userCompany.company);
+          break;
+        case QuoteReportFields.invoice7:
+          value = presentCustomField(
+              value: quote.customValue7,
+              customFieldType: CustomFieldType.invoice7,
+              company: userCompany.company);
+          break;
+        case QuoteReportFields.invoice8:
+          value = presentCustomField(
+              value: quote.customValue8,
+              customFieldType: CustomFieldType.invoice8,
+              company: userCompany.company);
           break;
         case QuoteReportFields.surcharge1:
           value = quote.customSurcharge1;

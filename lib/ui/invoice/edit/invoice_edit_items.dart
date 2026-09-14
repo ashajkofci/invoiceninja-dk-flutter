@@ -165,6 +165,10 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
   final _custom2Controller = TextEditingController();
   final _custom3Controller = TextEditingController();
   final _custom4Controller = TextEditingController();
+  final _custom5Controller = TextEditingController();
+  final _custom6Controller = TextEditingController();
+  final _custom7Controller = TextEditingController();
+  final _custom8Controller = TextEditingController();
 
   TaxRateEntity? _taxRate1;
   TaxRateEntity? _taxRate2;
@@ -204,6 +208,10 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
     _custom2Controller.text = invoiceItem.customValue2;
     _custom3Controller.text = invoiceItem.customValue3;
     _custom4Controller.text = invoiceItem.customValue4;
+    _custom5Controller.text = invoiceItem.customValue5;
+    _custom6Controller.text = invoiceItem.customValue6;
+    _custom7Controller.text = invoiceItem.customValue7;
+    _custom8Controller.text = invoiceItem.customValue8;
 
     _controllers = [
       _productKeyController,
@@ -217,6 +225,10 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
       _custom2Controller,
       _custom3Controller,
       _custom4Controller,
+      _custom5Controller,
+      _custom6Controller,
+      _custom7Controller,
+      _custom8Controller,
     ];
 
     _controllers.forEach(
@@ -245,6 +257,18 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
       }
       if (field == 4) {
         return invoice.customValue4;
+      }
+      if (field == 5) {
+        return invoice.customValue5;
+      }
+      if (field == 6) {
+        return invoice.customValue6;
+      }
+      if (field == 7) {
+        return invoice.customValue7;
+      }
+      if (field == 8) {
+        return invoice.customValue8;
       }
       return '';
     }
@@ -296,7 +320,11 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
       ..customValue1 = _custom1Controller.text.trim()
       ..customValue2 = _custom2Controller.text.trim()
       ..customValue3 = _custom3Controller.text.trim()
-      ..customValue4 = _custom4Controller.text.trim());
+      ..customValue4 = _custom4Controller.text.trim()
+      ..customValue5 = _custom5Controller.text.trim()
+      ..customValue6 = _custom6Controller.text.trim()
+      ..customValue7 = _custom7Controller.text.trim()
+      ..customValue8 = _custom8Controller.text.trim());
 
     if (company.calculateTaxes) {
       invoiceItem =
@@ -387,16 +415,14 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
                 title: Text(localization.lookup('price_per_unit_pro_rata')),
                 subtitle: Text(
                   formatNumber(
-                    proRataUnitPrice,
-                    context,
-                    clientId: invoice.isPurchaseOrder
-                        ? null
-                        : invoice.clientId,
-                    vendorId: invoice.isPurchaseOrder
-                        ? invoice.vendorId
-                        : null,
-                  ) ??
-                  '',
+                        proRataUnitPrice,
+                        context,
+                        clientId:
+                            invoice.isPurchaseOrder ? null : invoice.clientId,
+                        vendorId:
+                            invoice.isPurchaseOrder ? invoice.vendorId : null,
+                      ) ??
+                      '',
                 ),
               ),
             if (widget.viewModel.onGroupInvoiceItem != null &&
@@ -533,6 +559,34 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
               onSavePressed: widget.entityViewModel.onSavePressed,
               value: _custom4Controller.text,
             ),
+            if (!widget.invoiceItem.isTask)
+              CustomField(
+                controller: _custom5Controller,
+                field: CustomFieldType.product5,
+                onSavePressed: widget.entityViewModel.onSavePressed,
+                value: _custom5Controller.text,
+              ),
+            if (!widget.invoiceItem.isTask)
+              CustomField(
+                controller: _custom6Controller,
+                field: CustomFieldType.product6,
+                onSavePressed: widget.entityViewModel.onSavePressed,
+                value: _custom6Controller.text,
+              ),
+            if (!widget.invoiceItem.isTask)
+              CustomField(
+                controller: _custom7Controller,
+                field: CustomFieldType.product7,
+                onSavePressed: widget.entityViewModel.onSavePressed,
+                value: _custom7Controller.text,
+              ),
+            if (!widget.invoiceItem.isTask)
+              CustomField(
+                controller: _custom8Controller,
+                field: CustomFieldType.product8,
+                onSavePressed: widget.entityViewModel.onSavePressed,
+                value: _custom8Controller.text,
+              ),
             DecoratedFormField(
               label: widget.invoiceItem.isTask
                   ? localization.rate

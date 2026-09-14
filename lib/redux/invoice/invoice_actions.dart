@@ -496,6 +496,26 @@ class FilterInvoicesByCustom4 implements PersistUI {
   final String value;
 }
 
+class FilterInvoicesByCustom5 implements PersistUI {
+  FilterInvoicesByCustom5(this.value);
+  final String value;
+}
+
+class FilterInvoicesByCustom6 implements PersistUI {
+  FilterInvoicesByCustom6(this.value);
+  final String value;
+}
+
+class FilterInvoicesByCustom7 implements PersistUI {
+  FilterInvoicesByCustom7(this.value);
+  final String value;
+}
+
+class FilterInvoicesByCustom8 implements PersistUI {
+  FilterInvoicesByCustom8(this.value);
+  final String value;
+}
+
 class StartInvoiceMultiselect {}
 
 class AddToInvoiceMultiselect {

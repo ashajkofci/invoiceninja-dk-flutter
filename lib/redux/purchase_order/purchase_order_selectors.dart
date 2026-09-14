@@ -159,6 +159,18 @@ List<String> filteredPurchaseOrdersSelector(
     } else if (invoiceListState.custom4Filters.isNotEmpty &&
         !invoiceListState.custom4Filters.contains(invoice.customValue4)) {
       return false;
+    } else if (invoiceListState.custom5Filters.isNotEmpty &&
+        !invoiceListState.custom5Filters.contains(invoice.customValue5)) {
+      return false;
+    } else if (invoiceListState.custom6Filters.isNotEmpty &&
+        !invoiceListState.custom6Filters.contains(invoice.customValue6)) {
+      return false;
+    } else if (invoiceListState.custom7Filters.isNotEmpty &&
+        !invoiceListState.custom7Filters.contains(invoice.customValue7)) {
+      return false;
+    } else if (invoiceListState.custom8Filters.isNotEmpty &&
+        !invoiceListState.custom8Filters.contains(invoice.customValue8)) {
+      return false;
     }
     return true;
   }).toList();

@@ -688,6 +688,10 @@ abstract class CompanyEntity extends Object
       getCustomFieldLabel(CustomFieldType.product2).toLowerCase(),
       getCustomFieldLabel(CustomFieldType.product3).toLowerCase(),
       getCustomFieldLabel(CustomFieldType.product4).toLowerCase(),
+      getCustomFieldLabel(CustomFieldType.product5).toLowerCase(),
+      getCustomFieldLabel(CustomFieldType.product6).toLowerCase(),
+      getCustomFieldLabel(CustomFieldType.product7).toLowerCase(),
+      getCustomFieldLabel(CustomFieldType.product8).toLowerCase(),
     ].contains(label.toLowerCase());
   }
 

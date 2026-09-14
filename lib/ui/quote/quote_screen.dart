@@ -119,6 +119,14 @@ class QuoteScreen extends StatelessWidget {
             excludeBlank: true),
         customValues4: company.getCustomFieldValues(CustomFieldType.invoice4,
             excludeBlank: true),
+        customValues5: company.getCustomFieldValues(CustomFieldType.invoice5,
+            excludeBlank: true),
+        customValues6: company.getCustomFieldValues(CustomFieldType.invoice6,
+            excludeBlank: true),
+        customValues7: company.getCustomFieldValues(CustomFieldType.invoice7,
+            excludeBlank: true),
+        customValues8: company.getCustomFieldValues(CustomFieldType.invoice8,
+            excludeBlank: true),
         onSelectedCustom1: (value) =>
             store.dispatch(FilterQuotesByCustom1(value)),
         onSelectedCustom2: (value) =>
@@ -127,6 +135,14 @@ class QuoteScreen extends StatelessWidget {
             store.dispatch(FilterQuotesByCustom3(value)),
         onSelectedCustom4: (value) =>
             store.dispatch(FilterQuotesByCustom4(value)),
+        onSelectedCustom5: (value) =>
+            store.dispatch(FilterQuotesByCustom5(value)),
+        onSelectedCustom6: (value) =>
+            store.dispatch(FilterQuotesByCustom6(value)),
+        onSelectedCustom7: (value) =>
+            store.dispatch(FilterQuotesByCustom7(value)),
+        onSelectedCustom8: (value) =>
+            store.dispatch(FilterQuotesByCustom8(value)),
         sortFields: [
           QuoteFields.number,
           QuoteFields.date,

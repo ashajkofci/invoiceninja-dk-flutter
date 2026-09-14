@@ -30,6 +30,10 @@ enum QuoteItemReportFields {
   custom2,
   custom3,
   custom4,
+  custom5,
+  custom6,
+  custom7,
+  custom8,
   quoteNumber,
   quoteDate,
   client,
@@ -155,6 +159,18 @@ ReportResult lineItemReport(
             break;
           case QuoteItemReportFields.custom4:
             value = lineItem.customValue4;
+            break;
+          case QuoteItemReportFields.custom5:
+            value = lineItem.customValue5;
+            break;
+          case QuoteItemReportFields.custom6:
+            value = lineItem.customValue6;
+            break;
+          case QuoteItemReportFields.custom7:
+            value = lineItem.customValue7;
+            break;
+          case QuoteItemReportFields.custom8:
+            value = lineItem.customValue8;
             break;
           case QuoteItemReportFields.description:
             value = lineItem.notes;

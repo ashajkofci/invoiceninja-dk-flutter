@@ -43,6 +43,10 @@ class RecurringInvoicePresenter extends EntityPresenter {
       RecurringInvoiceFields.customValue2,
       RecurringInvoiceFields.customValue3,
       RecurringInvoiceFields.customValue4,
+      RecurringInvoiceFields.customValue5,
+      RecurringInvoiceFields.customValue6,
+      RecurringInvoiceFields.customValue7,
+      RecurringInvoiceFields.customValue8,
       RecurringInvoiceFields.taxAmount,
       RecurringInvoiceFields.exchangeRate,
     ];
@@ -87,6 +91,14 @@ class RecurringInvoicePresenter extends EntityPresenter {
         return Text(presentCustomField(context, invoice.customValue3)!);
       case RecurringInvoiceFields.customValue4:
         return Text(presentCustomField(context, invoice.customValue4)!);
+      case RecurringInvoiceFields.customValue5:
+        return Text(presentCustomField(context, invoice.customValue5)!);
+      case RecurringInvoiceFields.customValue6:
+        return Text(presentCustomField(context, invoice.customValue6)!);
+      case RecurringInvoiceFields.customValue7:
+        return Text(presentCustomField(context, invoice.customValue7)!);
+      case RecurringInvoiceFields.customValue8:
+        return Text(presentCustomField(context, invoice.customValue8)!);
       case RecurringInvoiceFields.publicNotes:
         return TableTooltip(message: invoice.publicNotes);
       case RecurringInvoiceFields.privateNotes:

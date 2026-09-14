@@ -42,11 +42,19 @@ InvoiceItemEntity convertExpenseToInvoiceItem({
   String? customValue2 = '';
   String? customValue3 = '';
   String? customValue4 = '';
+  String? customValue5 = '';
+  String? customValue6 = '';
+  String? customValue7 = '';
+  String? customValue8 = '';
 
   final fieldLabel1 = company.getCustomFieldLabel(CustomFieldType.product1);
   final fieldLabel2 = company.getCustomFieldLabel(CustomFieldType.product2);
   final fieldLabel3 = company.getCustomFieldLabel(CustomFieldType.product3);
   final fieldLabel4 = company.getCustomFieldLabel(CustomFieldType.product4);
+  final fieldLabel5 = company.getCustomFieldLabel(CustomFieldType.product5);
+  final fieldLabel6 = company.getCustomFieldLabel(CustomFieldType.product6);
+  final fieldLabel7 = company.getCustomFieldLabel(CustomFieldType.product7);
+  final fieldLabel8 = company.getCustomFieldLabel(CustomFieldType.product8);
 
   final customValues = {
     company.getCustomFieldLabel(CustomFieldType.expense1): expense.customValue1,
@@ -70,6 +78,14 @@ InvoiceItemEntity convertExpenseToInvoiceItem({
       customValue3 = value;
     } else if (fieldLabel4.toLowerCase() == label.toLowerCase()) {
       customValue4 = value;
+    } else if (fieldLabel5.toLowerCase() == label.toLowerCase()) {
+      customValue5 = value;
+    } else if (fieldLabel6.toLowerCase() == label.toLowerCase()) {
+      customValue6 = value;
+    } else if (fieldLabel7.toLowerCase() == label.toLowerCase()) {
+      customValue7 = value;
+    } else if (fieldLabel8.toLowerCase() == label.toLowerCase()) {
+      customValue8 = value;
     }
   }
 
@@ -85,6 +101,10 @@ InvoiceItemEntity convertExpenseToInvoiceItem({
     ..customValue2 = customValue2
     ..customValue3 = customValue3
     ..customValue4 = customValue4
+    ..customValue5 = customValue5
+    ..customValue6 = customValue6
+    ..customValue7 = customValue7
+    ..customValue8 = customValue8
     ..taxName1 = company.numberOfItemTaxRates >= 1 ? expense.taxName1 : ''
     ..taxRate1 =
         company.numberOfItemTaxRates >= 1 ? expense.calculatetaxRate1 : 0

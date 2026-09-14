@@ -622,6 +622,10 @@ class CustomFieldType {
   static const String product2 = 'product2';
   static const String product3 = 'product3';
   static const String product4 = 'product4';
+  static const String product5 = 'product5';
+  static const String product6 = 'product6';
+  static const String product7 = 'product7';
+  static const String product8 = 'product8';
 
   static const String client = 'client';
   static const String client1 = 'client1';
@@ -676,6 +680,10 @@ class CustomFieldType {
   static const String invoice2 = 'invoice2';
   static const String invoice3 = 'invoice3';
   static const String invoice4 = 'invoice4';
+  static const String invoice5 = 'invoice5';
+  static const String invoice6 = 'invoice6';
+  static const String invoice7 = 'invoice7';
+  static const String invoice8 = 'invoice8';
 
   static const String payment = 'payment';
   static const String payment1 = 'payment1';

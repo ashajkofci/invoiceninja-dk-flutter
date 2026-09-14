@@ -227,6 +227,18 @@ class _$InvoiceEntitySerializer implements StructuredSerializer<InvoiceEntity> {
       'custom_value4',
       serializers.serialize(object.customValue4,
           specifiedType: const FullType(String)),
+      'custom_value5',
+      serializers.serialize(object.customValue5,
+          specifiedType: const FullType(String)),
+      'custom_value6',
+      serializers.serialize(object.customValue6,
+          specifiedType: const FullType(String)),
+      'custom_value7',
+      serializers.serialize(object.customValue7,
+          specifiedType: const FullType(String)),
+      'custom_value8',
+      serializers.serialize(object.customValue8,
+          specifiedType: const FullType(String)),
       'custom_surcharge1',
       serializers.serialize(object.customSurcharge1,
           specifiedType: const FullType(double)),
@@ -592,6 +604,22 @@ class _$InvoiceEntitySerializer implements StructuredSerializer<InvoiceEntity> {
           result.customValue4 = serializers.deserialize(value,
               specifiedType: const FullType(String))! as String;
           break;
+        case 'custom_value5':
+          result.customValue5 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'custom_value6':
+          result.customValue6 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'custom_value7':
+          result.customValue7 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'custom_value8':
+          result.customValue8 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
         case 'custom_surcharge1':
           result.customSurcharge1 = serializers.deserialize(value,
               specifiedType: const FullType(double))! as double;
@@ -831,6 +859,18 @@ class _$InvoiceItemEntitySerializer
       'custom_value4',
       serializers.serialize(object.customValue4,
           specifiedType: const FullType(String)),
+      'custom_value5',
+      serializers.serialize(object.customValue5,
+          specifiedType: const FullType(String)),
+      'custom_value6',
+      serializers.serialize(object.customValue6,
+          specifiedType: const FullType(String)),
+      'custom_value7',
+      serializers.serialize(object.customValue7,
+          specifiedType: const FullType(String)),
+      'custom_value8',
+      serializers.serialize(object.customValue8,
+          specifiedType: const FullType(String)),
       'discount',
       serializers.serialize(object.discount,
           specifiedType: const FullType(double)),
@@ -966,6 +1006,22 @@ class _$InvoiceItemEntitySerializer
           break;
         case 'custom_value4':
           result.customValue4 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'custom_value5':
+          result.customValue5 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'custom_value6':
+          result.customValue6 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'custom_value7':
+          result.customValue7 = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'custom_value8':
+          result.customValue8 = serializers.deserialize(value,
               specifiedType: const FullType(String))! as String;
           break;
         case 'discount':
@@ -1588,6 +1644,14 @@ class _$InvoiceEntity extends InvoiceEntity {
   @override
   final String customValue4;
   @override
+  final String customValue5;
+  @override
+  final String customValue6;
+  @override
+  final String customValue7;
+  @override
+  final String customValue8;
+  @override
   final double customSurcharge1;
   @override
   final double customSurcharge2;
@@ -1712,6 +1776,10 @@ class _$InvoiceEntity extends InvoiceEntity {
       required this.customValue2,
       required this.customValue3,
       required this.customValue4,
+      required this.customValue5,
+      required this.customValue6,
+      required this.customValue7,
+      required this.customValue8,
       required this.customSurcharge1,
       required this.customSurcharge2,
       required this.customSurcharge3,
@@ -1802,6 +1870,10 @@ class _$InvoiceEntity extends InvoiceEntity {
         customValue2 == other.customValue2 &&
         customValue3 == other.customValue3 &&
         customValue4 == other.customValue4 &&
+        customValue5 == other.customValue5 &&
+        customValue6 == other.customValue6 &&
+        customValue7 == other.customValue7 &&
+        customValue8 == other.customValue8 &&
         customSurcharge1 == other.customSurcharge1 &&
         customSurcharge2 == other.customSurcharge2 &&
         customSurcharge3 == other.customSurcharge3 &&
@@ -1885,6 +1957,10 @@ class _$InvoiceEntity extends InvoiceEntity {
     _$hash = $jc(_$hash, customValue2.hashCode);
     _$hash = $jc(_$hash, customValue3.hashCode);
     _$hash = $jc(_$hash, customValue4.hashCode);
+    _$hash = $jc(_$hash, customValue5.hashCode);
+    _$hash = $jc(_$hash, customValue6.hashCode);
+    _$hash = $jc(_$hash, customValue7.hashCode);
+    _$hash = $jc(_$hash, customValue8.hashCode);
     _$hash = $jc(_$hash, customSurcharge1.hashCode);
     _$hash = $jc(_$hash, customSurcharge2.hashCode);
     _$hash = $jc(_$hash, customSurcharge3.hashCode);
@@ -1968,6 +2044,10 @@ class _$InvoiceEntity extends InvoiceEntity {
           ..add('customValue2', customValue2)
           ..add('customValue3', customValue3)
           ..add('customValue4', customValue4)
+          ..add('customValue5', customValue5)
+          ..add('customValue6', customValue6)
+          ..add('customValue7', customValue7)
+          ..add('customValue8', customValue8)
           ..add('customSurcharge1', customSurcharge1)
           ..add('customSurcharge2', customSurcharge2)
           ..add('customSurcharge3', customSurcharge3)
@@ -2166,6 +2246,22 @@ class InvoiceEntityBuilder
   String? _customValue4;
   String? get customValue4 => _$this._customValue4;
   set customValue4(String? customValue4) => _$this._customValue4 = customValue4;
+
+  String? _customValue5;
+  String? get customValue5 => _$this._customValue5;
+  set customValue5(String? customValue5) => _$this._customValue5 = customValue5;
+
+  String? _customValue6;
+  String? get customValue6 => _$this._customValue6;
+  set customValue6(String? customValue6) => _$this._customValue6 = customValue6;
+
+  String? _customValue7;
+  String? get customValue7 => _$this._customValue7;
+  set customValue7(String? customValue7) => _$this._customValue7 = customValue7;
+
+  String? _customValue8;
+  String? get customValue8 => _$this._customValue8;
+  set customValue8(String? customValue8) => _$this._customValue8 = customValue8;
 
   double? _customSurcharge1;
   double? get customSurcharge1 => _$this._customSurcharge1;
@@ -2405,6 +2501,10 @@ class InvoiceEntityBuilder
       _customValue2 = $v.customValue2;
       _customValue3 = $v.customValue3;
       _customValue4 = $v.customValue4;
+      _customValue5 = $v.customValue5;
+      _customValue6 = $v.customValue6;
+      _customValue7 = $v.customValue7;
+      _customValue8 = $v.customValue8;
       _customSurcharge1 = $v.customSurcharge1;
       _customSurcharge2 = $v.customSurcharge2;
       _customSurcharge3 = $v.customSurcharge3;
@@ -2540,6 +2640,14 @@ class InvoiceEntityBuilder
                 customValue3, r'InvoiceEntity', 'customValue3'),
             customValue4: BuiltValueNullFieldError.checkNotNull(
                 customValue4, r'InvoiceEntity', 'customValue4'),
+            customValue5: BuiltValueNullFieldError.checkNotNull(
+                customValue5, r'InvoiceEntity', 'customValue5'),
+            customValue6: BuiltValueNullFieldError.checkNotNull(
+                customValue6, r'InvoiceEntity', 'customValue6'),
+            customValue7: BuiltValueNullFieldError.checkNotNull(
+                customValue7, r'InvoiceEntity', 'customValue7'),
+            customValue8: BuiltValueNullFieldError.checkNotNull(
+                customValue8, r'InvoiceEntity', 'customValue8'),
             customSurcharge1: BuiltValueNullFieldError.checkNotNull(
                 customSurcharge1, r'InvoiceEntity', 'customSurcharge1'),
             customSurcharge2: BuiltValueNullFieldError.checkNotNull(
@@ -2670,6 +2778,14 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
   @override
   final String customValue4;
   @override
+  final String customValue5;
+  @override
+  final String customValue6;
+  @override
+  final String customValue7;
+  @override
+  final String customValue8;
+  @override
   final double discount;
   @override
   final String? taskId;
@@ -2713,6 +2829,10 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
       required this.customValue2,
       required this.customValue3,
       required this.customValue4,
+      required this.customValue5,
+      required this.customValue6,
+      required this.customValue7,
+      required this.customValue8,
       required this.discount,
       this.taskId,
       this.expenseId,
@@ -2754,6 +2874,10 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
         customValue2 == other.customValue2 &&
         customValue3 == other.customValue3 &&
         customValue4 == other.customValue4 &&
+        customValue5 == other.customValue5 &&
+        customValue6 == other.customValue6 &&
+        customValue7 == other.customValue7 &&
+        customValue8 == other.customValue8 &&
         discount == other.discount &&
         taskId == other.taskId &&
         expenseId == other.expenseId &&
@@ -2789,6 +2913,10 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
     _$hash = $jc(_$hash, customValue2.hashCode);
     _$hash = $jc(_$hash, customValue3.hashCode);
     _$hash = $jc(_$hash, customValue4.hashCode);
+    _$hash = $jc(_$hash, customValue5.hashCode);
+    _$hash = $jc(_$hash, customValue6.hashCode);
+    _$hash = $jc(_$hash, customValue7.hashCode);
+    _$hash = $jc(_$hash, customValue8.hashCode);
     _$hash = $jc(_$hash, discount.hashCode);
     _$hash = $jc(_$hash, taskId.hashCode);
     _$hash = $jc(_$hash, expenseId.hashCode);
@@ -2824,6 +2952,10 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
           ..add('customValue2', customValue2)
           ..add('customValue3', customValue3)
           ..add('customValue4', customValue4)
+          ..add('customValue5', customValue5)
+          ..add('customValue6', customValue6)
+          ..add('customValue7', customValue7)
+          ..add('customValue8', customValue8)
           ..add('discount', discount)
           ..add('taskId', taskId)
           ..add('expenseId', expenseId)
@@ -2916,6 +3048,22 @@ class InvoiceItemEntityBuilder
   String? get customValue4 => _$this._customValue4;
   set customValue4(String? customValue4) => _$this._customValue4 = customValue4;
 
+  String? _customValue5;
+  String? get customValue5 => _$this._customValue5;
+  set customValue5(String? customValue5) => _$this._customValue5 = customValue5;
+
+  String? _customValue6;
+  String? get customValue6 => _$this._customValue6;
+  set customValue6(String? customValue6) => _$this._customValue6 = customValue6;
+
+  String? _customValue7;
+  String? get customValue7 => _$this._customValue7;
+  set customValue7(String? customValue7) => _$this._customValue7 = customValue7;
+
+  String? _customValue8;
+  String? get customValue8 => _$this._customValue8;
+  set customValue8(String? customValue8) => _$this._customValue8 = customValue8;
+
   double? _discount;
   double? get discount => _$this._discount;
   set discount(double? discount) => _$this._discount = discount;
@@ -2984,6 +3132,10 @@ class InvoiceItemEntityBuilder
       _customValue2 = $v.customValue2;
       _customValue3 = $v.customValue3;
       _customValue4 = $v.customValue4;
+      _customValue5 = $v.customValue5;
+      _customValue6 = $v.customValue6;
+      _customValue7 = $v.customValue7;
+      _customValue8 = $v.customValue8;
       _discount = $v.discount;
       _taskId = $v.taskId;
       _expenseId = $v.expenseId;
@@ -3050,6 +3202,14 @@ class InvoiceItemEntityBuilder
               customValue3, r'InvoiceItemEntity', 'customValue3'),
           customValue4: BuiltValueNullFieldError.checkNotNull(
               customValue4, r'InvoiceItemEntity', 'customValue4'),
+          customValue5: BuiltValueNullFieldError.checkNotNull(
+              customValue5, r'InvoiceItemEntity', 'customValue5'),
+          customValue6: BuiltValueNullFieldError.checkNotNull(
+              customValue6, r'InvoiceItemEntity', 'customValue6'),
+          customValue7: BuiltValueNullFieldError.checkNotNull(
+              customValue7, r'InvoiceItemEntity', 'customValue7'),
+          customValue8: BuiltValueNullFieldError.checkNotNull(
+              customValue8, r'InvoiceItemEntity', 'customValue8'),
           discount: BuiltValueNullFieldError.checkNotNull(
               discount, r'InvoiceItemEntity', 'discount'),
           taskId: taskId,

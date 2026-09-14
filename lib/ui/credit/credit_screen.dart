@@ -130,6 +130,14 @@ class CreditScreen extends StatelessWidget {
             excludeBlank: true),
         customValues4: company.getCustomFieldValues(CustomFieldType.invoice4,
             excludeBlank: true),
+        customValues5: company.getCustomFieldValues(CustomFieldType.invoice5,
+            excludeBlank: true),
+        customValues6: company.getCustomFieldValues(CustomFieldType.invoice6,
+            excludeBlank: true),
+        customValues7: company.getCustomFieldValues(CustomFieldType.invoice7,
+            excludeBlank: true),
+        customValues8: company.getCustomFieldValues(CustomFieldType.invoice8,
+            excludeBlank: true),
         onSelectedCustom1: (value) =>
             store.dispatch(FilterCreditsByCustom1(value)),
         onSelectedCustom2: (value) =>
@@ -138,6 +146,14 @@ class CreditScreen extends StatelessWidget {
             store.dispatch(FilterCreditsByCustom3(value)),
         onSelectedCustom4: (value) =>
             store.dispatch(FilterCreditsByCustom4(value)),
+        onSelectedCustom5: (value) =>
+            store.dispatch(FilterCreditsByCustom5(value)),
+        onSelectedCustom6: (value) =>
+            store.dispatch(FilterCreditsByCustom6(value)),
+        onSelectedCustom7: (value) =>
+            store.dispatch(FilterCreditsByCustom7(value)),
+        onSelectedCustom8: (value) =>
+            store.dispatch(FilterCreditsByCustom8(value)),
       ),
       floatingActionButton: state.prefState.isMenuFloated &&
               userCompany.canCreate(EntityType.credit)

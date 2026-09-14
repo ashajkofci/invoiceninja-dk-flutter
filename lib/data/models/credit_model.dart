@@ -67,6 +67,10 @@ class CreditFields {
   static const String customValue2 = 'custom2';
   static const String customValue3 = 'custom3';
   static const String customValue4 = 'custom4';
+  static const String customValue5 = 'custom5';
+  static const String customValue6 = 'custom6';
+  static const String customValue7 = 'custom7';
+  static const String customValue8 = 'custom8';
   static const String updatedAt = 'updated_at';
   static const String archivedAt = 'archived_at';
   static const String isDeleted = 'is_deleted';

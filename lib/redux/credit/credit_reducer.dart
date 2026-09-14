@@ -34,6 +34,10 @@ final forceSelectedReducer = combineReducers<bool?>([
   TypedReducer<bool?, FilterCreditsByCustom2>((completer, action) => false),
   TypedReducer<bool?, FilterCreditsByCustom3>((completer, action) => false),
   TypedReducer<bool?, FilterCreditsByCustom4>((completer, action) => false),
+  TypedReducer<bool?, FilterCreditsByCustom5>((completer, action) => false),
+  TypedReducer<bool?, FilterCreditsByCustom6>((completer, action) => false),
+  TypedReducer<bool?, FilterCreditsByCustom7>((completer, action) => false),
+  TypedReducer<bool?, FilterCreditsByCustom8>((completer, action) => false),
 ]);
 
 final int? Function(int, dynamic) tabIndexReducer = combineReducers<int?>([
@@ -88,6 +92,10 @@ Reducer<String?> selectedIdReducer = combineReducers([
   TypedReducer<String?, FilterCreditsByCustom2>((selectedId, action) => ''),
   TypedReducer<String?, FilterCreditsByCustom3>((selectedId, action) => ''),
   TypedReducer<String?, FilterCreditsByCustom4>((selectedId, action) => ''),
+  TypedReducer<String?, FilterCreditsByCustom5>((selectedId, action) => ''),
+  TypedReducer<String?, FilterCreditsByCustom6>((selectedId, action) => ''),
+  TypedReducer<String?, FilterCreditsByCustom7>((selectedId, action) => ''),
+  TypedReducer<String?, FilterCreditsByCustom8>((selectedId, action) => ''),
   TypedReducer<String?, ClearEntitySelection>((selectedId, action) =>
       action.entityType == EntityType.credit ? '' : selectedId),
   TypedReducer<String?, FilterByEntity>(
@@ -198,6 +206,14 @@ final creditListReducer = combineReducers<ListUIState>([
   TypedReducer<ListUIState, FilterCreditsByCustom2>(_filterCreditsByCustom2),
   TypedReducer<ListUIState, FilterCreditsByCustom3>(_filterCreditsByCustom3),
   TypedReducer<ListUIState, FilterCreditsByCustom4>(_filterCreditsByCustom4),
+  TypedReducer<ListUIState, FilterCreditsByCustom5>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 5)),
+  TypedReducer<ListUIState, FilterCreditsByCustom6>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 6)),
+  TypedReducer<ListUIState, FilterCreditsByCustom7>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 7)),
+  TypedReducer<ListUIState, FilterCreditsByCustom8>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 8)),
   TypedReducer<ListUIState, StartCreditMultiselect>(_startListMultiselect),
   TypedReducer<ListUIState, AddToCreditMultiselect>(_addToListMultiselect),
   TypedReducer<ListUIState, RemoveFromCreditMultiselect>(

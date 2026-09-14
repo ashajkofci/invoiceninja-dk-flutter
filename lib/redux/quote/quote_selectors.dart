@@ -161,6 +161,18 @@ List<String> filteredQuotesSelector(
     } else if (quoteListState.custom4Filters.isNotEmpty &&
         !quoteListState.custom4Filters.contains(quote.customValue4)) {
       return false;
+    } else if (quoteListState.custom5Filters.isNotEmpty &&
+        !quoteListState.custom5Filters.contains(quote.customValue5)) {
+      return false;
+    } else if (quoteListState.custom6Filters.isNotEmpty &&
+        !quoteListState.custom6Filters.contains(quote.customValue6)) {
+      return false;
+    } else if (quoteListState.custom7Filters.isNotEmpty &&
+        !quoteListState.custom7Filters.contains(quote.customValue7)) {
+      return false;
+    } else if (quoteListState.custom8Filters.isNotEmpty &&
+        !quoteListState.custom8Filters.contains(quote.customValue8)) {
+      return false;
     }
 
     return true;

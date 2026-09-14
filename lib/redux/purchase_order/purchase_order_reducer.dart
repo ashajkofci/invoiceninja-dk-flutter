@@ -40,6 +40,10 @@ final forceSelectedReducer = combineReducers<bool?>([
       (completer, action) => false),
   TypedReducer<bool?, FilterPurchaseOrdersByCustom4>(
       (completer, action) => false),
+  TypedReducer<bool?, FilterPurchaseOrdersByCustom5>((_, __) => false),
+  TypedReducer<bool?, FilterPurchaseOrdersByCustom6>((_, __) => false),
+  TypedReducer<bool?, FilterPurchaseOrdersByCustom7>((_, __) => false),
+  TypedReducer<bool?, FilterPurchaseOrdersByCustom8>((_, __) => false),
 ]);
 
 final int? Function(int, dynamic) tabIndexReducer = combineReducers<int?>([
@@ -108,6 +112,10 @@ Reducer<String?> selectedIdReducer = combineReducers([
       (selectedId, action) => ''),
   TypedReducer<String?, FilterPurchaseOrdersByCustom4>(
       (selectedId, action) => ''),
+  TypedReducer<String?, FilterPurchaseOrdersByCustom5>((_, __) => ''),
+  TypedReducer<String?, FilterPurchaseOrdersByCustom6>((_, __) => ''),
+  TypedReducer<String?, FilterPurchaseOrdersByCustom7>((_, __) => ''),
+  TypedReducer<String?, FilterPurchaseOrdersByCustom8>((_, __) => ''),
   TypedReducer<String?, ClearEntitySelection>((selectedId, action) =>
       action.entityType == EntityType.purchaseOrder ? '' : selectedId),
   TypedReducer<String?, FilterByEntity>(
@@ -193,8 +201,7 @@ InvoiceEntity _addPurchaseOrderItem(
   } else {
     final index =
         action.index!.clamp(0, purchaseOrder!.lineItems.length).toInt();
-    return purchaseOrder
-        .rebuild((b) => b..lineItems.insert(index, item));
+    return purchaseOrder.rebuild((b) => b..lineItems.insert(index, item));
   }
 }
 
@@ -235,6 +242,14 @@ final purchaseOrderListReducer = combineReducers<ListUIState>([
       _filterPurchaseOrdersByCustom3),
   TypedReducer<ListUIState, FilterPurchaseOrdersByCustom4>(
       _filterPurchaseOrdersByCustom4),
+  TypedReducer<ListUIState, FilterPurchaseOrdersByCustom5>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 5)),
+  TypedReducer<ListUIState, FilterPurchaseOrdersByCustom6>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 6)),
+  TypedReducer<ListUIState, FilterPurchaseOrdersByCustom7>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 7)),
+  TypedReducer<ListUIState, FilterPurchaseOrdersByCustom8>(
+      (state, action) => toggleAdditionalCustomFilter(state, action.value, 8)),
   TypedReducer<ListUIState, StartPurchaseOrderMultiselect>(
       _startListMultiselect),
   TypedReducer<ListUIState, AddToPurchaseOrderMultiselect>(

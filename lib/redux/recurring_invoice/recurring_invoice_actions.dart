@@ -446,6 +446,26 @@ class FilterRecurringInvoicesByCustom4 implements PersistUI {
   final String value;
 }
 
+class FilterRecurringInvoicesByCustom5 implements PersistUI {
+  FilterRecurringInvoicesByCustom5(this.value);
+  final String value;
+}
+
+class FilterRecurringInvoicesByCustom6 implements PersistUI {
+  FilterRecurringInvoicesByCustom6(this.value);
+  final String value;
+}
+
+class FilterRecurringInvoicesByCustom7 implements PersistUI {
+  FilterRecurringInvoicesByCustom7(this.value);
+  final String value;
+}
+
+class FilterRecurringInvoicesByCustom8 implements PersistUI {
+  FilterRecurringInvoicesByCustom8(this.value);
+  final String value;
+}
+
 class SaveRecurringInvoiceDocumentRequest implements StartSaving {
   SaveRecurringInvoiceDocumentRequest({
     required this.isPrivate,

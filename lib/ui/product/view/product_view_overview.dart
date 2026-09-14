@@ -109,6 +109,21 @@ class _ProductOverviewState extends State<ProductOverview> {
           value: product.customValue4);
     }
 
+    for (final field in [
+      (CustomFieldType.product5, product.customValue5),
+      (CustomFieldType.product6, product.customValue6),
+      (CustomFieldType.product7, product.customValue7),
+      (CustomFieldType.product8, product.customValue8),
+    ]) {
+      if (company.hasCustomField(field.$1) && field.$2.isNotEmpty) {
+        fields[company.getCustomFieldLabel(field.$1)] = formatCustomValue(
+          context: context,
+          field: field.$1,
+          value: field.$2,
+        );
+      }
+    }
+
     if (company.trackInventory ||
         company.enabledModules & kModuleProductReservations != 0) {
       fields[localization.stockQuantity] = formatNumber(

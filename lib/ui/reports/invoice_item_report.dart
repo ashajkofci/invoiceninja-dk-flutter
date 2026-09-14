@@ -31,6 +31,10 @@ enum InvoiceItemReportFields {
   custom2,
   custom3,
   custom4,
+  custom5,
+  custom6,
+  custom7,
+  custom8,
   invoiceNumber,
   invoiceDate,
   client,
@@ -160,6 +164,18 @@ ReportResult lineItemReport(
             break;
           case InvoiceItemReportFields.custom4:
             value = lineItem.customValue4;
+            break;
+          case InvoiceItemReportFields.custom5:
+            value = lineItem.customValue5;
+            break;
+          case InvoiceItemReportFields.custom6:
+            value = lineItem.customValue6;
+            break;
+          case InvoiceItemReportFields.custom7:
+            value = lineItem.customValue7;
+            break;
+          case InvoiceItemReportFields.custom8:
+            value = lineItem.customValue8;
             break;
           case InvoiceItemReportFields.description:
             value = lineItem.notes;

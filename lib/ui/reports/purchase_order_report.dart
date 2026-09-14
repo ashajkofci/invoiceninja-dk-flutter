@@ -47,6 +47,10 @@ enum PurchaseOrderReportFields {
   invoice2,
   invoice3,
   invoice4,
+  invoice5,
+  invoice6,
+  invoice7,
+  invoice8,
   surcharge1,
   surcharge2,
   surcharge3,
@@ -235,6 +239,30 @@ ReportResult purchaseOrderReport(
             customFieldType: CustomFieldType.invoice4,
             company: userCompany.company,
           );
+          break;
+        case PurchaseOrderReportFields.invoice5:
+          value = presentCustomField(
+              value: purchaseOrder.customValue5,
+              customFieldType: CustomFieldType.invoice5,
+              company: userCompany.company);
+          break;
+        case PurchaseOrderReportFields.invoice6:
+          value = presentCustomField(
+              value: purchaseOrder.customValue6,
+              customFieldType: CustomFieldType.invoice6,
+              company: userCompany.company);
+          break;
+        case PurchaseOrderReportFields.invoice7:
+          value = presentCustomField(
+              value: purchaseOrder.customValue7,
+              customFieldType: CustomFieldType.invoice7,
+              company: userCompany.company);
+          break;
+        case PurchaseOrderReportFields.invoice8:
+          value = presentCustomField(
+              value: purchaseOrder.customValue8,
+              customFieldType: CustomFieldType.invoice8,
+              company: userCompany.company);
           break;
         case PurchaseOrderReportFields.surcharge1:
           value = purchaseOrder.customSurcharge1;

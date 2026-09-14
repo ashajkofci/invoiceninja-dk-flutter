@@ -42,6 +42,10 @@ class QuotePresenter extends EntityPresenter {
       QuoteFields.customValue2,
       QuoteFields.customValue3,
       QuoteFields.customValue4,
+      QuoteFields.customValue5,
+      QuoteFields.customValue6,
+      QuoteFields.customValue7,
+      QuoteFields.customValue8,
       QuoteFields.taxAmount,
       QuoteFields.exchangeRate,
       QuoteFields.isViewed,
@@ -94,6 +98,14 @@ class QuotePresenter extends EntityPresenter {
         return Text(presentCustomField(context, quote.customValue3)!);
       case QuoteFields.customValue4:
         return Text(presentCustomField(context, quote.customValue4)!);
+      case QuoteFields.customValue5:
+        return Text(presentCustomField(context, quote.customValue5)!);
+      case QuoteFields.customValue6:
+        return Text(presentCustomField(context, quote.customValue6)!);
+      case QuoteFields.customValue7:
+        return Text(presentCustomField(context, quote.customValue7)!);
+      case QuoteFields.customValue8:
+        return Text(presentCustomField(context, quote.customValue8)!);
       case QuoteFields.publicNotes:
         return TableTooltip(message: quote.publicNotes);
       case QuoteFields.privateNotes:

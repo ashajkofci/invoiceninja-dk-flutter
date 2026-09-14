@@ -48,6 +48,10 @@ enum CreditReportFields {
   invoice2,
   invoice3,
   invoice4,
+  invoice5,
+  invoice6,
+  invoice7,
+  invoice8,
   surcharge1,
   surcharge2,
   surcharge3,
@@ -241,6 +245,30 @@ ReportResult creditReport(
             customFieldType: CustomFieldType.invoice4,
             company: userCompany.company,
           );
+          break;
+        case CreditReportFields.invoice5:
+          value = presentCustomField(
+              value: credit.customValue5,
+              customFieldType: CustomFieldType.invoice5,
+              company: userCompany.company);
+          break;
+        case CreditReportFields.invoice6:
+          value = presentCustomField(
+              value: credit.customValue6,
+              customFieldType: CustomFieldType.invoice6,
+              company: userCompany.company);
+          break;
+        case CreditReportFields.invoice7:
+          value = presentCustomField(
+              value: credit.customValue7,
+              customFieldType: CustomFieldType.invoice7,
+              company: userCompany.company);
+          break;
+        case CreditReportFields.invoice8:
+          value = presentCustomField(
+              value: credit.customValue8,
+              customFieldType: CustomFieldType.invoice8,
+              company: userCompany.company);
           break;
         case CreditReportFields.surcharge1:
           value = credit.customSurcharge1;

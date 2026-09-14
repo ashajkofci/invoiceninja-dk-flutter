@@ -61,6 +61,10 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
   static const COLUMN_CUSTOM2 = 'custom2';
   static const COLUMN_CUSTOM3 = 'custom3';
   static const COLUMN_CUSTOM4 = 'custom4';
+  static const COLUMN_CUSTOM5 = 'custom5';
+  static const COLUMN_CUSTOM6 = 'custom6';
+  static const COLUMN_CUSTOM7 = 'custom7';
+  static const COLUMN_CUSTOM8 = 'custom8';
   static const COLUMN_TAX1 = 'tax1';
   static const COLUMN_TAX2 = 'tax2';
   static const COLUMN_TAX3 = 'tax3';
@@ -103,7 +107,40 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
     if (field == 4) {
       return invoice.customValue4;
     }
+    if (field == 5) {
+      return invoice.customValue5;
+    }
+    if (field == 6) {
+      return invoice.customValue6;
+    }
+    if (field == 7) {
+      return invoice.customValue7;
+    }
+    if (field == 8) {
+      return invoice.customValue8;
+    }
     return '';
+  }
+
+  Widget _customFieldCell(
+    String field,
+    String value,
+    ValueChanged<String> onChanged,
+  ) {
+    return Focus(
+      onFocusChange: (hasFocus) => _onFocusChange(hasFocus),
+      skipTraversal: true,
+      child: Padding(
+        padding: const EdgeInsets.only(right: kTableColumnGap),
+        child: CustomField(
+          field: field,
+          value: value,
+          hideFieldLabel: true,
+          onChanged: onChanged,
+          onSavePressed: widget.entityViewModel.onSavePressed,
+        ),
+      ),
+    );
   }
 
   void _updateReservationAvailability() {
@@ -150,6 +187,10 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
         widget.isTasks ? CustomFieldType.task3 : CustomFieldType.product3;
     final customField4 =
         widget.isTasks ? CustomFieldType.task4 : CustomFieldType.product4;
+    const customField5 = CustomFieldType.product5;
+    const customField6 = CustomFieldType.product6;
+    const customField7 = CustomFieldType.product7;
+    const customField8 = CustomFieldType.product8;
 
     List<String> pdfColumns = company.settings
         .getFieldsForSection(
@@ -237,6 +278,18 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
         !pdfColumns.contains(customField4)) {
       pdfColumns.add(customField4);
     }
+    if (!widget.isTasks) {
+      for (final field in [
+        customField5,
+        customField6,
+        customField7,
+        customField8,
+      ]) {
+        if (company.hasCustomField(field) && !pdfColumns.contains(field)) {
+          pdfColumns.add(field);
+        }
+      }
+    }
 
     _columns.clear();
 
@@ -278,6 +331,18 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
               TaskItemFields.custom4 == column) &&
           company.hasCustomField(customField4)) {
         _columns.add(COLUMN_CUSTOM4);
+      } else if (ProductItemFields.custom5 == column &&
+          company.hasCustomField(customField5)) {
+        _columns.add(COLUMN_CUSTOM5);
+      } else if (ProductItemFields.custom6 == column &&
+          company.hasCustomField(customField6)) {
+        _columns.add(COLUMN_CUSTOM6);
+      } else if (ProductItemFields.custom7 == column &&
+          company.hasCustomField(customField7)) {
+        _columns.add(COLUMN_CUSTOM7);
+      } else if (ProductItemFields.custom8 == column &&
+          company.hasCustomField(customField8)) {
+        _columns.add(COLUMN_CUSTOM8);
       } else if (ProductItemFields.tax == column) {
         if (company.calculateTaxes) {
           _columns.add(COLUMN_TAX_CATEGORY);
@@ -401,6 +466,10 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
         widget.isTasks ? CustomFieldType.task3 : CustomFieldType.product3;
     final customField4 =
         widget.isTasks ? CustomFieldType.task4 : CustomFieldType.product4;
+    const customField5 = CustomFieldType.product5;
+    const customField6 = CustomFieldType.product6;
+    const customField7 = CustomFieldType.product7;
+    const customField8 = CustomFieldType.product8;
 
     final tableFontColor = state.prefState
             .activeCustomColors[PrefState.THEME_INVOICE_HEADER_FONT_COLOR] ??
@@ -439,6 +508,14 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
         label = company.getCustomFieldLabel(customField3);
       } else if (column == COLUMN_CUSTOM4) {
         label = company.getCustomFieldLabel(customField4);
+      } else if (column == COLUMN_CUSTOM5) {
+        label = company.getCustomFieldLabel(customField5);
+      } else if (column == COLUMN_CUSTOM6) {
+        label = company.getCustomFieldLabel(customField6);
+      } else if (column == COLUMN_CUSTOM7) {
+        label = company.getCustomFieldLabel(customField7);
+      } else if (column == COLUMN_CUSTOM8) {
+        label = company.getCustomFieldLabel(customField8);
       } else if ([COLUMN_TAX1, COLUMN_TAX2, COLUMN_TAX3].contains(column)) {
         label = localization!.tax +
             (invoice.usesInclusiveTaxes ? ' - ${localization.inclusive}' : '');
@@ -559,6 +636,14 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                               return Text(item.customValue3);
                             } else if (column == COLUMN_CUSTOM4) {
                               return Text(item.customValue4);
+                            } else if (column == COLUMN_CUSTOM5) {
+                              return Text(item.customValue5);
+                            } else if (column == COLUMN_CUSTOM6) {
+                              return Text(item.customValue6);
+                            } else if (column == COLUMN_CUSTOM7) {
+                              return Text(item.customValue7);
+                            } else if (column == COLUMN_CUSTOM8) {
+                              return Text(item.customValue8);
                             } else if (column == COLUMN_TAX1) {
                               return Text(item.taxName1);
                             } else if (column == COLUMN_TAX2) {
@@ -873,6 +958,10 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                                       ..customValue2 = product.customValue2
                                       ..customValue3 = product.customValue3
                                       ..customValue4 = product.customValue4
+                                      ..customValue5 = product.customValue5
+                                      ..customValue6 = product.customValue6
+                                      ..customValue7 = product.customValue7
+                                      ..customValue8 = product.customValue8
                                       ..taxCategoryId = product.taxCategoryId
                                       ..taxName1 =
                                           company.numberOfItemTaxRates >= 1 &&
@@ -1129,6 +1218,46 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                               onSavePressed:
                                   widget.entityViewModel.onSavePressed,
                             ),
+                          ),
+                        );
+                      } else if (column == COLUMN_CUSTOM5) {
+                        return _customFieldCell(
+                          customField5,
+                          lineItems[index].customValue5,
+                          (value) => _onChanged(
+                            lineItems[index]
+                                .rebuild((b) => b..customValue5 = value),
+                            index,
+                          ),
+                        );
+                      } else if (column == COLUMN_CUSTOM6) {
+                        return _customFieldCell(
+                          customField6,
+                          lineItems[index].customValue6,
+                          (value) => _onChanged(
+                            lineItems[index]
+                                .rebuild((b) => b..customValue6 = value),
+                            index,
+                          ),
+                        );
+                      } else if (column == COLUMN_CUSTOM7) {
+                        return _customFieldCell(
+                          customField7,
+                          lineItems[index].customValue7,
+                          (value) => _onChanged(
+                            lineItems[index]
+                                .rebuild((b) => b..customValue7 = value),
+                            index,
+                          ),
+                        );
+                      } else if (column == COLUMN_CUSTOM8) {
+                        return _customFieldCell(
+                          customField8,
+                          lineItems[index].customValue8,
+                          (value) => _onChanged(
+                            lineItems[index]
+                                .rebuild((b) => b..customValue8 = value),
+                            index,
                           ),
                         );
                       } else if (column == COLUMN_TAX_CATEGORY &&

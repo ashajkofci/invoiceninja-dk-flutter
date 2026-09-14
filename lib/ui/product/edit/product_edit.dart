@@ -43,6 +43,10 @@ class _ProductEditState extends State<ProductEdit> {
   final _custom2Controller = TextEditingController();
   final _custom3Controller = TextEditingController();
   final _custom4Controller = TextEditingController();
+  final _custom5Controller = TextEditingController();
+  final _custom6Controller = TextEditingController();
+  final _custom7Controller = TextEditingController();
+  final _custom8Controller = TextEditingController();
   final _stockQuantityController = TextEditingController();
   final _notificationThresholdController = TextEditingController();
   final _imageUrlController = TextEditingController();
@@ -62,6 +66,10 @@ class _ProductEditState extends State<ProductEdit> {
       _custom2Controller,
       _custom3Controller,
       _custom4Controller,
+      _custom5Controller,
+      _custom6Controller,
+      _custom7Controller,
+      _custom8Controller,
       _stockQuantityController,
       _notificationThresholdController,
       _imageUrlController,
@@ -85,6 +93,10 @@ class _ProductEditState extends State<ProductEdit> {
     _custom2Controller.text = product.customValue2;
     _custom3Controller.text = product.customValue3;
     _custom4Controller.text = product.customValue4;
+    _custom5Controller.text = product.customValue5;
+    _custom6Controller.text = product.customValue6;
+    _custom7Controller.text = product.customValue7;
+    _custom8Controller.text = product.customValue8;
     _stockQuantityController.text = formatNumber(
       product.stockQuantity.toDouble(),
       context,
@@ -137,6 +149,10 @@ class _ProductEditState extends State<ProductEdit> {
       ..customValue2 = _custom2Controller.text.trim()
       ..customValue3 = _custom3Controller.text.trim()
       ..customValue4 = _custom4Controller.text.trim()
+      ..customValue5 = _custom5Controller.text.trim()
+      ..customValue6 = _custom6Controller.text.trim()
+      ..customValue7 = _custom7Controller.text.trim()
+      ..customValue8 = _custom8Controller.text.trim()
       ..stockQuantity = parseInt(_stockQuantityController.text.trim())
       ..stockNotificationThreshold =
           parseInt(_notificationThresholdController.text.trim())
@@ -241,7 +257,11 @@ class _ProductEditState extends State<ProductEdit> {
                         ..customValue1 = child.customValue1
                         ..customValue2 = child.customValue2
                         ..customValue3 = child.customValue3
-                        ..customValue4 = child.customValue4);
+                        ..customValue4 = child.customValue4
+                        ..customValue5 = child.customValue5
+                        ..customValue6 = child.customValue6
+                        ..customValue7 = child.customValue7
+                        ..customValue8 = child.customValue8);
                       viewModel.onChanged(
                           product.rebuild((b) => b..groupItems.add(groupItem)));
                     },
@@ -403,6 +423,30 @@ class _ProductEditState extends State<ProductEdit> {
                   controller: _custom4Controller,
                   field: CustomFieldType.product4,
                   value: product.customValue4,
+                  onSavePressed: _onSavePressed,
+                ),
+                CustomField(
+                  controller: _custom5Controller,
+                  field: CustomFieldType.product5,
+                  value: product.customValue5,
+                  onSavePressed: _onSavePressed,
+                ),
+                CustomField(
+                  controller: _custom6Controller,
+                  field: CustomFieldType.product6,
+                  value: product.customValue6,
+                  onSavePressed: _onSavePressed,
+                ),
+                CustomField(
+                  controller: _custom7Controller,
+                  field: CustomFieldType.product7,
+                  value: product.customValue7,
+                  onSavePressed: _onSavePressed,
+                ),
+                CustomField(
+                  controller: _custom8Controller,
+                  field: CustomFieldType.product8,
+                  value: product.customValue8,
                   onSavePressed: _onSavePressed,
                 ),
               ],

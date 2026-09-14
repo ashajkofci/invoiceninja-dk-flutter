@@ -8,6 +8,36 @@ import 'package:invoiceninja_flutter/data/models/models.dart';
 
 part 'list_ui_state.g.dart';
 
+ListUIState toggleAdditionalCustomFilter(
+    ListUIState state, String value, int fieldNumber) {
+  final filters = state.getCustomFilters(fieldNumber)!;
+  return state.rebuild((b) {
+    final shouldRemove = filters.contains(value);
+    switch (fieldNumber) {
+      case 5:
+        shouldRemove
+            ? b.custom5Filters.remove(value)
+            : b.custom5Filters.add(value);
+        break;
+      case 6:
+        shouldRemove
+            ? b.custom6Filters.remove(value)
+            : b.custom6Filters.add(value);
+        break;
+      case 7:
+        shouldRemove
+            ? b.custom7Filters.remove(value)
+            : b.custom7Filters.add(value);
+        break;
+      case 8:
+        shouldRemove
+            ? b.custom8Filters.remove(value)
+            : b.custom8Filters.add(value);
+        break;
+    }
+  });
+}
+
 abstract class ListUIState implements Built<ListUIState, ListUIStateBuilder> {
   factory ListUIState(String sortField, {bool? sortAscending}) {
     return _$ListUIState._(
@@ -22,6 +52,10 @@ abstract class ListUIState implements Built<ListUIState, ListUIStateBuilder> {
         custom2Filters: BuiltList<String>(),
         custom3Filters: BuiltList<String>(),
         custom4Filters: BuiltList<String>(),
+        custom5Filters: BuiltList<String>(),
+        custom6Filters: BuiltList<String>(),
+        custom7Filters: BuiltList<String>(),
+        custom8Filters: BuiltList<String>(),
         filter: null);
   }
 
@@ -36,6 +70,10 @@ abstract class ListUIState implements Built<ListUIState, ListUIStateBuilder> {
       custom2Filters.hashCode ^
       custom3Filters.hashCode ^
       custom4Filters.hashCode ^
+      custom5Filters.hashCode ^
+      custom6Filters.hashCode ^
+      custom7Filters.hashCode ^
+      custom8Filters.hashCode ^
       stateFilters.hashCode ^
       statusFilters.hashCode ^
       filterClearedAt.hashCode ^
@@ -65,6 +103,14 @@ abstract class ListUIState implements Built<ListUIState, ListUIStateBuilder> {
         return custom3Filters;
       case 4:
         return custom4Filters;
+      case 5:
+        return custom5Filters;
+      case 6:
+        return custom6Filters;
+      case 7:
+        return custom7Filters;
+      case 8:
+        return custom8Filters;
       default:
         return null;
     }
@@ -78,6 +124,14 @@ abstract class ListUIState implements Built<ListUIState, ListUIStateBuilder> {
 
   BuiltList<String> get custom4Filters;
 
+  BuiltList<String> get custom5Filters;
+
+  BuiltList<String> get custom6Filters;
+
+  BuiltList<String> get custom7Filters;
+
+  BuiltList<String> get custom8Filters;
+
   bool get hasStateFilters =>
       stateFilters.length != 1 || stateFilters.first != EntityState.active;
 
@@ -90,6 +144,14 @@ abstract class ListUIState implements Built<ListUIState, ListUIStateBuilder> {
   bool get hasCustom3Filters => custom3Filters.isNotEmpty;
 
   bool get hasCustom4Filters => custom4Filters.isNotEmpty;
+
+  bool get hasCustom5Filters => custom5Filters.isNotEmpty;
+
+  bool get hasCustom6Filters => custom6Filters.isNotEmpty;
+
+  bool get hasCustom7Filters => custom7Filters.isNotEmpty;
+
+  bool get hasCustom8Filters => custom8Filters.isNotEmpty;
 
   BuiltList<String>? get selectedIds;
 
