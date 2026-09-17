@@ -623,14 +623,14 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
                     .toList(),
                 onChanged: (value) {
                   final name = value ?? '';
-                  final preset = timeCoefficients
-                      .where((candidate) => candidate['name'] == name);
+                  final coefficient = resolveTimeCoefficient(
+                    name,
+                    timeCoefficients,
+                    parseDouble(_timeCoefficientController.text) ?? 1,
+                  );
                   setState(() {
                     _timeCoefficientName = name;
-                    if (preset.isNotEmpty) {
-                      _timeCoefficientController.text =
-                          (preset.first['coefficient'] as num).toString();
-                    }
+                    _timeCoefficientController.text = coefficient.toString();
                   });
                   _onChanged();
                 },

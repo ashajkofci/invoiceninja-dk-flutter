@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:invoiceninja_flutter/data/models/models.dart';
+import 'package:invoiceninja_flutter/redux/app/app_actions.dart';
 import 'package:invoiceninja_flutter/redux/app/app_state.dart';
 import 'package:invoiceninja_flutter/redux/invoice/invoice_actions.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
@@ -16,13 +18,17 @@ Future<void> openReservationInvoice(
   }
 
   try {
-    if (!store.state.invoiceState.map.containsKey(invoiceId)) {
+    if (store.state.invoiceState.map[invoiceId]?.isLoaded != true) {
       final completer = Completer<void>();
       store.dispatch(LoadInvoice(invoiceId: invoiceId, completer: completer));
       await completer.future;
     }
 
-    store.dispatch(ViewInvoice(invoiceId: invoiceId, force: true));
+    viewEntityById(
+      entityId: invoiceId,
+      entityType: EntityType.invoice,
+      force: true,
+    );
   } catch (_) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

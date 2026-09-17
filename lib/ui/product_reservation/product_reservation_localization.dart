@@ -140,3 +140,18 @@ List<Map<String, dynamic>> decodeTimeCoefficients(String value) {
     return [];
   }
 }
+
+double resolveTimeCoefficient(
+    String name, List<Map<String, dynamic>> coefficients, double current) {
+  if (name.isEmpty) {
+    return 1;
+  }
+
+  for (final coefficient in coefficients) {
+    if (coefficient['name'] == name) {
+      return (coefficient['coefficient'] as num).toDouble();
+    }
+  }
+
+  return current;
+}

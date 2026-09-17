@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:invoiceninja_flutter/data/models/models.dart';
+import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
 
 InvoiceItemEntity item({
   String typeId = InvoiceItemEntity.TYPE_STANDARD,
@@ -47,5 +48,12 @@ void main() {
 
     expect(group.total(invoice, 2), 60);
     expect(invoice.calculateSubtotal(precision: 2), 60);
+
+    final standardGroup = group.rebuild((b) => b
+      ..timeCoefficient = resolveTimeCoefficient('', const [], 3)
+      ..timeCoefficientName = '');
+    final standardInvoice =
+        invoice.rebuild((b) => b..lineItems[0] = standardGroup);
+    expect(standardInvoice.calculateSubtotal(precision: 2), 20);
   });
 }

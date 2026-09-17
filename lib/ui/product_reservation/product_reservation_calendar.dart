@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:invoiceninja_flutter/data/models/models.dart';
 import 'package:invoiceninja_flutter/data/web_client.dart';
 import 'package:invoiceninja_flutter/redux/app/app_state.dart';
+import 'package:invoiceninja_flutter/ui/app/entity_dropdown.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_invoice_link.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
 import 'package:redux/redux.dart';
@@ -88,7 +89,13 @@ class _ProductReservationCalendarScreenState
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   IconButton(
-                      onPressed: () => _changeMonth(-1),
+                      onPressed: canNavigateToPreviousReservationMonth(
+                              _month,
+                              store
+                                  .state.userCompany.settings.numberYearsActive,
+                              DateTime.now())
+                          ? () => _changeMonth(-1)
+                          : null,
                       icon: Icon(Icons.chevron_left)),
                   OutlinedButton(
                     onPressed: () => setState(() {
@@ -108,27 +115,14 @@ class _ProductReservationCalendarScreenState
                       style: Theme.of(context).textTheme.titleLarge),
                   SizedBox(
                     width: 280,
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _productId,
-                      decoration: InputDecoration(
-                          labelText: reservationText(context, 'product')),
-                      items: [
-                        DropdownMenuItem(
-                            value: '',
-                            child:
-                                Text(reservationText(context, 'allProducts'))),
-                        ...products
-                            .map((ProductEntity product) => DropdownMenuItem(
-                                  value: product.id,
-                                  child: Text(
-                                      product.notes.isEmpty
-                                          ? reservationText(context, 'product')
-                                          : product.notes,
-                                      overflow: TextOverflow.ellipsis),
-                                )),
-                      ],
-                      onChanged: (value) => setState(() {
-                        _productId = value ?? '';
+                    child: EntityDropdown(
+                      entityType: EntityType.product,
+                      entityId: _productId,
+                      entityList:
+                          products.map((product) => product.id).toList(),
+                      labelText: reservationText(context, 'product'),
+                      onSelected: (product) => setState(() {
+                        _productId = product?.id ?? '';
                         _data = _load();
                       }),
                     ),
@@ -174,6 +168,26 @@ class _MonthGrid extends StatelessWidget {
 
     return LayoutBuilder(builder: (context, constraints) {
       final cellWidth = constraints.maxWidth / 7;
+      var maxDayEvents = 0;
+      for (var day = 1; day <= days; day++) {
+        final dateText = DateFormat('yyyy-MM-dd')
+            .format(DateTime(month.year, month.month, day));
+        final count = events
+            .where((event) =>
+                dateText.compareTo(event['start_date']) >= 0 &&
+                dateText.compareTo(event['end_date']) <= 0)
+            .length;
+        if (count > maxDayEvents) {
+          maxDayEvents = count;
+        }
+      }
+      final textScaler = MediaQuery.textScalerOf(context);
+      final contentHeight = textScaler.scale(14) * 1.4 +
+          8 +
+          maxDayEvents * (textScaler.scale(11) * 3 * 1.4 + 8);
+      final cellHeight =
+          contentHeight > cellWidth / .9 ? contentHeight : cellWidth / .9;
+
       return Column(children: [
         Row(
             children: List.generate(7, (index) {
@@ -191,7 +205,7 @@ class _MonthGrid extends StatelessWidget {
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 7, childAspectRatio: .9),
+              crossAxisCount: 7, mainAxisExtent: cellHeight),
           itemCount: ((cells + 6) ~/ 7) * 7,
           itemBuilder: (context, index) {
             final day = index - firstWeekday + 1;
@@ -224,7 +238,7 @@ class _MonthGrid extends StatelessWidget {
                         textAlign: TextAlign.right,
                         style: TextStyle(
                             fontWeight: isToday ? FontWeight.bold : null)),
-                    ...dayEvents.take(3).map((event) => InkWell(
+                    ...dayEvents.map((event) => InkWell(
                           onTap: () => openReservationInvoice(
                               context, store, event['invoice_id']?.toString()),
                           child: Container(
@@ -293,6 +307,17 @@ class _AvailabilityCard extends StatelessWidget {
       ),
     );
   }
+}
+
+bool canNavigateToPreviousReservationMonth(
+    DateTime month, int numberYearsActive, DateTime now) {
+  if (numberYearsActive == 0) {
+    return true;
+  }
+
+  final previousMonth = DateTime(month.year, month.month - 1);
+  final earliestMonth = DateTime(now.year - numberYearsActive, now.month);
+  return !previousMonth.isBefore(earliestMonth);
 }
 
 Color _hexColor(String value) {

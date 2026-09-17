@@ -1502,20 +1502,14 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                                     ))
                                 .toList(),
                             onChanged: (value) {
-                              Map<String, dynamic>? preset;
-                              for (final candidate in presets) {
-                                if (candidate['name'] == value) {
-                                  preset = candidate;
-                                  break;
-                                }
-                              }
+                              final name = value ?? '';
                               _onChanged(
                                 lineItems[index].rebuild((b) => b
-                                  ..timeCoefficientName = value ?? ''
-                                  ..timeCoefficient = preset == null
-                                      ? lineItems[index].timeCoefficient
-                                      : (preset['coefficient'] as num)
-                                          .toDouble()),
+                                  ..timeCoefficientName = name
+                                  ..timeCoefficient = resolveTimeCoefficient(
+                                      name,
+                                      presets,
+                                      lineItems[index].timeCoefficient)),
                                 index,
                                 debounce: false,
                               );

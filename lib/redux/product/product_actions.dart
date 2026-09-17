@@ -304,11 +304,11 @@ void handleProductAction(
         entity: invoice.rebuild(
           (b) => b
             ..lineItems.addAll(
-              productIds.map(
-                (productId) => convertProductToInvoiceItem(
+              products.expand(
+                (product) => convertProductToInvoiceItems(
                   company: state.company,
                   invoice: invoice,
-                  product: state.productState.map[productId],
+                  product: product as ProductEntity,
                   currencyMap: state.staticState.currencyMap,
                 ),
               ),
@@ -322,11 +322,11 @@ void handleProductAction(
         entity: invoice.rebuild(
           (b) => b
             ..lineItems.addAll(
-              productIds.map(
-                (productId) => convertProductToInvoiceItem(
+              products.expand(
+                (product) => convertProductToInvoiceItems(
                   company: state.company,
                   invoice: invoice,
-                  product: state.productState.map[productId],
+                  product: product as ProductEntity,
                   currencyMap: state.staticState.currencyMap,
                 ),
               ),
@@ -341,11 +341,11 @@ void handleProductAction(
         entity: invoice.rebuild(
           (b) => b
             ..lineItems.addAll(
-              productIds.map(
-                (productId) => convertProductToInvoiceItem(
+              products.expand(
+                (product) => convertProductToInvoiceItems(
                   company: state.company,
                   invoice: invoice,
-                  product: state.productState.map[productId],
+                  product: product as ProductEntity,
                   currencyMap: state.staticState.currencyMap,
                 ),
               ),

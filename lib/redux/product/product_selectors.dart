@@ -21,22 +21,6 @@ int productNotificationThreshold({
   return company!.stockNotificationThreshold;
 }
 
-InvoiceItemEntity convertProductToInvoiceItem({
-  required ProductEntity? product,
-  required CompanyEntity company,
-  required InvoiceEntity invoice,
-  required BuiltMap<String, CurrencyEntity> currencyMap,
-  ClientEntity? client,
-}) {
-  return convertProductToInvoiceItems(
-    product: product,
-    company: company,
-    invoice: invoice,
-    currencyMap: currencyMap,
-    client: client,
-  ).first;
-}
-
 List<InvoiceItemEntity> convertProductToInvoiceItems({
   required ProductEntity? product,
   required CompanyEntity company,
