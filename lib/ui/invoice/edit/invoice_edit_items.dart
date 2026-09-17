@@ -175,6 +175,7 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
   TaxRateEntity? _taxRate3;
   String? _taxCategoryId;
   bool _groupHideItemPrices = false;
+  bool _groupShowItemUnitPrice = false;
   bool _groupHasPrice = false;
   String _timeCoefficientName = '';
 
@@ -203,6 +204,7 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
         formatNumberType: FormatNumberType.inputMoney)!;
     _groupHideItemPrices =
         invoiceItem.groupHasPrice || invoiceItem.groupHideItemPrices;
+    _groupShowItemUnitPrice = invoiceItem.groupShowItemUnitPrice;
     _groupHasPrice = invoiceItem.groupHasPrice;
     _custom1Controller.text = invoiceItem.customValue1;
     _custom2Controller.text = invoiceItem.customValue2;
@@ -316,6 +318,7 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
           : widget.invoiceItem.groupTitle
       ..groupPrice = parseDouble(_groupPriceController.text)
       ..groupHideItemPrices = _groupHasPrice || _groupHideItemPrices
+      ..groupShowItemUnitPrice = _groupShowItemUnitPrice
       ..groupHasPrice = _groupHasPrice
       ..customValue1 = _custom1Controller.text.trim()
       ..customValue2 = _custom2Controller.text.trim()
@@ -464,6 +467,15 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
                         setState(() => _groupHideItemPrices = value);
                         _onChanged();
                       },
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text('${localization.show} ${localization.unitCost}'),
+                value: _groupShowItemUnitPrice,
+                onChanged: (value) {
+                  setState(() => _groupShowItemUnitPrice = value);
+                  _onChanged();
+                },
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
@@ -633,7 +645,9 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
                     const TextInputType.numberWithOptions(decimal: true),
                 onSavePressed: widget.entityViewModel.onSavePressed,
               ),
-            !widget.invoiceItem.isGroup && company.enableProductQuantity
+            !widget.invoiceItem.isTask &&
+                    (widget.invoiceItem.isGroup ||
+                        company.enableProductQuantity)
                 ? DecoratedFormField(
                     label: widget.invoiceItem.isTask
                         ? localization.hours

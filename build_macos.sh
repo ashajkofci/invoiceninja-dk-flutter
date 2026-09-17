@@ -31,5 +31,7 @@ FLUTTER_XCODE_CODE_SIGN_ENTITLEMENTS="$PWD/macos/Runner/Local.entitlements" \
   flutter build macos --release
 
 APP="build/macos/Build/Products/Release/Invoice Ninja.app"
+codesign --force --deep --sign - "$APP"
+codesign --verify --deep --strict "$APP"
 echo "==> Built: $APP"
 lipo -info "$APP/Contents/MacOS/Invoice Ninja"

@@ -1615,7 +1615,9 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                             ),
                           ),
                         ),
-                      ),
+                      )
+                    else
+                      const SizedBox.shrink(),
                     PopupMenuButton<String>(
                       icon: Icon(Icons.more_vert),
                       enabled: !lineItems[index].isEmpty ||

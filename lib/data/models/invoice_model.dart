@@ -292,6 +292,32 @@ abstract class InvoiceEntity extends Object
       return this;
     }
     final lineItem = lineItems[oldIndex];
+
+    if (lineItem.isGroup && lineItem.groupId.isNotEmpty) {
+      final lastGroupIndex = lineItems.lastIndexWhere(
+        (item) => item.groupId == lineItem.groupId,
+      );
+      var targetIndex = newIndex ?? lineItems.length;
+      if (targetIndex > oldIndex && targetIndex <= lastGroupIndex) {
+        targetIndex = lastGroupIndex + 1;
+      }
+      final group =
+          lineItems.where((item) => item.groupId == lineItem.groupId).toList();
+      final remaining =
+          lineItems.where((item) => item.groupId != lineItem.groupId).toList();
+      final end = (targetIndex + (targetIndex > oldIndex ? 1 : 0))
+          .clamp(0, lineItems.length);
+      final insertAt = lineItems
+          .take(end)
+          .where((item) => item.groupId != lineItem.groupId)
+          .length;
+      remaining.insertAll(insertAt.clamp(0, remaining.length), group);
+
+      return rebuild((b) => b
+        ..lineItems.replace(remaining)
+        ..isChanged = true);
+    }
+
     final invoice = rebuild((b) => b..lineItems.removeAt(oldIndex));
     final targetIndex = (newIndex ?? invoice.lineItems.length)
         .clamp(0, invoice.lineItems.length);
@@ -1746,6 +1772,7 @@ abstract class InvoiceItemEntity
       groupId: '',
       groupTitle: '',
       groupHideItemPrices: false,
+      groupShowItemUnitPrice: false,
       groupHasPrice: false,
       groupPrice: 0,
       createdAt: DateTime.now().microsecondsSinceEpoch,
@@ -1850,6 +1877,9 @@ abstract class InvoiceItemEntity
   @BuiltValueField(wireName: 'group_hide_item_prices')
   bool get groupHideItemPrices;
 
+  @BuiltValueField(wireName: 'group_show_item_unit_price')
+  bool get groupShowItemUnitPrice;
+
   @BuiltValueField(wireName: 'group_has_price')
   bool get groupHasPrice;
 
@@ -1876,7 +1906,7 @@ abstract class InvoiceItemEntity
               }
               return sum + childTotal;
             });
-      total *= timeCoefficient;
+      total *= quantity * timeCoefficient;
     }
 
     if (discount != 0) {
@@ -1960,7 +1990,8 @@ abstract class InvoiceItemEntity
       return null;
     }
 
-    final overrideAmount = header.groupPrice * header.timeCoefficient;
+    final overrideAmount =
+        header.groupPrice * header.quantity * header.timeCoefficient;
     final share = totalOriginal == 0
         ? overrideAmount / children.length
         : overrideAmount * (quantity * cost * timeCoefficient) / totalOriginal;
@@ -2065,6 +2096,7 @@ abstract class InvoiceItemEntity
     ..groupId = ''
     ..groupTitle = ''
     ..groupHideItemPrices = false
+    ..groupShowItemUnitPrice = false
     ..groupHasPrice = false
     ..groupPrice = 0
     ..customValue5 = ''

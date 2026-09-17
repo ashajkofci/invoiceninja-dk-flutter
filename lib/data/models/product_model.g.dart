@@ -204,6 +204,9 @@ class _$ProductEntitySerializer implements StructuredSerializer<ProductEntity> {
       'group_hide_item_prices',
       serializers.serialize(object.groupHideItemPrices,
           specifiedType: const FullType(bool)),
+      'group_show_item_unit_price',
+      serializers.serialize(object.groupShowItemUnitPrice,
+          specifiedType: const FullType(bool)),
       'group_has_price',
       serializers.serialize(object.groupHasPrice,
           specifiedType: const FullType(bool)),
@@ -382,6 +385,10 @@ class _$ProductEntitySerializer implements StructuredSerializer<ProductEntity> {
           break;
         case 'group_hide_item_prices':
           result.groupHideItemPrices = serializers.deserialize(value,
+              specifiedType: const FullType(bool))! as bool;
+          break;
+        case 'group_show_item_unit_price':
+          result.groupShowItemUnitPrice = serializers.deserialize(value,
               specifiedType: const FullType(bool))! as bool;
           break;
         case 'group_has_price':
@@ -875,6 +882,8 @@ class _$ProductEntity extends ProductEntity {
   @override
   final bool groupHideItemPrices;
   @override
+  final bool groupShowItemUnitPrice;
+  @override
   final bool groupHasPrice;
   @override
   final double groupPrice;
@@ -929,6 +938,7 @@ class _$ProductEntity extends ProductEntity {
       required this.documents,
       required this.isGroup,
       required this.groupHideItemPrices,
+      required this.groupShowItemUnitPrice,
       required this.groupHasPrice,
       required this.groupPrice,
       required this.groupItems,
@@ -980,6 +990,7 @@ class _$ProductEntity extends ProductEntity {
         documents == other.documents &&
         isGroup == other.isGroup &&
         groupHideItemPrices == other.groupHideItemPrices &&
+        groupShowItemUnitPrice == other.groupShowItemUnitPrice &&
         groupHasPrice == other.groupHasPrice &&
         groupPrice == other.groupPrice &&
         groupItems == other.groupItems &&
@@ -1026,6 +1037,7 @@ class _$ProductEntity extends ProductEntity {
     _$hash = $jc(_$hash, documents.hashCode);
     _$hash = $jc(_$hash, isGroup.hashCode);
     _$hash = $jc(_$hash, groupHideItemPrices.hashCode);
+    _$hash = $jc(_$hash, groupShowItemUnitPrice.hashCode);
     _$hash = $jc(_$hash, groupHasPrice.hashCode);
     _$hash = $jc(_$hash, groupPrice.hashCode);
     _$hash = $jc(_$hash, groupItems.hashCode);
@@ -1072,6 +1084,7 @@ class _$ProductEntity extends ProductEntity {
           ..add('documents', documents)
           ..add('isGroup', isGroup)
           ..add('groupHideItemPrices', groupHideItemPrices)
+          ..add('groupShowItemUnitPrice', groupShowItemUnitPrice)
           ..add('groupHasPrice', groupHasPrice)
           ..add('groupPrice', groupPrice)
           ..add('groupItems', groupItems)
@@ -1210,6 +1223,11 @@ class ProductEntityBuilder
   set groupHideItemPrices(bool? groupHideItemPrices) =>
       _$this._groupHideItemPrices = groupHideItemPrices;
 
+  bool? _groupShowItemUnitPrice;
+  bool? get groupShowItemUnitPrice => _$this._groupShowItemUnitPrice;
+  set groupShowItemUnitPrice(bool? groupShowItemUnitPrice) =>
+      _$this._groupShowItemUnitPrice = groupShowItemUnitPrice;
+
   bool? _groupHasPrice;
   bool? get groupHasPrice => _$this._groupHasPrice;
   set groupHasPrice(bool? groupHasPrice) =>
@@ -1294,6 +1312,7 @@ class ProductEntityBuilder
       _documents = $v.documents.toBuilder();
       _isGroup = $v.isGroup;
       _groupHideItemPrices = $v.groupHideItemPrices;
+      _groupShowItemUnitPrice = $v.groupShowItemUnitPrice;
       _groupHasPrice = $v.groupHasPrice;
       _groupPrice = $v.groupPrice;
       _groupItems = $v.groupItems.toBuilder();
@@ -1385,6 +1404,10 @@ class ProductEntityBuilder
                 isGroup, r'ProductEntity', 'isGroup'),
             groupHideItemPrices: BuiltValueNullFieldError.checkNotNull(
                 groupHideItemPrices, r'ProductEntity', 'groupHideItemPrices'),
+            groupShowItemUnitPrice: BuiltValueNullFieldError.checkNotNull(
+                groupShowItemUnitPrice,
+                r'ProductEntity',
+                'groupShowItemUnitPrice'),
             groupHasPrice: BuiltValueNullFieldError.checkNotNull(
                 groupHasPrice, r'ProductEntity', 'groupHasPrice'),
             groupPrice: BuiltValueNullFieldError.checkNotNull(

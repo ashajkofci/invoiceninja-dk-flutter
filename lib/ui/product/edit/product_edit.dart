@@ -51,6 +51,7 @@ class _ProductEditState extends State<ProductEdit> {
   final _imageUrlController = TextEditingController();
   final _maxQuantityController = TextEditingController();
   final _groupPriceController = TextEditingController();
+  String _groupProductFilter = '';
 
   List<TextEditingController> _controllers = [];
   @override
@@ -220,8 +221,18 @@ class _ProductEditState extends State<ProductEdit> {
                       .onChanged(product.rebuild((b) => b..isGroup = value)),
                 ),
                 if (product.isGroup) ...[
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: localization.searchProducts,
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                    onChanged: (value) => setState(
+                      () => _groupProductFilter = value.trim().toLowerCase(),
+                    ),
+                  ),
                   DropdownButtonFormField<String>(
-                    key: ValueKey('group_product_${product.groupItems.length}'),
+                    key: ValueKey(
+                        'group_product_${product.groupItems.length}_$_groupProductFilter'),
                     decoration: InputDecoration(
                         labelText:
                             '${localization.add} ${localization.product}'),
@@ -230,8 +241,15 @@ class _ProductEditState extends State<ProductEdit> {
                             candidate.id != product.id &&
                             candidate.isActive &&
                             !candidate.isGroup &&
-                            !product.groupItems
-                                .any((item) => item.productId == candidate.id))
+                            !product.groupItems.any(
+                                (item) => item.productId == candidate.id) &&
+                            (_groupProductFilter.isEmpty ||
+                                candidate.productKey
+                                    .toLowerCase()
+                                    .contains(_groupProductFilter) ||
+                                candidate.notes
+                                    .toLowerCase()
+                                    .contains(_groupProductFilter)))
                         .map((candidate) => DropdownMenuItem<String>(
                               value: candidate.id,
                               child: Text(candidate.productKey),
@@ -312,6 +330,14 @@ class _ProductEditState extends State<ProductEdit> {
                         ? null
                         : (value) => viewModel.onChanged(product
                             .rebuild((b) => b..groupHideItemPrices = value)),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title:
+                        Text('${localization.show} ${localization.unitCost}'),
+                    value: product.groupShowItemUnitPrice,
+                    onChanged: (value) => viewModel.onChanged(product
+                        .rebuild((b) => b..groupShowItemUnitPrice = value)),
                   ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,

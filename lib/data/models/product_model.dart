@@ -118,6 +118,7 @@ abstract class ProductEntity extends Object
       taxCategoryId: kTaxCategoryPhysical,
       isGroup: false,
       groupHideItemPrices: false,
+      groupShowItemUnitPrice: false,
       groupHasPrice: false,
       groupPrice: 0,
       groupItems: BuiltList<ProductGroupItemEntity>(),
@@ -220,6 +221,9 @@ abstract class ProductEntity extends Object
 
   @BuiltValueField(wireName: 'group_hide_item_prices')
   bool get groupHideItemPrices;
+
+  @BuiltValueField(wireName: 'group_show_item_unit_price')
+  bool get groupShowItemUnitPrice;
 
   @BuiltValueField(wireName: 'group_has_price')
   bool get groupHasPrice;
@@ -462,6 +466,7 @@ abstract class ProductEntity extends Object
     ..taxCategoryId = kTaxCategoryPhysical
     ..isGroup = false
     ..groupHideItemPrices = false
+    ..groupShowItemUnitPrice = false
     ..groupHasPrice = false
     ..groupPrice = 0
     ..customValue5 = ''

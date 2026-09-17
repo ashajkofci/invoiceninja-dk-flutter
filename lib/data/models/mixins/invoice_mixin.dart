@@ -73,7 +73,7 @@ abstract mixin class CalculateInvoiceTotal {
   }
 
   double _itemAmount(InvoiceItemEntity item, int precision) => item.isGroup
-      ? _groupAmount(item, precision) * item.timeCoefficient
+      ? _groupAmount(item, precision) * item.quantity * item.timeCoefficient
       : item.quantity * item.cost * item.timeCoefficient;
 
   double _calculateTaxAmount(
@@ -218,7 +218,7 @@ abstract mixin class CalculateInvoiceTotal {
     final double cost = round(item.cost, 5);
     final double itemDiscount = round(item.discount, 5);
     double lineTotal = item.isGroup
-        ? _groupAmount(item, precision) * item.timeCoefficient
+        ? _groupAmount(item, precision) * item.quantity * item.timeCoefficient
         : qty * cost * item.timeCoefficient;
 
     if (discount != 0) {
@@ -257,7 +257,7 @@ abstract mixin class CalculateInvoiceTotal {
       final double taxRate2 = round(item.taxRate2, 3);
       final double taxRate3 = round(item.taxRate3, 3);
       double lineTotal = item.isGroup
-          ? _groupAmount(item, precision) * item.timeCoefficient
+          ? _groupAmount(item, precision) * item.quantity * item.timeCoefficient
           : qty * cost * item.timeCoefficient;
 
       if (discount != 0) {
@@ -352,7 +352,7 @@ abstract mixin class CalculateInvoiceTotal {
       final double discount = round(item.discount, 5);
 
       double lineTotal = item.isGroup
-          ? _groupAmount(item, precision) * item.timeCoefficient
+          ? _groupAmount(item, precision) * item.quantity * item.timeCoefficient
           : qty * cost * item.timeCoefficient;
 
       if (discount != 0) {

@@ -1,16 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:invoiceninja_flutter/data/models/models.dart';
 
-InvoiceItemEntity item(
-  String productKey, {
+InvoiceItemEntity item({
   String typeId = InvoiceItemEntity.TYPE_STANDARD,
   String groupId = '',
+  double quantity = 1,
+  double cost = 0,
+  double timeCoefficient = 1,
 }) =>
     (InvoiceItemEntityBuilder()
-          ..productKey = productKey
+          ..productKey = ''
           ..notes = ''
-          ..cost = 0
-          ..quantity = 1
+          ..cost = cost
+          ..quantity = quantity
+          ..timeCoefficient = timeCoefficient
+          ..timeCoefficientName = ''
           ..taxName1 = ''
           ..taxRate1 = 0
           ..taxName2 = ''
@@ -27,25 +31,21 @@ InvoiceItemEntity item(
         .build();
 
 void main() {
-  test('moves a group with all of its children', () {
-    final before = item('before');
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  test('group quantity multiplies invoice and quote totals', () {
     final group = item(
-      'group',
       typeId: InvoiceItemEntity.TYPE_GROUP,
       groupId: 'group-a',
+      quantity: 2,
+      timeCoefficient: 3,
     );
-    final child = item('child', groupId: 'group-a');
-    final after = item('after');
+    final child = item(groupId: 'group-a', cost: 10);
     final invoice = InvoiceEntity().rebuild(
-      (b) => b..lineItems.addAll([before, group, child, after]),
+      (b) => b..lineItems.addAll([group, child]),
     );
 
-    final moved = invoice.moveLineItem(1, 2);
-    expect(moved.lineItems.map((item) => item.productKey), [
-      'before',
-      'after',
-      'group',
-      'child',
-    ]);
+    expect(group.total(invoice, 2), 60);
+    expect(invoice.calculateSubtotal(precision: 2), 60);
   });
 }

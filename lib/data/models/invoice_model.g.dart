@@ -886,6 +886,9 @@ class _$InvoiceItemEntitySerializer
       'group_hide_item_prices',
       serializers.serialize(object.groupHideItemPrices,
           specifiedType: const FullType(bool)),
+      'group_show_item_unit_price',
+      serializers.serialize(object.groupShowItemUnitPrice,
+          specifiedType: const FullType(bool)),
       'group_has_price',
       serializers.serialize(object.groupHasPrice,
           specifiedType: const FullType(bool)),
@@ -1054,6 +1057,10 @@ class _$InvoiceItemEntitySerializer
           break;
         case 'group_hide_item_prices':
           result.groupHideItemPrices = serializers.deserialize(value,
+              specifiedType: const FullType(bool))! as bool;
+          break;
+        case 'group_show_item_unit_price':
+          result.groupShowItemUnitPrice = serializers.deserialize(value,
               specifiedType: const FullType(bool))! as bool;
           break;
         case 'group_has_price':
@@ -2802,6 +2809,8 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
   @override
   final bool groupHideItemPrices;
   @override
+  final bool groupShowItemUnitPrice;
+  @override
   final bool groupHasPrice;
   @override
   final double groupPrice;
@@ -2841,6 +2850,7 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
       required this.groupId,
       required this.groupTitle,
       required this.groupHideItemPrices,
+      required this.groupShowItemUnitPrice,
       required this.groupHasPrice,
       required this.groupPrice})
       : super._();
@@ -2886,6 +2896,7 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
         groupId == other.groupId &&
         groupTitle == other.groupTitle &&
         groupHideItemPrices == other.groupHideItemPrices &&
+        groupShowItemUnitPrice == other.groupShowItemUnitPrice &&
         groupHasPrice == other.groupHasPrice &&
         groupPrice == other.groupPrice;
   }
@@ -2925,6 +2936,7 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
     _$hash = $jc(_$hash, groupId.hashCode);
     _$hash = $jc(_$hash, groupTitle.hashCode);
     _$hash = $jc(_$hash, groupHideItemPrices.hashCode);
+    _$hash = $jc(_$hash, groupShowItemUnitPrice.hashCode);
     _$hash = $jc(_$hash, groupHasPrice.hashCode);
     _$hash = $jc(_$hash, groupPrice.hashCode);
     _$hash = $jf(_$hash);
@@ -2964,6 +2976,7 @@ class _$InvoiceItemEntity extends InvoiceItemEntity {
           ..add('groupId', groupId)
           ..add('groupTitle', groupTitle)
           ..add('groupHideItemPrices', groupHideItemPrices)
+          ..add('groupShowItemUnitPrice', groupShowItemUnitPrice)
           ..add('groupHasPrice', groupHasPrice)
           ..add('groupPrice', groupPrice))
         .toString();
@@ -3098,6 +3111,11 @@ class InvoiceItemEntityBuilder
   set groupHideItemPrices(bool? groupHideItemPrices) =>
       _$this._groupHideItemPrices = groupHideItemPrices;
 
+  bool? _groupShowItemUnitPrice;
+  bool? get groupShowItemUnitPrice => _$this._groupShowItemUnitPrice;
+  set groupShowItemUnitPrice(bool? groupShowItemUnitPrice) =>
+      _$this._groupShowItemUnitPrice = groupShowItemUnitPrice;
+
   bool? _groupHasPrice;
   bool? get groupHasPrice => _$this._groupHasPrice;
   set groupHasPrice(bool? groupHasPrice) =>
@@ -3144,6 +3162,7 @@ class InvoiceItemEntityBuilder
       _groupId = $v.groupId;
       _groupTitle = $v.groupTitle;
       _groupHideItemPrices = $v.groupHideItemPrices;
+      _groupShowItemUnitPrice = $v.groupShowItemUnitPrice;
       _groupHasPrice = $v.groupHasPrice;
       _groupPrice = $v.groupPrice;
       _$v = null;
@@ -3223,6 +3242,10 @@ class InvoiceItemEntityBuilder
               groupTitle, r'InvoiceItemEntity', 'groupTitle'),
           groupHideItemPrices: BuiltValueNullFieldError.checkNotNull(
               groupHideItemPrices, r'InvoiceItemEntity', 'groupHideItemPrices'),
+          groupShowItemUnitPrice: BuiltValueNullFieldError.checkNotNull(
+              groupShowItemUnitPrice,
+              r'InvoiceItemEntity',
+              'groupShowItemUnitPrice'),
           groupHasPrice: BuiltValueNullFieldError.checkNotNull(
               groupHasPrice, r'InvoiceItemEntity', 'groupHasPrice'),
           groupPrice: BuiltValueNullFieldError.checkNotNull(
