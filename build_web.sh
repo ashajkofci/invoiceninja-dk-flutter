@@ -7,7 +7,6 @@ BACKEND_DIR="${1:-../invoiceninja}"
 PUBLIC_DIR="$BACKEND_DIR/public"
 FOSS_FILES=(
   lib/utils/oauth.dart
-  lib/utils/app_review.dart
   lib/ui/app/upgrade_dialog.dart
   lib/ui/app/pinput.dart
   pubspec.yaml
@@ -52,7 +51,6 @@ trap cleanup EXIT
 
 echo "==> Building Flutter web FOSS"
 cp lib/utils/oauth.dart.foss lib/utils/oauth.dart
-cp lib/utils/app_review.dart.foss lib/utils/app_review.dart
 cp lib/ui/app/upgrade_dialog.dart.foss lib/ui/app/upgrade_dialog.dart
 cp lib/ui/app/pinput.dart.foss lib/ui/app/pinput.dart
 cp pubspec.foss.yaml pubspec.yaml

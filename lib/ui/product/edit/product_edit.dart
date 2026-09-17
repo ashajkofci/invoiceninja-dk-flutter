@@ -5,7 +5,6 @@ import 'package:invoiceninja_flutter/constants.dart';
 // Project imports:
 import 'package:invoiceninja_flutter/data/models/models.dart';
 import 'package:invoiceninja_flutter/ui/app/edit_scaffold.dart';
-import 'package:invoiceninja_flutter/ui/app/entity_dropdown.dart';
 import 'package:invoiceninja_flutter/ui/app/form_card.dart';
 import 'package:invoiceninja_flutter/ui/app/forms/app_dropdown_button.dart';
 import 'package:invoiceninja_flutter/ui/app/forms/app_form.dart';
@@ -221,22 +220,25 @@ class _ProductEditState extends State<ProductEdit> {
                       .onChanged(product.rebuild((b) => b..isGroup = value)),
                 ),
                 if (product.isGroup) ...[
-                  EntityDropdown(
-                    entityType: EntityType.product,
-                    entityList: viewModel.state.productState.map.values
+                  DropdownButtonFormField<String>(
+                    key: ValueKey('group_product_${product.groupItems.length}'),
+                    decoration: InputDecoration(
+                        labelText:
+                            '${localization.add} ${localization.product}'),
+                    items: viewModel.state.productState.map.values
                         .where((candidate) =>
                             candidate.id != product.id &&
                             candidate.isActive &&
                             !candidate.isGroup &&
                             !product.groupItems
                                 .any((item) => item.productId == candidate.id))
-                        .map((candidate) => candidate.id)
+                        .map((candidate) => DropdownMenuItem<String>(
+                              value: candidate.id,
+                              child: Text(candidate.productKey),
+                            ))
                         .toList(),
-                    labelText: '${localization.add} ${localization.product}',
-                    allowClearing: false,
-                    clearAfterSelection: true,
-                    onSelected: (entity) {
-                      final child = entity as ProductEntity?;
+                    onChanged: (productId) {
+                      final child = viewModel.state.productState.map[productId];
                       if (child == null) {
                         return;
                       }

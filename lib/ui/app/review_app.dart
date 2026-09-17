@@ -44,19 +44,6 @@ class _ReviewAppState extends State<ReviewApp> {
                 onPressed: () async {
                   launchUrl(Uri.parse(getRateAppURL(context)));
 
-                  /*
-                  // TODO remove this code: https://github.com/britannio/in_app_review/issues/56
-                  if (kIsWeb || isLinux()) {
-                    launchUrl(Uri.parse(getRateAppURL(context)));
-                  } else if (isAndroid()) {
-                    AppReview.openStoreListing();
-                  } else if (await AppReview.isAvailable()) {
-                    AppReview.requestReview();
-                  } else {
-                    AppReview.openStoreListing();
-                  }
-                  */
-
                   if (state.showTwoYearReviewApp) {
                     store.dispatch(DismissTwoYearReviewAppPermanently());
                   } else if (state.showOneYearReviewApp) {

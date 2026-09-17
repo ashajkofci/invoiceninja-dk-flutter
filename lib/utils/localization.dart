@@ -15,12 +15,12 @@ class AppLocalization extends LocaleCodeAware with LocalizationsProvider {
   final Locale locale;
 
   static Locale createLocale(String? locale) {
-    if (!kLanguages.contains(locale)) {
+    final languageCode = locale?.split('_').first;
+    if (!kLanguages.contains(languageCode)) {
       return Locale('en');
     }
 
-    final parts = locale!.split('_');
-    return Locale(parts[0], parts.length > 1 ? parts[1] : null);
+    return Locale(languageCode!);
   }
 
   static AppLocalization? of(BuildContext context) {
@@ -32,7 +32,7 @@ class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalization> {
   const AppLocalizationsDelegate();
 
   @override
-  bool isSupported(Locale locale) => kLanguages.contains(locale.toString());
+  bool isSupported(Locale locale) => kLanguages.contains(locale.languageCode);
 
   @override
   Future<AppLocalization> load(Locale locale) {

@@ -15,7 +15,6 @@ import 'package:invoiceninja_flutter/redux/reports/reports_actions.dart';
 import 'package:invoiceninja_flutter/redux/settings/settings_actions.dart';
 import 'package:invoiceninja_flutter/ui/app/sms_verification.dart';
 import 'package:invoiceninja_flutter/ui/app/upgrade_dialog.dart';
-import 'package:invoiceninja_flutter/utils/app_review.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
@@ -1622,13 +1621,8 @@ void _showAbout(BuildContext context) async {
                       label: localization.reviewApp.toUpperCase(),
                       iconData: Icons.star,
                       color: Colors.purple,
-                      onPressed: () {
-                        if (kIsWeb || isLinux()) {
-                          launchUrl(Uri.parse(getRateAppURL(context)));
-                        } else {
-                          AppReview.openStoreListing();
-                        }
-                      },
+                      onPressed: () =>
+                          launchUrl(Uri.parse(getRateAppURL(context))),
                     ),
                   AppButton(
                     label: localization.logout.toUpperCase(),

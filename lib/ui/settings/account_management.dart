@@ -482,51 +482,68 @@ class _ReservationStatusRules extends StatelessWidget {
       for (var index = 0; index < values.length; index++)
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: Row(children: [
-            Expanded(
-              child: TextFormField(
-                key: ValueKey(
-                    'reservation-status-$index-${values[index]['value']}'),
-                initialValue: values[index]['value']?.toString() ?? '',
-                decoration: InputDecoration(
-                    labelText: reservationText(context, 'statusValue')),
-                onChanged: (value) {
+          child: Column(children: [
+            Row(children: [
+              Expanded(
+                child: TextFormField(
+                  key: ValueKey(
+                      'reservation-status-$index-${values[index]['value']}'),
+                  initialValue: values[index]['value']?.toString() ?? '',
+                  decoration: InputDecoration(
+                      labelText: reservationText(context, 'statusValue')),
+                  onChanged: (value) {
+                    final updated = List<Map<String, dynamic>>.from(values);
+                    updated[index] = {...updated[index], 'value': value};
+                    update(updated);
+                  },
+                ),
+              ),
+              SizedBox(width: 8),
+              DropdownButton<String>(
+                value: colors.contains(values[index]['color'])
+                    ? values[index]['color'] as String
+                    : colors.first,
+                items: colors
+                    .map((color) => DropdownMenuItem(
+                          value: color,
+                          child: Container(
+                              width: 42, height: 22, color: _hexColor(color)),
+                        ))
+                    .toList(),
+                onChanged: (color) {
                   final updated = List<Map<String, dynamic>>.from(values);
-                  updated[index] = {...updated[index], 'value': value};
+                  updated[index] = {...updated[index], 'color': color};
                   update(updated);
                 },
               ),
-            ),
-            SizedBox(width: 8),
-            DropdownButton<String>(
-              value: colors.contains(values[index]['color'])
-                  ? values[index]['color'] as String
-                  : colors.first,
-              items: colors
-                  .map((color) => DropdownMenuItem(
-                        value: color,
-                        child: Container(
-                            width: 42, height: 22, color: _hexColor(color)),
-                      ))
-                  .toList(),
-              onChanged: (color) {
+              IconButton(
+                tooltip: reservationText(context, 'remove'),
+                icon: Icon(Icons.delete_outline),
+                onPressed: () => update(
+                    List<Map<String, dynamic>>.from(values)..removeAt(index)),
+              ),
+            ]),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              controlAffinity: ListTileControlAffinity.leading,
+              title: Text(reservationText(context, 'overrideEndDate')),
+              value: values[index]['overrides_end_date'] == true,
+              onChanged: (value) {
                 final updated = List<Map<String, dynamic>>.from(values);
-                updated[index] = {...updated[index], 'color': color};
+                updated[index] = {
+                  ...updated[index],
+                  'overrides_end_date': value == true
+                };
                 update(updated);
               },
-            ),
-            IconButton(
-              tooltip: reservationText(context, 'remove'),
-              icon: Icon(Icons.delete_outline),
-              onPressed: () => update(
-                  List<Map<String, dynamic>>.from(values)..removeAt(index)),
             ),
           ]),
         ),
       TextButton.icon(
         onPressed: () => update([
           ...values,
-          {'value': '', 'color': colors.first}
+          {'value': '', 'color': colors.first, 'overrides_end_date': false}
         ]),
         icon: Icon(Icons.add),
         label: Text(reservationText(context, 'addStatus')),
