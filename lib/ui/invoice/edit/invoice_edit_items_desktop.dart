@@ -1039,7 +1039,7 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                                   Iterable<SelectableEntity> options) {
                                 final highlightedIndex =
                                     AutocompleteHighlightedOption.of(context);
-                                return Theme(
+                                final optionsView = Theme(
                                   data: theme,
                                   child: Align(
                                     alignment: Alignment.topLeft,
@@ -1048,7 +1048,7 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                                       child: AppBorder(
                                         child: Container(
                                           color: Theme.of(context).cardColor,
-                                          width: 250,
+                                          width: double.infinity,
                                           constraints:
                                               BoxConstraints(maxHeight: 270),
                                           child: ScrollableListViewBuilder(
@@ -1116,6 +1116,19 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                                       ),
                                     ),
                                   ),
+                                );
+                                return LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final width = constraints.maxWidth < 500
+                                        ? 500.0
+                                        : constraints.maxWidth;
+                                    return OverflowBox(
+                                      alignment: Alignment.topLeft,
+                                      minWidth: width,
+                                      maxWidth: width,
+                                      child: optionsView,
+                                    );
+                                  },
                                 );
                               },
                             ),
