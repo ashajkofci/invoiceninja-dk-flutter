@@ -401,6 +401,15 @@ class ReportsScreenVM {
           state.paymentState.map,
           state.staticState,
         );
+        break;
+      case kReportYearly:
+        reportResult = ReportResult(
+          columns: [],
+          allColumns: [],
+          defaultColumns: [],
+          data: [],
+          showTotals: false,
+        );
     }
 
     final groupTotals = memoizeedGroupTotals(

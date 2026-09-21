@@ -931,6 +931,7 @@ const String kReportPurchaseOrder = 'purchase_order';
 const String kReportPurchaseOrderItem = 'purchase_order_item';
 const String kReportVendor = 'vendor';
 const String kReportTransaction = 'transaction';
+const String kReportYearly = 'yearly_report';
 
 final kReportMap = {
   kReportClient: ExportType.clients,
@@ -957,6 +958,7 @@ final kReportMap = {
   kReportPurchaseOrderItem: ExportType.purchase_order_items,
   kReportVendor: ExportType.vendors,
   kReportTransaction: null,
+  kReportYearly: null,
 };
 
 const String kPdfFieldsClientDetails = 'client_details';

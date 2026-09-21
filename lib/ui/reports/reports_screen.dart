@@ -9,6 +9,7 @@ import 'package:flutter_redux/flutter_redux.dart';
 // Project imports:
 import 'package:invoiceninja_flutter/.env.dart';
 import 'package:invoiceninja_flutter/constants.dart';
+import 'package:invoiceninja_flutter/data/web_client.dart';
 import 'package:invoiceninja_flutter/data/models/dashboard_model.dart';
 import 'package:invoiceninja_flutter/data/models/models.dart';
 import 'package:invoiceninja_flutter/main_app.dart';
@@ -61,6 +62,7 @@ class ReportsScreen extends StatelessWidget {
     final state = viewModel.state;
     final reportsState = viewModel.reportState;
     final reportResult = viewModel.reportResult!;
+    final isYearlyReport = reportsState.report == kReportYearly;
 
     Widget leading = SizedBox();
     final hideReports = state.isHosted && !state.isProPlan && !state.isTrial;
@@ -130,9 +132,10 @@ class ReportsScreen extends StatelessWidget {
       ],
       if (state.company.isModuleEnabled(EntityType.transaction))
         kReportTransaction,
+      kReportYearly,
     ]..sort((a, b) => a.compareTo(b));
 
-    final reportChildren = [
+    final reportChildren = <Widget>[
       AppDropdownButton<String>(
         labelText: localization.report,
         value: reportsState.report,
@@ -145,31 +148,34 @@ class ReportsScreen extends StatelessWidget {
                 ))
             .toList(),
       ),
-      AppDropdownButton<String>(
-        labelText: localization.group,
-        value: reportsState.group,
-        blankValue: '',
-        showBlank: true,
-        onChanged: (dynamic value) {
-          viewModel.onSettingsChanged(group: value, selectedGroup: '');
-        },
-        items: reportResult.columns
-            .where((column) =>
-                getReportColumnType(column, context) != ReportColumnType.number)
-            .map((column) {
-          final columnTitle = state.company.getCustomFieldLabel(column);
-          return DropdownMenuItem(
-            child: Text(columnTitle.isEmpty
-                ? localization.lookup(column)
-                : columnTitle),
-            value: column,
-          );
-        }).toList(),
-      ),
-      if (getReportColumnType(reportsState.group, context) ==
-              ReportColumnType.dateTime ||
-          getReportColumnType(reportsState.group, context) ==
-              ReportColumnType.date)
+      if (!isYearlyReport)
+        AppDropdownButton<String>(
+          labelText: localization.group,
+          value: reportsState.group,
+          blankValue: '',
+          showBlank: true,
+          onChanged: (dynamic value) {
+            viewModel.onSettingsChanged(group: value, selectedGroup: '');
+          },
+          items: reportResult.columns
+              .where((column) =>
+                  getReportColumnType(column, context) !=
+                  ReportColumnType.number)
+              .map((column) {
+            final columnTitle = state.company.getCustomFieldLabel(column);
+            return DropdownMenuItem(
+              child: Text(columnTitle.isEmpty
+                  ? localization.lookup(column)
+                  : columnTitle),
+              value: column,
+            );
+          }).toList(),
+        ),
+      if (!isYearlyReport &&
+          (getReportColumnType(reportsState.group, context) ==
+                  ReportColumnType.dateTime ||
+              getReportColumnType(reportsState.group, context) ==
+                  ReportColumnType.date))
         AppDropdownButton<String>(
           labelText: localization.subgroup,
           value: reportsState.subgroup,
@@ -357,7 +363,7 @@ class ReportsScreen extends StatelessWidget {
           actions: hideReports
               ? []
               : [
-                  if (isDesktop(context)) ...[
+                  if (isDesktop(context) && !isYearlyReport) ...[
                     Builder(builder: (BuildContext context) {
                       return AppTextButton(
                         label: localization.columns,
@@ -392,32 +398,36 @@ class ReportsScreen extends StatelessWidget {
                       },
                     ),
                   ],
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ActionMenuButton(
-                        entityActions: firstEntity == null
-                            ? null
-                            : firstEntity.getActions(
-                                userCompany: state.userCompany,
-                                multiselect: true),
-                        entity: firstEntity,
-                        onSelected: (context, action) {
-                          final entities = action.applyMaxLimit
-                              ? cappedEntities
-                              : reportResult.entities!;
-                          confirmCallback(
-                              context: context,
-                              message: localization.lookup(action.toString()) +
-                                  ' • ' +
-                                  (entities.length == 1
-                                      ? '1 ${localization.lookup(firstEntity!.entityType.toString())}'
-                                      : '${entities.length} ${localization.lookup(firstEntity!.entityType!.plural)}'),
-                              callback: (_) {
-                                handleEntitiesActions(entities, action);
-                              });
-                        }),
-                  ),
-                  if (isMobile(context) || !state.prefState.isHistoryVisible)
+                  if (!isYearlyReport)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ActionMenuButton(
+                          entityActions: firstEntity == null
+                              ? null
+                              : firstEntity.getActions(
+                                  userCompany: state.userCompany,
+                                  multiselect: true),
+                          entity: firstEntity,
+                          onSelected: (context, action) {
+                            final entities = action.applyMaxLimit
+                                ? cappedEntities
+                                : reportResult.entities!;
+                            confirmCallback(
+                                context: context,
+                                message: localization
+                                        .lookup(action.toString()) +
+                                    ' • ' +
+                                    (entities.length == 1
+                                        ? '1 ${localization.lookup(firstEntity!.entityType.toString())}'
+                                        : '${entities.length} ${localization.lookup(firstEntity!.entityType!.plural)}'),
+                                callback: (_) {
+                                  handleEntitiesActions(entities, action);
+                                });
+                          }),
+                    ),
+                  if ((isMobile(context) ||
+                          !state.prefState.isHistoryVisible) &&
+                      !isYearlyReport)
                     Builder(
                       builder: (context) => IconButton(
                         icon: Icon(Icons.history),
@@ -460,47 +470,49 @@ class ReportsScreen extends StatelessWidget {
                 key: ValueKey(
                     '${viewModel.state.company.id}_${viewModel.state.isSaving}_${reportsState.report}_${reportsState.group}'),
                 children: <Widget>[
-                  isMobile(context)
-                      ? FormCard(
-                          children: [
-                            ...reportChildren,
-                            ...dateChildren,
-                            ...chartChildren,
-                          ],
-                        )
-                      : Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Flexible(
-                              child: FormCard(
-                                children: reportChildren,
-                                padding: const EdgeInsets.only(
-                                    top: kMobileDialogPadding,
-                                    right: kMobileDialogPadding / 2,
-                                    left: kMobileDialogPadding),
-                              ),
-                            ),
-                            Flexible(
-                              child: FormCard(
-                                children: dateChildren,
-                                padding: const EdgeInsets.only(
-                                    top: kMobileDialogPadding,
-                                    right: kMobileDialogPadding / 2,
-                                    left: kMobileDialogPadding / 2),
-                              ),
-                            ),
-                            Flexible(
-                              child: FormCard(
-                                children: chartChildren,
-                                padding: const EdgeInsets.only(
-                                    top: kMobileDialogPadding,
-                                    right: kMobileDialogPadding,
-                                    left: kMobileDialogPadding / 2),
-                              ),
+                  isYearlyReport
+                      ? FormCard(children: reportChildren)
+                      : isMobile(context)
+                          ? FormCard(
+                              children: [
+                                ...reportChildren,
+                                ...dateChildren,
+                                ...chartChildren,
+                              ],
                             )
-                          ],
-                        ),
-                  if (isMobile(context))
+                          : Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Flexible(
+                                  child: FormCard(
+                                    children: reportChildren,
+                                    padding: const EdgeInsets.only(
+                                        top: kMobileDialogPadding,
+                                        right: kMobileDialogPadding / 2,
+                                        left: kMobileDialogPadding),
+                                  ),
+                                ),
+                                Flexible(
+                                  child: FormCard(
+                                    children: dateChildren,
+                                    padding: const EdgeInsets.only(
+                                        top: kMobileDialogPadding,
+                                        right: kMobileDialogPadding / 2,
+                                        left: kMobileDialogPadding / 2),
+                                  ),
+                                ),
+                                Flexible(
+                                  child: FormCard(
+                                    children: chartChildren,
+                                    padding: const EdgeInsets.only(
+                                        top: kMobileDialogPadding,
+                                        right: kMobileDialogPadding,
+                                        left: kMobileDialogPadding / 2),
+                                  ),
+                                )
+                              ],
+                            ),
+                  if (isMobile(context) && !isYearlyReport)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
@@ -546,14 +558,232 @@ class ReportsScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                  ReportDataTable(
-                    key: ValueKey(
-                        '${viewModel.state.isSaving}_${reportsState.group}_${reportsState.selectedGroup}'),
-                    viewModel: viewModel,
-                  )
+                  isYearlyReport
+                      ? YearlyReportView(state: state)
+                      : ReportDataTable(
+                          key: ValueKey(
+                              '${viewModel.state.isSaving}_${reportsState.group}_${reportsState.selectedGroup}'),
+                          viewModel: viewModel,
+                        )
                 ],
               ),
       ),
+    );
+  }
+}
+
+class YearlyReportView extends StatefulWidget {
+  const YearlyReportView({Key? key, required this.state}) : super(key: key);
+
+  final AppState state;
+
+  @override
+  State<YearlyReportView> createState() => _YearlyReportViewState();
+}
+
+class _YearlyReportViewState extends State<YearlyReportView> {
+  late final TextEditingController _yearController;
+  late int _year;
+  late Future<Map<String, dynamic>> _future;
+  bool _convertToMainCurrency = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _year = DateTime.now().year;
+    _yearController = TextEditingController(text: '$_year');
+    _future = _loadReport();
+  }
+
+  @override
+  void dispose() {
+    _yearController.dispose();
+    super.dispose();
+  }
+
+  Future<Map<String, dynamic>> _loadReport() async {
+    final response = await const WebClient().get(
+      '${widget.state.credentials.url}/reports/yearly?year=$_year&convert_to_main_currency=${_convertToMainCurrency ? 1 : 0}',
+      widget.state.credentials.token,
+    );
+    final payload = response is Map && response['data'] is Map
+        ? response['data']
+        : response;
+    if (payload is! Map) {
+      throw FormatException('Invalid yearly report response');
+    }
+    return Map<String, dynamic>.from(payload);
+  }
+
+  void _submitYear(String value) {
+    final year = int.tryParse(value);
+    if (year == null || year < 1900 || year > 9999 || year == _year) {
+      return;
+    }
+
+    setState(() {
+      _year = year;
+      _future = _loadReport();
+    });
+  }
+
+  double _number(dynamic value) =>
+      value is num ? value.toDouble() : double.tryParse('$value') ?? 0;
+
+  String _money(BuildContext context, dynamic value, String currencyId) =>
+      formatNumber(
+        _number(value),
+        context,
+        currencyId: currencyId,
+        showCurrencyCode: true,
+      ) ??
+      '';
+
+  @override
+  Widget build(BuildContext context) {
+    final localization = AppLocalization.of(context)!;
+    final months = [
+      localization.january,
+      localization.february,
+      localization.march,
+      localization.april,
+      localization.may,
+      localization.june,
+      localization.july,
+      localization.august,
+      localization.september,
+      localization.october,
+      localization.november,
+      localization.december,
+    ];
+
+    return Column(
+      children: [
+        FormCard(
+          children: [
+            DecoratedFormField(
+              label: localization.year,
+              controller: _yearController,
+              keyboardType: TextInputType.number,
+              onFieldSubmitted: _submitYear,
+              validator: (value) => int.tryParse(value) == null ||
+                      int.parse(value) < 1900 ||
+                      int.parse(value) > 9999
+                  ? 'Enter a year between 1900 and 9999'
+                  : '',
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(localization.convertToMainCurrency),
+              value: _convertToMainCurrency,
+              onChanged: (value) {
+                setState(() {
+                  _convertToMainCurrency = value;
+                  _future = _loadReport();
+                });
+              },
+            ),
+          ],
+        ),
+        FutureBuilder<Map<String, dynamic>>(
+          future: _future,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return FormCard(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return FormCard(child: Text(localization.error));
+            }
+
+            final currencies = ((snapshot.data?['currencies'] as List?) ?? [])
+                .map((currency) => Map<String, dynamic>.from(currency as Map))
+                .toList();
+            if (currencies.isEmpty) {
+              return FormCard(child: Text(localization.empty));
+            }
+
+            return Column(
+              children: currencies.map((currency) {
+                final currencyId = '${currency['currency_id']}';
+                final payments = (currency['payments'] as List? ?? [])
+                    .map((payment) => Map<String, dynamic>.from(payment as Map))
+                    .toList();
+                final expenses = (currency['expenses'] as List? ?? [])
+                    .map((expense) => Map<String, dynamic>.from(expense as Map))
+                    .toList();
+
+                return FormCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${currency['currency_name']} (${currency['currency_code']})',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(localization.payments),
+                      DataTable(
+                        columns: [
+                          DataColumn(label: Text(localization.month)),
+                          DataColumn(label: Text(localization.total)),
+                        ],
+                        rows: payments.map((payment) {
+                          final month = (_number(payment['month']).toInt() - 1)
+                              .clamp(0, 11);
+                          return DataRow(cells: [
+                            DataCell(Text(months[month])),
+                            DataCell(Text(
+                                _money(context, payment['total'], currencyId))),
+                          ]);
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(localization.expenses),
+                      if (expenses.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Text(localization.empty),
+                        )
+                      else
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: DataTable(
+                            columns: [
+                              DataColumn(label: Text(localization.category)),
+                              ...months.map(
+                                  (month) => DataColumn(label: Text(month))),
+                              DataColumn(label: Text(localization.total)),
+                            ],
+                            rows: expenses.map((expense) {
+                              final expenseMonths =
+                                  expense['months'] as List? ?? [];
+                              return DataRow(cells: [
+                                DataCell(Text('${expense['category']}')),
+                                ...List.generate(
+                                    12,
+                                    (month) => DataCell(Text(
+                                          _money(
+                                            context,
+                                            month < expenseMonths.length
+                                                ? expenseMonths[month]
+                                                : 0,
+                                            currencyId,
+                                          ),
+                                        ))),
+                                DataCell(Text(_money(
+                                    context, expense['total'], currencyId))),
+                              ]);
+                            }).toList(),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            );
+          },
+        ),
+      ],
     );
   }
 }

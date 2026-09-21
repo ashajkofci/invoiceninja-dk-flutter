@@ -1841,6 +1841,7 @@ mixin LocalizationsProvider on LocaleCodeAware {
       'aging': 'Aging',
       'profit_and_loss': 'Profit and Loss',
       'reports': 'Reports',
+      'yearly_report': 'Yearly report',
       'report': 'Report',
       'add_company': 'Add Company',
       'unpaid_invoice': 'Unpaid Invoice',
@@ -2273,6 +2274,7 @@ mixin LocalizationsProvider on LocaleCodeAware {
       'add_documents_to_invoice': 'Add Documents to Invoice',
       'exchange_rate': 'Exchange Rate',
       'convert_currency': 'Convert Currency',
+      'convert_to_main_currency': 'Convert to main currency',
       'mark_paid': 'Mark Paid',
       'category': 'Category',
       'address': 'Address',
@@ -4701,6 +4703,7 @@ mixin LocalizationsProvider on LocaleCodeAware {
       'aging': 'Vieillissement',
       'profit_and_loss': 'Profits et Pertes',
       'reports': 'Rapports',
+      'yearly_report': 'Rapport annuel',
       'report': 'Rapport',
       'add_company': 'Ajouter compte',
       'unpaid_invoice': 'Facture impayée',
@@ -5146,6 +5149,7 @@ mixin LocalizationsProvider on LocaleCodeAware {
       'add_documents_to_invoice': 'Ajouter des documents à la facture',
       'exchange_rate': 'Taux de change',
       'convert_currency': 'Convertir la devise',
+      'convert_to_main_currency': 'Convertir dans la devise principale',
       'mark_paid': 'Marquer comme payé',
       'category': 'Catégorie',
       'address': 'Adresse',
@@ -7583,6 +7587,7 @@ mixin LocalizationsProvider on LocaleCodeAware {
       'aging': 'Versendet',
       'profit_and_loss': 'Gewinn und Verlust',
       'reports': 'Berichte',
+      'yearly_report': 'Jahresbericht',
       'report': 'Bericht',
       'add_company': 'Konto hinzufügen',
       'unpaid_invoice': 'Unbezahlte Rechnung',
@@ -8022,6 +8027,7 @@ mixin LocalizationsProvider on LocaleCodeAware {
       'add_documents_to_invoice': 'Fügen Sie Dokumente zur Rechnung hinzu',
       'exchange_rate': 'Wechselkurs',
       'convert_currency': 'Währung umrechnen',
+      'convert_to_main_currency': 'In Hauptwährung umrechnen',
       'mark_paid': 'Als bezahlt markieren',
       'category': 'Kategorie',
       'address': 'Adresse',
@@ -9461,6 +9467,9 @@ mixin LocalizationsProvider on LocaleCodeAware {
 
   String get convertCurrency =>
       _localizedValues[localeCode]!['convert_currency']!;
+
+  String get convertToMainCurrency =>
+      _localizedValues[localeCode]!['convert_to_main_currency']!;
 
   String get exchangeRate => _localizedValues[localeCode]!['exchange_rate']!;
 

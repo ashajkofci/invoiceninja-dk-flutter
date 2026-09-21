@@ -166,101 +166,81 @@ class _MonthGrid extends StatelessWidget {
     final cells = firstWeekday + days;
     final locale = Localizations.localeOf(context).toString();
 
-    return LayoutBuilder(builder: (context, constraints) {
-      final cellWidth = constraints.maxWidth / 7;
-      var maxDayEvents = 0;
-      for (var day = 1; day <= days; day++) {
-        final dateText = DateFormat('yyyy-MM-dd')
-            .format(DateTime(month.year, month.month, day));
-        final count = events
-            .where((event) =>
-                dateText.compareTo(event['start_date']) >= 0 &&
-                dateText.compareTo(event['end_date']) <= 0)
-            .length;
-        if (count > maxDayEvents) {
-          maxDayEvents = count;
-        }
-      }
-      final textScaler = MediaQuery.textScalerOf(context);
-      final contentHeight = textScaler.scale(14) * 1.4 +
-          8 +
-          maxDayEvents * (textScaler.scale(11) * 3 * 1.4 + 8);
-      final cellHeight =
-          contentHeight > cellWidth / .9 ? contentHeight : cellWidth / .9;
+    final weekCount = (cells + 6) ~/ 7;
 
-      return Column(children: [
-        Row(
-            children: List.generate(7, (index) {
-          final day = DateTime(2023, 1, 1 + index);
-          return SizedBox(
-            width: cellWidth,
-            child: Padding(
+    Widget dayCell(int index) {
+      final day = index - firstWeekday + 1;
+      if (day < 1 || day > days) {
+        return DecoratedBox(
+            decoration: BoxDecoration(border: Border.all(width: .2)));
+      }
+      final date = DateTime(month.year, month.month, day);
+      final dateText = DateFormat('yyyy-MM-dd').format(date);
+      final now = DateTime.now();
+      final isToday = date.year == now.year &&
+          date.month == now.month &&
+          date.day == now.day;
+      final dayEvents = events.where((event) =>
+          dateText.compareTo(event['start_date']) >= 0 &&
+          dateText.compareTo(event['end_date']) <= 0);
+
+      return Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: isToday ? Colors.amber.withValues(alpha: .12) : null,
+          border: Border.all(
+              color: isToday ? Colors.amber : Colors.grey,
+              width: isToday ? 2 : .2),
+        ),
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text('$day',
+              textAlign: TextAlign.right,
+              style: TextStyle(fontWeight: isToday ? FontWeight.bold : null)),
+          ...dayEvents.map((event) => InkWell(
+                onTap: () => openReservationInvoice(
+                    context, store, event['invoice_id']?.toString()),
+                child: Container(
+                  margin: const EdgeInsets.only(top: 2),
+                  padding: const EdgeInsets.all(3),
+                  color: _hexColor(event['color']?.toString() ?? '#2563eb'),
+                  child: Text(
+                    '#${event['invoice_number']} ${event['client_name']}\n${event['status'] ?? ''}',
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 11, color: Colors.white),
+                  ),
+                ),
+              )),
+        ]),
+      );
+    }
+
+    return Column(children: [
+      Table(
+        defaultColumnWidth: const FlexColumnWidth(),
+        children: [
+          TableRow(
+              children: List.generate(7, (index) {
+            final day = DateTime(2023, 1, 1 + index);
+            return Padding(
               padding: const EdgeInsets.all(8),
               child: Text(DateFormat.E(locale).format(day),
                   textAlign: TextAlign.center),
-            ),
-          );
-        })),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 7, mainAxisExtent: cellHeight),
-          itemCount: ((cells + 6) ~/ 7) * 7,
-          itemBuilder: (context, index) {
-            final day = index - firstWeekday + 1;
-            if (day < 1 || day > days) {
-              return DecoratedBox(
-                  decoration: BoxDecoration(border: Border.all(width: .2)));
-            }
-            final date = DateTime(month.year, month.month, day);
-            final dateText = DateFormat('yyyy-MM-dd').format(date);
-            final now = DateTime.now();
-            final isToday = date.year == now.year &&
-                date.month == now.month &&
-                date.day == now.day;
-            final dayEvents = events.where((event) =>
-                dateText.compareTo(event['start_date']) >= 0 &&
-                dateText.compareTo(event['end_date']) <= 0);
-
-            return Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: isToday ? Colors.amber.withValues(alpha: .12) : null,
-                border: Border.all(
-                    color: isToday ? Colors.amber : Colors.grey,
-                    width: isToday ? 2 : .2),
-              ),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text('$day',
-                        textAlign: TextAlign.right,
-                        style: TextStyle(
-                            fontWeight: isToday ? FontWeight.bold : null)),
-                    ...dayEvents.map((event) => InkWell(
-                          onTap: () => openReservationInvoice(
-                              context, store, event['invoice_id']?.toString()),
-                          child: Container(
-                            margin: const EdgeInsets.only(top: 2),
-                            padding: const EdgeInsets.all(3),
-                            color: _hexColor(
-                                event['color']?.toString() ?? '#2563eb'),
-                            child: Text(
-                              '#${event['invoice_number']} ${event['client_name']}\n${event['status'] ?? ''}',
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                              style:
-                                  TextStyle(fontSize: 11, color: Colors.white),
-                            ),
-                          ),
-                        )),
-                  ]),
             );
-          },
+          })),
+        ],
+      ),
+      Table(
+        defaultColumnWidth: const FlexColumnWidth(),
+        children: List.generate(
+          weekCount,
+          (week) => TableRow(
+            children: List.generate(7, (day) => dayCell(week * 7 + day)),
+          ),
         ),
-      ]);
-    });
+      ),
+    ]);
   }
 }
 
