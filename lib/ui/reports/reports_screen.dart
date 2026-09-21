@@ -639,6 +639,31 @@ class _YearlyReportViewState extends State<YearlyReportView> {
       ) ??
       '';
 
+  Map<String, dynamic> _invoiceStatusAmounts(Map<String, dynamic> payment) {
+    final statuses = payment['invoice_statuses'];
+    if (statuses is! Map) {
+      return {};
+    }
+
+    return statuses.map((key, value) => MapEntry('$key', value));
+  }
+
+  String _invoiceStatusLabel(AppLocalization localization, String statusId) {
+    if (statusId == '0') {
+      return localization.unapplied;
+    }
+
+    final status = kInvoiceStatuses[statusId];
+    return status == null ? statusId : localization.lookup(status);
+  }
+
+  String _shortCategoryName(String name) {
+    final characters = name.runes.toList();
+    return characters.length <= 15
+        ? name
+        : '${String.fromCharCodes(characters.take(15))}...';
+  }
+
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalization.of(context)!;
@@ -711,6 +736,20 @@ class _YearlyReportViewState extends State<YearlyReportView> {
                 final expenses = (currency['expenses'] as List? ?? [])
                     .map((expense) => Map<String, dynamic>.from(expense as Map))
                     .toList();
+                final invoiceStatusIds = payments
+                    .expand((payment) => _invoiceStatusAmounts(payment).keys)
+                    .toSet()
+                    .toList()
+                  ..sort((left, right) {
+                    if (left == '0') {
+                      return 1;
+                    }
+                    if (right == '0') {
+                      return -1;
+                    }
+                    return (int.tryParse(left) ?? 0)
+                        .compareTo(int.tryParse(right) ?? 0);
+                  });
 
                 return FormCard(
                   child: Column(
@@ -722,20 +761,34 @@ class _YearlyReportViewState extends State<YearlyReportView> {
                       ),
                       const SizedBox(height: 16),
                       Text(localization.payments),
-                      DataTable(
-                        columns: [
-                          DataColumn(label: Text(localization.month)),
-                          DataColumn(label: Text(localization.total)),
-                        ],
-                        rows: payments.map((payment) {
-                          final month = (_number(payment['month']).toInt() - 1)
-                              .clamp(0, 11);
-                          return DataRow(cells: [
-                            DataCell(Text(months[month])),
-                            DataCell(Text(
-                                _money(context, payment['total'], currencyId))),
-                          ]);
-                        }).toList(),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
+                          columns: [
+                            DataColumn(label: Text(localization.month)),
+                            ...invoiceStatusIds.map((statusId) => DataColumn(
+                                  label: Text(_invoiceStatusLabel(
+                                      localization, statusId)),
+                                )),
+                            DataColumn(label: Text(localization.total)),
+                          ],
+                          rows: payments.map((payment) {
+                            final month =
+                                (_number(payment['month']).toInt() - 1)
+                                    .clamp(0, 11);
+                            final statusAmounts =
+                                _invoiceStatusAmounts(payment);
+                            return DataRow(cells: [
+                              DataCell(Text(months[month])),
+                              ...invoiceStatusIds.map((statusId) => DataCell(
+                                    Text(_money(context,
+                                        statusAmounts[statusId], currencyId)),
+                                  )),
+                              DataCell(Text(_money(
+                                  context, payment['total'], currencyId))),
+                            ]);
+                          }).toList(),
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Text(localization.expenses),
@@ -749,31 +802,56 @@ class _YearlyReportViewState extends State<YearlyReportView> {
                           scrollDirection: Axis.horizontal,
                           child: DataTable(
                             columns: [
-                              DataColumn(label: Text(localization.category)),
-                              ...months.map(
-                                  (month) => DataColumn(label: Text(month))),
+                              DataColumn(label: Text(localization.month)),
+                              ...expenses.map((expense) {
+                                final category = '${expense['category']}';
+                                return DataColumn(
+                                  label: Tooltip(
+                                    message: category,
+                                    child: Text(_shortCategoryName(category)),
+                                  ),
+                                );
+                              }),
                               DataColumn(label: Text(localization.total)),
                             ],
-                            rows: expenses.map((expense) {
-                              final expenseMonths =
-                                  expense['months'] as List? ?? [];
-                              return DataRow(cells: [
-                                DataCell(Text('${expense['category']}')),
-                                ...List.generate(
-                                    12,
-                                    (month) => DataCell(Text(
-                                          _money(
-                                            context,
-                                            month < expenseMonths.length
-                                                ? expenseMonths[month]
-                                                : 0,
-                                            currencyId,
-                                          ),
-                                        ))),
+                            rows: [
+                              ...List.generate(12, (month) {
+                                final values = expenses.map((expense) {
+                                  final expenseMonths =
+                                      expense['months'] as List? ?? [];
+                                  return month < expenseMonths.length
+                                      ? expenseMonths[month]
+                                      : 0;
+                                }).toList();
+                                return DataRow(cells: [
+                                  DataCell(Text(months[month])),
+                                  ...values.map((value) => DataCell(Text(
+                                      _money(context, value, currencyId)))),
+                                  DataCell(Text(_money(
+                                    context,
+                                    values.fold<double>(
+                                        0,
+                                        (total, value) =>
+                                            total + _number(value)),
+                                    currencyId,
+                                  ))),
+                                ]);
+                              }),
+                              DataRow(cells: [
+                                DataCell(Text(localization.total)),
+                                ...expenses.map((expense) => DataCell(Text(
+                                    _money(context, expense['total'],
+                                        currencyId)))),
                                 DataCell(Text(_money(
-                                    context, expense['total'], currencyId))),
-                              ]);
-                            }).toList(),
+                                  context,
+                                  expenses.fold<double>(
+                                      0,
+                                      (total, expense) =>
+                                          total + _number(expense['total'])),
+                                  currencyId,
+                                ))),
+                              ]),
+                            ],
                           ),
                         ),
                     ],
@@ -2046,6 +2124,8 @@ class ReportNumberValue extends ReportElement {
     required String entityId,
     required this.currencyId,
     required this.exchangeRate,
+    this.convertedValue,
+    this.convertedCurrencyId,
     this.formatNumberType = FormatNumberType.money,
   }) : super(entityType: entityType, entityId: entityId);
 
@@ -2053,6 +2133,8 @@ class ReportNumberValue extends ReportElement {
   final FormatNumberType? formatNumberType;
   final String? currencyId;
   final double? exchangeRate;
+  final double? convertedValue;
+  final String? convertedCurrencyId;
 
   @override
   double? get doubleValue => value;

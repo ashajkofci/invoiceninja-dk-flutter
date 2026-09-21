@@ -60,6 +60,15 @@ enum ExpenseReportFields {
   is_invoiced,
 }
 
+const _convertedExpenseAmountFields = {
+  ExpenseReportFields.amount,
+  ExpenseReportFields.net_amount,
+  ExpenseReportFields.tax_amount,
+  ExpenseReportFields.tax_amount1,
+  ExpenseReportFields.tax_amount2,
+  ExpenseReportFields.tax_amount3,
+};
+
 var memoizedExpenseReport = memo10((
   UserCompanyEntity? userCompany,
   ReportsUIState reportsUIState,
@@ -305,8 +314,17 @@ ReportResult expenseReport(
         row.add(expense.getReportDouble(
             value: value, currencyId: expense.invoiceCurrencyId));
       } else if (value.runtimeType == double || value.runtimeType == int) {
+        final supportsRecordedConversion =
+            _convertedExpenseAmountFields.contains(column);
         row.add(expense.getReportDouble(
-            value: value, currencyId: expense.currencyId));
+          value: value,
+          currencyId: expense.currencyId,
+          convertedValue: supportsRecordedConversion
+              ? round(value * expense.convertedExchangeRate, 2)
+              : null,
+          convertedCurrencyId:
+              supportsRecordedConversion ? expense.invoiceCurrencyId : null,
+        ));
       } else {
         row.add(expense.getReportString(value: value));
       }

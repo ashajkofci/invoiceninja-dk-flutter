@@ -623,51 +623,7 @@ GroupTotals calculateReportTotals({
     return GroupTotals();
   }
 
-  bool shouldConverCurrencies = false;
-  final Map<String?, Map<String?, String?>> groupCurrencies = {};
-  for (var i = 0; i < data.length; i++) {
-    final row = data[i];
-    final columnIndex = columns.indexOf(reportState.group);
-
-    if (columnIndex == -1) {
-      print('## ERROR: colum not found - ${reportState.group}');
-      continue;
-    }
-
-    final groupCell = row[columnIndex];
-    final group = groupCell.stringValue;
-
-    if (!groupCurrencies.containsKey(group)) {
-      groupCurrencies[group] = {};
-    }
-
-    for (var j = 0; j < row.length; j++) {
-      final cell = row[j];
-      final column = columns[j];
-
-      if (cell is ReportNumberValue) {
-        final currencyId = groupCurrencies[group]![column] ?? '';
-
-        if (currencyId.isNotEmpty && currencyId != cell.currencyId) {
-          shouldConverCurrencies = true;
-          break;
-        }
-
-        groupCurrencies[group]![column] = cell.currencyId;
-      }
-    }
-  }
-
-  for (var i = 0; i < data.length; i++) {
-    final row = data[i];
-    final columnIndex = columns.indexOf(reportState.group);
-
-    if (columnIndex == -1) {
-      print('## ERROR: colum not found - ${reportState.group}');
-      continue;
-    }
-
-    final groupCell = row[columnIndex];
+  String? normalizedGroup(ReportElement groupCell) {
     String? group = groupCell.stringValue;
 
     if (groupCell is ReportAgeValue) {
@@ -685,7 +641,7 @@ GroupTotals calculateReportTotals({
       } else {
         group = kAgeGroup120;
       }
-    } else if (group!.isNotEmpty && isValidDate(group)) {
+    } else if ((group ?? '').isNotEmpty && isValidDate(group!)) {
       group = convertDateTimeToSqlDate(DateTime.tryParse(group));
       if (reportState.subgroup == kReportGroupYear) {
         group = group.substring(0, 4) + '-01-01';
@@ -712,6 +668,80 @@ GroupTotals calculateReportTotals({
       }
     }
 
+    return group;
+  }
+
+  final useRecordedExpenseConversions = reportState.report == kReportExpense &&
+      (reportState.group == ExpenseReportFields.date.name ||
+          reportState.group == ExpenseReportFields.category.name) &&
+      (reportState.filters[ExpenseReportFields.currency.name] ?? '').isEmpty;
+
+  bool shouldConverCurrencies = false;
+  final Map<String?, Map<String?, Set<String>>> groupCurrencies = {};
+  final Map<String?, Map<String?, Set<String>>> convertedGroupCurrencies = {};
+  final Map<String?, Map<String?, bool>> hasRecordedGroupConversions = {};
+  for (var i = 0; i < data.length; i++) {
+    final row = data[i];
+    final columnIndex = columns.indexOf(reportState.group);
+
+    if (columnIndex == -1) {
+      print('## ERROR: colum not found - ${reportState.group}');
+      continue;
+    }
+
+    final groupCell = row[columnIndex];
+    final group = useRecordedExpenseConversions
+        ? normalizedGroup(groupCell)
+        : groupCell.stringValue;
+
+    if (!groupCurrencies.containsKey(group)) {
+      groupCurrencies[group] = {};
+      convertedGroupCurrencies[group] = {};
+      hasRecordedGroupConversions[group] = {};
+    }
+
+    for (var j = 0; j < row.length; j++) {
+      final cell = row[j];
+      final column = columns[j];
+
+      if (cell is ReportNumberValue) {
+        final currencyIds =
+            groupCurrencies[group]!.putIfAbsent(column, () => <String>{});
+        if ((cell.currencyId ?? '').isNotEmpty) {
+          currencyIds.add(cell.currencyId!);
+        }
+
+        if (currencyIds.length > 1) {
+          shouldConverCurrencies = true;
+        }
+
+        if (useRecordedExpenseConversions) {
+          hasRecordedGroupConversions[group]!.putIfAbsent(column, () => true);
+          if (cell.convertedValue == null ||
+              (cell.convertedCurrencyId ?? '').isEmpty) {
+            hasRecordedGroupConversions[group]![column] = false;
+          } else {
+            convertedGroupCurrencies[group]!
+                .putIfAbsent(column, () => <String>{})
+                .add(cell.convertedCurrencyId!);
+          }
+        }
+      }
+    }
+  }
+
+  for (var i = 0; i < data.length; i++) {
+    final row = data[i];
+    final columnIndex = columns.indexOf(reportState.group);
+
+    if (columnIndex == -1) {
+      print('## ERROR: colum not found - ${reportState.group}');
+      continue;
+    }
+
+    final groupCell = row[columnIndex];
+    final group = normalizedGroup(groupCell);
+
     if (!totals.containsKey(group)) {
       totals[group] = {'count': 0};
     }
@@ -731,15 +761,32 @@ GroupTotals calculateReportTotals({
           totals[group]![column] = 0;
         }
 
+        final shouldConvertGroupCurrencies = useRecordedExpenseConversions
+            ? (groupCurrencies[group]?[column]?.length ?? 0) > 1
+            : shouldConverCurrencies;
+        final convertedCurrencies = convertedGroupCurrencies[group]?[column];
+        final canUseRecordedConversion = shouldConvertGroupCurrencies &&
+            useRecordedExpenseConversions &&
+            hasRecordedGroupConversions[group]?[column] == true &&
+            convertedCurrencies?.length == 1;
+
         if (cell is ReportNumberValue && cell.currencyId != null) {
-          totals[group]!['${column}_currency_id'] = parseDouble(
-              shouldConverCurrencies ? company!.currencyId : cell.currencyId);
+          final currencyId = canUseRecordedConversion
+              ? convertedCurrencies!.single
+              : shouldConvertGroupCurrencies
+                  ? company!.currencyId
+                  : cell.currencyId;
+          totals[group]!['${column}_currency_id'] =
+              double.tryParse(currencyId ?? '');
         }
 
-        if (cell is ReportNumberValue &&
+        if (cell is ReportNumberValue && canUseRecordedConversion) {
+          totals[group]![column] =
+              totals[group]![column]! + cell.convertedValue!;
+        } else if (cell is ReportNumberValue &&
             cell.currencyId != null &&
             cell.currencyId != company!.currencyId &&
-            shouldConverCurrencies) {
+            shouldConvertGroupCurrencies) {
           double cellValue = cell.value!;
           final toCurrency = currencyMap![company.currencyId]!;
           final rate = getExchangeRate(currencyMap,

@@ -477,6 +477,8 @@ abstract mixin class BaseEntity implements SelectableEntity {
           {double? value,
           String? currencyId,
           double? exchangeRate,
+          double? convertedValue,
+          String? convertedCurrencyId,
           FormatNumberType? formatNumberType}) =>
       ReportNumberValue(
           entityId: id,
@@ -484,6 +486,8 @@ abstract mixin class BaseEntity implements SelectableEntity {
           value: value,
           currencyId: currencyId,
           exchangeRate: exchangeRate,
+          convertedValue: convertedValue,
+          convertedCurrencyId: convertedCurrencyId,
           formatNumberType: formatNumberType);
 
   ReportIntValue getReportInt(
