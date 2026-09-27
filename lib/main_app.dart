@@ -71,6 +71,7 @@ import 'package:invoiceninja_flutter/ui/recurring_invoice/view/recurring_invoice
 import 'package:invoiceninja_flutter/ui/reports/reports_screen.dart';
 import 'package:invoiceninja_flutter/ui/reports/reports_screen_vm.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_calendar.dart';
+import 'package:invoiceninja_flutter/ui/marketing/marketing_screen.dart';
 import 'package:invoiceninja_flutter/ui/settings/account_management_vm.dart';
 import 'package:invoiceninja_flutter/ui/settings/device_settings_vm.dart';
 import 'package:invoiceninja_flutter/ui/settings/expense_settings_vm.dart';
@@ -504,6 +505,7 @@ class InvoiceNinjaAppState extends State<InvoiceNinjaApp> {
                                 appLayout: state.prefState.appLayout,
                                 child: DashboardScreenBuilder(),
                               ),
+                          MarketingScreen.route: (context) => const MarketingScreen(),
                           ProductReservationCalendarScreen.route: (context) =>
                               ProductReservationCalendarScreen(),
                           ProductScreen.route: (context) =>

@@ -1088,8 +1088,10 @@ const int kModuleInvoices = 4096;
 const int kModuleProformaInvoices = 8192;
 const int kModulePurchaseOrders = 16384;
 const int kModuleProductReservations = 32768;
+const int kModuleMarketing = 65536;
 
 const Map<int, String> kModules = {
+  kModuleMarketing: 'marketing',
   kModuleInvoices: 'invoices',
   kModuleRecurringInvoices: 'recurring_invoices',
   kModuleQuotes: 'quotes',

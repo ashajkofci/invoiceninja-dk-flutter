@@ -46,6 +46,7 @@ import 'package:invoiceninja_flutter/ui/app/resources/cached_image.dart';
 import 'package:invoiceninja_flutter/ui/app/scrollable_listview.dart';
 import 'package:invoiceninja_flutter/ui/system/update_dialog.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_calendar.dart';
+import 'package:invoiceninja_flutter/ui/marketing/marketing_screen.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
 import 'package:invoiceninja_flutter/utils/colors.dart';
 import 'package:invoiceninja_flutter/utils/dialogs.dart';
@@ -623,6 +624,15 @@ class _MenuDrawerState extends State<MenuDrawer> {
                                   title: localization.invoices,
                                   iconTooltip: localization.newInvoice,
                                 ),
+                                if (company.enabledModules & kModuleMarketing != 0)
+                                  DrawerTile(
+                                    company: company, icon: Icons.campaign,
+                                    title: marketingTitle(context),
+                                    onTap: () {
+                                      store.dispatch(UpdateCurrentRoute(MarketingScreen.route));
+                                      if (isMobile(context)) Navigator.of(context).pushNamed(MarketingScreen.route);
+                                    },
+                                  ),
                                 if (company.enabledModules &
                                         kModuleProductReservations !=
                                     0)
@@ -1169,7 +1179,7 @@ class SidebarFooter extends StatelessWidget {
                   url += '/user-guide';
                 } else if (uiState.mainRoute == kReports) {
                   url += '/$kReports';
-                } else if (uiState.mainRoute ==
+                } else if (uiState.mainRoute == MarketingScreen.route.substring(1) || uiState.mainRoute ==
                     ProductReservationCalendarScreen.route.substring(1)) {
                   url += '/user-guide';
                 } else {

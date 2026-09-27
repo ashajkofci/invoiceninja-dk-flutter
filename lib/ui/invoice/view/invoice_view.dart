@@ -1,5 +1,7 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:invoiceninja_flutter/constants.dart';
+import 'package:invoiceninja_flutter/ui/marketing/marketing_screen.dart';
 
 // Package imports:
 import 'package:flutter_redux/flutter_redux.dart';
@@ -144,9 +146,10 @@ class _InvoiceViewState extends State<InvoiceView>
           Tab(text: localization.contacts),
           if (company.isModuleEnabled(EntityType.document))
             Tab(
-                text: documents.isEmpty
-                    ? localization.documents
-                    : '${localization.documents} (${documents.length})'),
+              text: documents.isEmpty
+                  ? localization.documents
+                  : '${localization.documents} (${documents.length})',
+            ),
           if (invoice.isRecurring) Tab(text: localization.schedule),
           if (!invoice.isRecurring) Tab(text: localization.history),
           Tab(text: localization.activity),
@@ -158,6 +161,23 @@ class _InvoiceViewState extends State<InvoiceView>
             onRefresh: () => viewModel.onRefreshed!(context),
             child: Column(
               children: <Widget>[
+                if (invoice.isQuote &&
+                    !invoice.isNew &&
+                    invoice.isDeleted != true &&
+                    (company.enabledModules & kModuleMarketing) != 0 &&
+                    viewModel.state!.userCompany.canView(EntityType.quote))
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      icon: const Icon(Icons.track_changes),
+                      label: Text(marketingQuoteActionTitle(context)),
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => MarketingScreen(quoteId: invoice.id),
+                        ),
+                      ),
+                    ),
+                  ),
                 Expanded(
                   child: TabBarView(
                     controller: _controller,
@@ -168,7 +188,8 @@ class _InvoiceViewState extends State<InvoiceView>
                           viewModel: viewModel,
                           isFilter: widget.isFilter,
                           key: ValueKey(
-                              '${viewModel.invoice!.id}-${viewModel.invoice!.loadedAt}'),
+                            '${viewModel.invoice!.id}-${viewModel.invoice!.loadedAt}',
+                          ),
                         ),
                       ),
                       RefreshIndicator(
@@ -176,17 +197,20 @@ class _InvoiceViewState extends State<InvoiceView>
                         child: InvoiceViewContacts(
                           viewModel: viewModel,
                           key: ValueKey(
-                              '${viewModel.invoice!.id}-${viewModel.invoice!.loadedAt}'),
+                            '${viewModel.invoice!.id}-${viewModel.invoice!.loadedAt}',
+                          ),
                         ),
                       ),
                       if (company.isModuleEnabled(EntityType.document))
                         RefreshIndicator(
                           onRefresh: () => viewModel.onRefreshed!(context),
                           child: InvoiceViewDocuments(
-                              viewModel: viewModel,
-                              invoice: viewModel.invoice,
-                              key: ValueKey(
-                                  '${viewModel.invoice!.id}-${viewModel.invoice!.loadedAt}')),
+                            viewModel: viewModel,
+                            invoice: viewModel.invoice,
+                            key: ValueKey(
+                              '${viewModel.invoice!.id}-${viewModel.invoice!.loadedAt}',
+                            ),
+                          ),
                         ),
                       if (invoice.isRecurring)
                         RefreshIndicator(
@@ -194,23 +218,28 @@ class _InvoiceViewState extends State<InvoiceView>
                           child: InvoiceViewSchedule(
                             viewModel: viewModel,
                             key: ValueKey(
-                                '${viewModel.invoice!.id}-${viewModel.invoice!.loadedAt}'),
+                              '${viewModel.invoice!.id}-${viewModel.invoice!.loadedAt}',
+                            ),
                           ),
                         ),
                       if (!invoice.isRecurring)
                         RefreshIndicator(
                           onRefresh: () => viewModel.onRefreshed!(context),
                           child: InvoiceViewHistory(
-                              viewModel: viewModel,
-                              key: ValueKey(
-                                  '${viewModel.invoice!.id}-${viewModel.invoice!.loadedAt}')),
+                            viewModel: viewModel,
+                            key: ValueKey(
+                              '${viewModel.invoice!.id}-${viewModel.invoice!.loadedAt}',
+                            ),
+                          ),
                         ),
                       RefreshIndicator(
                         onRefresh: () => viewModel.onRefreshed!(context),
                         child: InvoiceViewActivity(
-                            viewModel: viewModel,
-                            key: ValueKey(
-                                '${viewModel.invoice!.id}-${viewModel.invoice!.loadedAt}')),
+                          viewModel: viewModel,
+                          key: ValueKey(
+                            '${viewModel.invoice!.id}-${viewModel.invoice!.loadedAt}',
+                          ),
+                        ),
                       ),
                     ],
                   ),
