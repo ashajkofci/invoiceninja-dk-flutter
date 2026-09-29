@@ -79,6 +79,7 @@ import 'package:invoiceninja_flutter/ui/reports/reports_screen.dart';
 import 'package:invoiceninja_flutter/ui/reports/reports_screen_vm.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_calendar.dart';
 import 'package:invoiceninja_flutter/ui/marketing/marketing_screen.dart';
+import 'package:invoiceninja_flutter/ui/marketing/marketing_settings_screen.dart';
 import 'package:invoiceninja_flutter/ui/settings/account_management_vm.dart';
 import 'package:invoiceninja_flutter/ui/settings/device_settings_vm.dart';
 import 'package:invoiceninja_flutter/ui/settings/expense_settings_vm.dart';
@@ -910,6 +911,9 @@ class SettingsScreens extends StatelessWidget {
         break;
       case kSettingsWorkflowSettings:
         screen = WorkflowSettingsScreen();
+        break;
+      case kSettingsMarketing:
+        screen = const MarketingSettingsScreen();
         break;
       case kSettingsInvoiceDesign:
         screen = InvoiceDesignScreen();

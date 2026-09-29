@@ -8,6 +8,7 @@ import 'package:invoiceninja_flutter/data/models/models.dart';
 import 'package:invoiceninja_flutter/data/web_client.dart';
 import 'package:invoiceninja_flutter/redux/app/app_actions.dart';
 import 'package:invoiceninja_flutter/redux/app/app_state.dart';
+import 'package:invoiceninja_flutter/redux/settings/settings_actions.dart';
 
 String marketingTitle(BuildContext context) =>
     {
@@ -20,33 +21,34 @@ String marketingTitle(BuildContext context) =>
 Map<String, dynamic> marketingInitial(
   List<dynamic> fields, [
   Map<String, dynamic> defaults = const {},
-]) => {
-  for (final field in fields)
-    field['name'] as String:
-        defaults[field['name']] ??
-        (field['type'] == 'boolean'
-            ? false
-            : field['type'] == 'number'
-            ? 0
-            : field['type'] == 'list'
-            ? <dynamic>[]
-            : ''),
-};
+]) =>
+    {
+      for (final field in fields)
+        field['name'] as String: defaults[field['name']] ??
+            (field['type'] == 'boolean'
+                ? false
+                : field['type'] == 'number'
+                    ? 0
+                    : field['type'] == 'list'
+                        ? <dynamic>[]
+                        : ''),
+    };
 Map<String, dynamic> marketingUpdate(
   Map<String, dynamic> values,
   String name,
   dynamic value,
-) => {
-  ...values,
-  name: value,
-  if (name == 'client_id') ...{
-    'contact_id': '',
-    'quote_id': '',
-    'consent': false,
-    'consent_source': '',
-  },
-  if (name == 'contact_id') ...{'consent': false, 'consent_source': ''},
-};
+) =>
+    {
+      ...values,
+      name: value,
+      if (name == 'client_id') ...{
+        'contact_id': '',
+        'quote_id': '',
+        'consent': false,
+        'consent_source': '',
+      },
+      if (name == 'contact_id') ...{'consent': false, 'consent_source': ''},
+    };
 
 String marketingQuoteActionTitle(BuildContext context) =>
     {
@@ -99,11 +101,11 @@ List<dynamic> marketingFilterOpportunities(
           (DateTime.tryParse(b['updated_at'] ?? '')?.millisecondsSinceEpoch ??
                   0)
               .compareTo(
-                DateTime.tryParse(
-                      a['updated_at'] ?? '',
-                    )?.millisecondsSinceEpoch ??
-                    0,
-              ),
+        DateTime.tryParse(
+              a['updated_at'] ?? '',
+            )?.millisecondsSinceEpoch ??
+            0,
+      ),
     );
 }
 
@@ -113,12 +115,12 @@ class MarketingScreen extends StatelessWidget {
   static const route = '/marketing';
   @override
   Widget build(BuildContext context) => StoreBuilder<AppState>(
-    builder: (context, store) => _MarketingWorkspace(
-      key: ValueKey('${store.state.company.id}-$quoteId'),
-      quoteId: quoteId,
-      state: store.state,
-    ),
-  );
+        builder: (context, store) => _MarketingWorkspace(
+          key: ValueKey('${store.state.company.id}-$quoteId'),
+          quoteId: quoteId,
+          state: store.state,
+        ),
+      );
 }
 
 class _MarketingWorkspace extends StatefulWidget {
@@ -133,7 +135,7 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
   Map<String, dynamic>? _bootstrap;
   List<dynamic> _records = [];
   List<dynamic>? _allOpportunities;
-  bool _board = true, _cacheDirty = false;
+  bool _board = true, _cacheDirty = false, _viewInitialized = false;
   String _tab = 'opportunities',
       _search = '',
       _filter = '',
@@ -156,6 +158,10 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (!_viewInitialized) {
+      _board = MediaQuery.sizeOf(context).width >= 700;
+      _viewInitialized = true;
+    }
     final language = Localizations.localeOf(context).languageCode;
     if (language != _language) {
       _language = language;
@@ -182,6 +188,8 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
     _cacheDirty = true;
     if (method == 'PUT')
       return client.put(url, credentials.token, data: jsonEncode(data));
+    if (method == 'DELETE')
+      return client.delete(url, credentials.token, data: jsonEncode(data));
     return client.post(url, credentials.token, data: jsonEncode(data));
   }
 
@@ -238,9 +246,8 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
               'data': _board
                   ? filtered
                   : filtered.skip((_page - 1) * 50).take(50).toList(),
-              'last_page': _board
-                  ? 1
-                  : ((filtered.length + 49) ~/ 50).clamp(1, 1000000),
+              'last_page':
+                  _board ? 1 : ((filtered.length + 49) ~/ 50).clamp(1, 1000000),
             }
           : await api('GET', '$_tab?$query');
       if (mounted && generation == _generation)
@@ -345,8 +352,7 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
 
   Future<void> _edit([Map<String, dynamic>? record]) async {
     final fields = _bootstrap!['fields'][_tab] as List<dynamic>;
-    final values =
-        record ??
+    final values = record ??
         marketingInitial(fields, {
           ...Map<String, dynamic>.from(_bootstrap!['defaults']),
           'opportunity_id': _opportunity,
@@ -374,41 +380,19 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
     }
   }
 
-  Future<void> _settings() async {
-    final bootstrap = _bootstrap!;
-    final config = Map<String, dynamic>.from(
-      jsonDecode(jsonEncode(bootstrap['config'])),
-    );
-    final fields = <dynamic>[...bootstrap['fields']['settings']];
-    (bootstrap['fields']['collections'] as Map).forEach(
-      (key, value) =>
-          fields.add({'name': key, 'type': 'list', 'fields': value}),
-    );
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => _MarketingEditor(
-        title: text('settings'),
-        fields: fields,
-        values: config,
-        bootstrap: bootstrap,
-        isConfig: true,
-        save: (updated) => api('PUT', 'settings', {
-          'revision': bootstrap['revision'],
-          'config': updated,
-        }),
-      ),
-    );
-    if (mounted) {
-      await _load();
-    }
-  }
+  void _settings() => StoreProvider.of<AppState>(context).dispatch(
+        ViewSettings(
+          section: kSettingsMarketing,
+          company: widget.state.company,
+          user: widget.state.user,
+        ),
+      );
 
   Future<void> _enroll(Map<String, dynamic>? record) async {
     String selected =
         record != null && (record['quote_id'] ?? '').toString().isNotEmpty
-        ? _bootstrap!['config']['offer_sequence_${record['locale']}']
-        : '';
+            ? _bootstrap!['config']['offer_sequence_${record['locale']}']
+            : '';
     String error = '';
     bool busy = false;
     await showDialog<void>(
@@ -432,9 +416,8 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
                     ),
                   ),
                 ],
-                onChanged: busy
-                    ? null
-                    : (v) => setLocal(() => selected = v ?? ''),
+                onChanged:
+                    busy ? null : (v) => setLocal(() => selected = v ?? ''),
               ),
               if (error.isNotEmpty) Text(error),
             ],
@@ -550,6 +533,48 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
     return id?.toString() ?? '';
   }
 
+  Widget _sectionTitle(String title, {IconData? icon}) => Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          children: [
+            if (icon != null) ...[
+              Icon(icon,
+                  size: 20, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 8),
+            ],
+            Expanded(
+              child:
+                  Text(title, style: Theme.of(context).textTheme.titleMedium),
+            ),
+          ],
+        ),
+      );
+
+  Widget _nextAction(dynamic next) => Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            next == null
+                ? Icons.notification_important_outlined
+                : Icons.event_outlined,
+            size: 18,
+            color: next == null
+                ? Theme.of(context).colorScheme.error
+                : Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              next == null
+                  ? text('needs_followup')
+                  : '${next['title']} · ${next['due_at']}',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      );
+
   Future<void> _openQuoteRecord(Map<String, dynamic> record) async {
     try {
       final store = StoreProvider.of<AppState>(context);
@@ -596,11 +621,66 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
     }
   }
 
+  Future<void> _removeFromMarketing(Map<String, dynamic> record) async {
+    final hasQuote = (record['quote_id'] ?? '').toString().isNotEmpty;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.remove_circle_outline),
+        title: Text(text('remove_from_marketing')),
+        content: Text(
+          text(
+            hasQuote
+                ? 'remove_marketing_confirm'
+                : 'remove_opportunity_confirm',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(text('cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(text('remove_from_marketing')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) {
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      await api('DELETE', 'opportunities/${record['id']}', {
+        'revision': record['revision'],
+      });
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _selected.clear();
+        _opportunity = '';
+        _page = 1;
+      });
+      await _load();
+    } catch (e) {
+      if (mounted) {
+        setState(() => _error = e.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+  }
+
   Widget _kanbanCard(Map<String, dynamic> record, Map<String, dynamic> stage) {
     final next = record['next_activity'];
     return Card(
+      margin: const EdgeInsets.only(bottom: 10),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -608,13 +688,18 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
               record['title'],
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            Text(optionName('clients', record['client_id'])),
+            const SizedBox(height: 4),
+            Text(
+              optionName('clients', record['client_id']),
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
             Text(
               '${record['amount']} ${optionName('currencies', record['currency_id'])}',
+              style: Theme.of(context).textTheme.titleSmall,
             ),
-            Text(
-              '${text('next_action')}: ${next == null ? text('needs_followup') : '${next['title']} · ${next['due_at']}'}',
-            ),
+            const SizedBox(height: 12),
+            _nextAction(next),
             if (allowed('edit'))
               DropdownButtonFormField<String>(
                 key: ValueKey(
@@ -638,8 +723,10 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
                         }
                       },
               ),
+            const SizedBox(height: 8),
             Wrap(
               spacing: 8,
+              runSpacing: 4,
               children: [
                 if (allowed('edit'))
                   TextButton(
@@ -666,6 +753,16 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
                     onPressed: _busy ? null : () => _openQuoteRecord(record),
                     child: Text(text('view_quote')),
                   ),
+                if (allowed('edit'))
+                  TextButton.icon(
+                    onPressed:
+                        _busy ? null : () => _removeFromMarketing(record),
+                    icon: const Icon(Icons.remove_circle_outline, size: 18),
+                    label: Text(text('remove_from_marketing')),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
                 if (allowed('create') &&
                     record['archived'] != true &&
                     stage['outcome'] == 'open')
@@ -689,87 +786,97 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
   }
 
   Widget _kanban() => SizedBox(
-    height: 600,
-    child: SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final rawStage in _bootstrap!['config']['stages'])
-            Builder(
-              builder: (context) {
-                final stage = Map<String, dynamic>.from(rawStage);
-                final cards = _records
-                    .where((r) => r['stage_id'] == stage['id'])
-                    .toList();
-                return DragTarget<Map<String, dynamic>>(
-                  onWillAcceptWithDetails: (_) => allowed('edit') && !_busy,
-                  onAcceptWithDetails: (details) =>
-                      _moveStage(details.data, stage['id']),
-                  builder: (context, candidates, rejected) => Container(
-                    width: 300,
-                    margin: const EdgeInsets.only(right: 12),
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: candidates.isEmpty
-                            ? Theme.of(context).dividerColor
-                            : Theme.of(context).colorScheme.primary,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          '${stage['name']} · ${cards.length}',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Expanded(
-                          child: ListView(
-                            children: [
-                              for (final raw in cards)
-                                Builder(
-                                  builder: (context) {
-                                    final record = Map<String, dynamic>.from(
-                                      raw,
-                                    );
-                                    final card = _kanbanCard(record, stage);
-                                    if (!allowed('edit') || _busy) {
-                                      return card;
-                                    }
-                                    return LongPressDraggable<
-                                      Map<String, dynamic>
-                                    >(
-                                      data: record,
-                                      feedback: Material(
-                                        elevation: 6,
-                                        child: SizedBox(
-                                          width: 280,
-                                          child: Text(record['title']),
-                                        ),
-                                      ),
-                                      childWhenDragging: Opacity(
-                                        opacity: 0.4,
-                                        child: card,
-                                      ),
-                                      child: card,
-                                    );
-                                  },
-                                ),
-                            ],
+        height: 600,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final rawStage in _bootstrap!['config']['stages'])
+                Builder(
+                  builder: (context) {
+                    final stage = Map<String, dynamic>.from(rawStage);
+                    final cards = _records
+                        .where((r) => r['stage_id'] == stage['id'])
+                        .toList();
+                    return DragTarget<Map<String, dynamic>>(
+                      onWillAcceptWithDetails: (_) => allowed('edit') && !_busy,
+                      onAcceptWithDetails: (details) =>
+                          _moveStage(details.data, stage['id']),
+                      builder: (context, candidates, rejected) => Container(
+                        width: 320,
+                        margin: const EdgeInsets.only(right: 12),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color:
+                              Theme.of(context).colorScheme.surfaceContainerLow,
+                          border: Border.all(
+                            color: candidates.isEmpty
+                                ? Theme.of(context).dividerColor
+                                : Theme.of(context).colorScheme.primary,
                           ),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-        ],
-      ),
-    ),
-  );
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    stage['name'],
+                                    style:
+                                        Theme.of(context).textTheme.titleMedium,
+                                  ),
+                                ),
+                                Badge(label: Text('${cards.length}')),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Expanded(
+                              child: ListView(
+                                children: [
+                                  for (final raw in cards)
+                                    Builder(
+                                      builder: (context) {
+                                        final record =
+                                            Map<String, dynamic>.from(
+                                          raw,
+                                        );
+                                        final card = _kanbanCard(record, stage);
+                                        if (!allowed('edit') || _busy) {
+                                          return card;
+                                        }
+                                        return LongPressDraggable<
+                                            Map<String, dynamic>>(
+                                          data: record,
+                                          feedback: Material(
+                                            elevation: 6,
+                                            child: SizedBox(
+                                              width: 280,
+                                              child: Text(record['title']),
+                                            ),
+                                          ),
+                                          childWhenDragging: Opacity(
+                                            opacity: 0.4,
+                                            child: card,
+                                          ),
+                                          child: card,
+                                        );
+                                      },
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -804,54 +911,71 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
             )
           : null,
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 96),
         children: [
           if (_busy) const LinearProgressIndicator(),
           if (_error.isNotEmpty)
-            SelectableText(
-              _error,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            Card(
+              color: Theme.of(context).colorScheme.errorContainer,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: SelectableText(
+                  _error,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onErrorContainer,
+                  ),
+                ),
+              ),
             ),
           if (bootstrap != null) ...[
-            Wrap(
-              spacing: 12,
-              runSpacing: 8,
-              children: [
-                for (final tab in ['opportunities', 'activities'])
-                  ChoiceChip(
-                    label: Text(text(tab)),
-                    selected: _tab == tab,
-                    onSelected: _busy
-                        ? null
-                        : (_) {
-                            setState(() {
-                              _tab = tab;
-                              _worklist = '';
-                              _opportunity = '';
-                              _filter = '';
-                              _page = 1;
-                            });
-                            _load();
-                          },
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SegmentedButton<String>(
+                segments: [
+                  ButtonSegment(
+                    value: 'opportunities',
+                    icon: const Icon(Icons.view_kanban_outlined),
+                    label: Text(text('opportunities')),
                   ),
-              ],
+                  ButtonSegment(
+                    value: 'activities',
+                    icon: const Icon(Icons.event_note_outlined),
+                    label: Text(text('activities')),
+                  ),
+                ],
+                selected: {_tab},
+                onSelectionChanged: _busy
+                    ? null
+                    : (values) {
+                        setState(() {
+                          _tab = values.first;
+                          _worklist = '';
+                          _opportunity = '';
+                          _filter = '';
+                          _page = 1;
+                        });
+                        _load();
+                      },
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
-                ActionChip(
+                FilterChip(
                   label: Text(
                     '${text('due_work')} · ${bootstrap['workload']?['due'] ?? 0}',
                   ),
-                  onPressed: _busy ? null : () => _showWork('due'),
+                  selected: _worklist == 'due',
+                  onSelected: _busy ? null : (_) => _showWork('due'),
                 ),
-                ActionChip(
+                FilterChip(
                   label: Text(
                     '${text('needs_followup')} · ${bootstrap['workload']?['needs_followup'] ?? 0}',
                   ),
-                  onPressed: _busy ? null : () => _showWork('needs_followup'),
+                  selected: _worklist == 'needs_followup',
+                  onSelected: _busy ? null : (_) => _showWork('needs_followup'),
                 ),
                 if (_worklist.isNotEmpty || _opportunity.isNotEmpty)
                   ActionChip(
@@ -870,52 +994,81 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
               ],
             ),
             if (_tab == 'opportunities' && allowed('create')) ...[
-              const SizedBox(height: 16),
-              Text(text('quote_start_help')),
-              DropdownButtonFormField<String>(
-                isExpanded: true,
-                initialValue: _quoteChoice,
-                decoration: InputDecoration(labelText: text('quote_id')),
-                items: [
-                  const DropdownMenuItem(value: '', child: Text('—')),
-                  ...(bootstrap['options']['quotes'] as List).map(
-                    (q) => DropdownMenuItem<String>(
-                      value: q['id'],
-                      child: Text(
-                        '${q['name']} · ${optionName('clients', q['client_id'])}',
+              const SizedBox(height: 20),
+              Card.filled(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _sectionTitle(
+                        text('from_quote'),
+                        icon: Icons.description_outlined,
                       ),
-                    ),
+                      Text(text('quote_start_help')),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        isExpanded: true,
+                        initialValue: _quoteChoice,
+                        decoration: InputDecoration(
+                          labelText: text('quote_id'),
+                          border: const OutlineInputBorder(),
+                        ),
+                        items: [
+                          const DropdownMenuItem(value: '', child: Text('—')),
+                          ...(bootstrap['options']['quotes'] as List).map(
+                            (q) => DropdownMenuItem<String>(
+                              value: q['id'],
+                              child: Text(
+                                '${q['name']} · ${optionName('clients', q['client_id'])}',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                        ],
+                        onChanged: _busy
+                            ? null
+                            : (v) => setState(() => _quoteChoice = v ?? ''),
+                      ),
+                      const SizedBox(height: 12),
+                      FilledButton.icon(
+                        onPressed: _busy || _quoteChoice.isEmpty
+                            ? null
+                            : () => _fromQuote(_quoteChoice),
+                        icon: const Icon(Icons.track_changes),
+                        label: Text(text('from_quote')),
+                      ),
+                    ],
                   ),
-                ],
-                onChanged: _busy
-                    ? null
-                    : (v) => setState(() => _quoteChoice = v ?? ''),
-              ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: FilledButton.icon(
-                  onPressed: _busy || _quoteChoice.isEmpty
-                      ? null
-                      : () => _fromQuote(_quoteChoice),
-                  icon: const Icon(Icons.track_changes),
-                  label: Text(text('from_quote')),
                 ),
               ),
             ],
             if (_tab == 'opportunities') ...[
-              Text(
-                text('forecast'),
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              const SizedBox(height: 24),
+              _sectionTitle(text('forecast'), icon: Icons.insights_outlined),
               for (final f in bootstrap['forecast'])
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Text(
-                    '${optionName('currencies', f['currency_id'])}: ${text('open')} ${f['open']} · ${f['weighted']} · ${text('won')} ${f['won']} · ${text('lost')} ${f['lost']}',
+                Card.outlined(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          optionName('currencies', f['currency_id']),
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        const SizedBox(height: 8),
+                        Text('${text('open')}: ${f['open']}'),
+                        Text('${text('forecast')}: ${f['weighted']}'),
+                        Text(
+                          '${text('won')}: ${f['won']} · ${text('lost')}: ${f['lost']}',
+                        ),
+                      ],
+                    ),
                   ),
                 ),
             ],
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             TextField(
               controller: _searchController,
               onChanged: _tab == 'opportunities'
@@ -994,10 +1147,10 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
                 isExpanded: true,
                 initialValue:
                     (bootstrap['options']['opportunities'] as List).any(
-                      (o) => o['id'] == _opportunity,
-                    )
-                    ? _opportunity
-                    : '',
+                  (o) => o['id'] == _opportunity,
+                )
+                        ? _opportunity
+                        : '',
                 decoration: InputDecoration(labelText: text('opportunity_id')),
                 items: [
                   DropdownMenuItem(value: '', child: Text(text('all'))),
@@ -1025,9 +1178,8 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
                 children: [
                   Text('${text('selected')}: ${_selected.length}'),
                   TextButton(
-                    onPressed: _busy || _selected.isEmpty
-                        ? null
-                        : () => _enroll(null),
+                    onPressed:
+                        _busy || _selected.isEmpty ? null : () => _enroll(null),
                     child: Text(text('enroll')),
                   ),
                   TextButton(
@@ -1040,63 +1192,118 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
             if (_tab == 'opportunities')
               Align(
                 alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: _busy
+                child: SegmentedButton<bool>(
+                  segments: [
+                    ButtonSegment(
+                      value: true,
+                      icon: const Icon(Icons.view_kanban_outlined),
+                      label: Text(text('board')),
+                    ),
+                    ButtonSegment(
+                      value: false,
+                      icon: const Icon(Icons.view_list_outlined),
+                      label: Text(text('list')),
+                    ),
+                  ],
+                  selected: {_board},
+                  onSelectionChanged: _busy
                       ? null
-                      : () {
+                      : (values) {
                           setState(() {
-                            _board = !_board;
+                            _board = values.first;
                             _page = 1;
                             _selected.clear();
                           });
                           _load();
                         },
-                  icon: Icon(_board ? Icons.list : Icons.view_kanban),
-                  label: Text(text(_board ? 'list' : 'board')),
                 ),
               ),
-            if (_records.isEmpty) Text(text('empty')),
+            if (_records.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 40),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.inbox_outlined,
+                      size: 40,
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      text('empty'),
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ],
+                ),
+              ),
             if (_tab == 'opportunities' && _board) _kanban(),
             for (final raw
                 in (_tab == 'opportunities' && _board ? [] : _records))
               Builder(
                 builder: (context) {
                   final record = Map<String, dynamic>.from(raw);
-                  return Card(
+                  return Card.outlined(
+                    margin: const EdgeInsets.symmetric(vertical: 6),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (_tab == 'opportunities' && allowed('edit'))
-                            CheckboxListTile(
-                              title: Text(text('selected')),
-                              value: _selected.contains(record['id']),
-                              onChanged: _busy
-                                  ? null
-                                  : (value) => setState(() {
-                                      if (value == true) {
-                                        _selected.add(record['id']);
-                                      } else {
-                                        _selected.remove(record['id']);
-                                      }
-                                    }),
+                          Row(
+                            children: [
+                              if (_tab == 'opportunities' && allowed('edit'))
+                                Checkbox(
+                                  value: _selected.contains(record['id']),
+                                  onChanged: _busy
+                                      ? null
+                                      : (value) => setState(() {
+                                            if (value == true) {
+                                              _selected.add(record['id']);
+                                            } else {
+                                              _selected.remove(record['id']);
+                                            }
+                                          }),
+                                ),
+                              Expanded(
+                                child: Text(
+                                  record['title'],
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Chip(
+                              label: Text(
+                                _tab == 'opportunities'
+                                    ? optionName('stages', record['stage_id'])
+                                    : text(record['state']),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          Text(
-                            record['title'],
-                            style: Theme.of(context).textTheme.titleMedium,
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            _tab == 'opportunities'
-                                ? '${optionName('stages', record['stage_id'])} · ${record['amount']} ${optionName('currencies', record['currency_id'])}'
-                                : '${text(record['state'])} · ${record['due_at']} UTC',
-                          ),
-                          if (_tab == 'opportunities')
+                          if (_tab == 'opportunities') ...[
+                            Text(optionName('clients', record['client_id'])),
+                            const SizedBox(height: 4),
                             Text(
-                              '${text('next_action')}: ${record['next_activity'] == null ? text('needs_followup') : '${record['next_activity']['title']} · ${record['next_activity']['due_at']}'}',
+                              '${record['amount']} ${optionName('currencies', record['currency_id'])}',
+                              style: Theme.of(context).textTheme.titleSmall,
                             ),
-                          if (record['notes'] != null) Text(record['notes']),
+                            const SizedBox(height: 12),
+                            _nextAction(record['next_activity']),
+                          ] else
+                            Text('${record['due_at']} UTC'),
+                          if ((record['notes'] ?? '')
+                              .toString()
+                              .isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text(record['notes']),
+                          ],
                           if (record['error'] != null)
                             Text(
                               record['error'],
@@ -1104,8 +1311,10 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
                                 color: Theme.of(context).colorScheme.error,
                               ),
                             ),
+                          const SizedBox(height: 8),
                           Wrap(
                             spacing: 8,
+                            runSpacing: 4,
                             children: [
                               if (allowed('edit') &&
                                   (_tab == 'opportunities' ||
@@ -1144,10 +1353,25 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
                                 ),
                                 if (allowed('edit'))
                                   TextButton(
+                                    onPressed:
+                                        _busy ? null : () => _enroll(record),
+                                    child: Text(text('enroll')),
+                                  ),
+                                if (allowed('edit'))
+                                  TextButton.icon(
                                     onPressed: _busy
                                         ? null
-                                        : () => _enroll(record),
-                                    child: Text(text('enroll')),
+                                        : () => _removeFromMarketing(record),
+                                    icon: const Icon(
+                                      Icons.remove_circle_outline,
+                                      size: 18,
+                                    ),
+                                    label: Text(text('remove_from_marketing')),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Theme.of(
+                                        context,
+                                      ).colorScheme.error,
+                                    ),
                                   ),
                                 TextButton(
                                   onPressed: _busy
@@ -1156,8 +1380,8 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
                                           try {
                                             final store =
                                                 StoreProvider.of<AppState>(
-                                                  context,
-                                                );
+                                              context,
+                                            );
                                             if ((record['quote_id'] ?? '')
                                                 .toString()
                                                 .isNotEmpty) {
@@ -1215,9 +1439,8 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
                               ] else ...[
                                 if (record['kind'] == 'email')
                                   TextButton(
-                                    onPressed: _busy
-                                        ? null
-                                        : () => _preview(record),
+                                    onPressed:
+                                        _busy ? null : () => _preview(record),
                                     child: Text(text('preview')),
                                   ),
                                 if (allowed('edit') &&
@@ -1283,13 +1506,11 @@ class _MarketingEditor extends StatefulWidget {
     required this.values,
     required this.bootstrap,
     required this.save,
-    this.isConfig = false,
   });
   final String title;
   final List<dynamic> fields;
   final Map<String, dynamic> values, bootstrap;
   final Future<dynamic> Function(Map<String, dynamic>) save;
-  final bool isConfig;
   @override
   State<_MarketingEditor> createState() => _MarketingEditorState();
 }
@@ -1303,66 +1524,61 @@ class _MarketingEditorState extends State<_MarketingEditor> {
   String text(String key) => widget.bootstrap['labels'][key]?.toString() ?? key;
   @override
   Widget build(BuildContext context) => PopScope(
-    canPop: !busy,
-    child: AlertDialog(
-      title: Text(widget.title),
-      content: SizedBox(
-        width: 800,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (widget.isConfig) ...[
-                Text(text('automatic_help')),
-                Text(text('tokens')),
-                const SizedBox(height: 16),
-              ],
-              MarketingFields(
-                fields: widget.fields,
-                values: values,
-                bootstrap: widget.bootstrap,
-                config: widget.isConfig
-                    ? values
-                    : Map<String, dynamic>.from(widget.bootstrap['config']),
-                onChanged: (v) => setState(() => values = v),
+        canPop: !busy,
+        child: AlertDialog(
+          title: Text(widget.title),
+          content: SizedBox(
+            width: 800,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  MarketingFields(
+                    fields: widget.fields,
+                    values: values,
+                    bootstrap: widget.bootstrap,
+                    config:
+                        Map<String, dynamic>.from(widget.bootstrap['config']),
+                    onChanged: (v) => setState(() => values = v),
+                  ),
+                  if (error.isNotEmpty)
+                    Text(
+                      error,
+                      style:
+                          TextStyle(color: Theme.of(context).colorScheme.error),
+                    ),
+                ],
               ),
-              if (error.isNotEmpty)
-                Text(
-                  error,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-            ],
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: busy ? null : () => Navigator.pop(context),
+              child: Text(text('cancel')),
+            ),
+            FilledButton(
+              onPressed: busy
+                  ? null
+                  : () async {
+                      setState(() => busy = true);
+                      try {
+                        await widget.save(values);
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                        }
+                      } catch (e) {
+                        if (mounted)
+                          setState(() {
+                            error = e.toString();
+                            busy = false;
+                          });
+                      }
+                    },
+              child: Text(text('save')),
+            ),
+          ],
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: busy ? null : () => Navigator.pop(context),
-          child: Text(text('cancel')),
-        ),
-        FilledButton(
-          onPressed: busy
-              ? null
-              : () async {
-                  setState(() => busy = true);
-                  try {
-                    await widget.save(values);
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                    }
-                  } catch (e) {
-                    if (mounted)
-                      setState(() {
-                        error = e.toString();
-                        busy = false;
-                      });
-                  }
-                },
-          child: Text(text('save')),
-        ),
-      ],
-    ),
-  );
+      );
 }
 
 class MarketingFields extends StatelessWidget {
@@ -1380,162 +1596,168 @@ class MarketingFields extends StatelessWidget {
   String text(String key) => bootstrap['labels'][key]?.toString() ?? key;
   @override
   Widget build(BuildContext context) => Column(
-    mainAxisSize: MainAxisSize.min,
-    children: fields.map<Widget>((field) {
-      final name = field['name'] as String;
-      final type = field['type'];
-      final value = values[name];
-      void update(dynamic next) =>
-          onChanged(marketingUpdate(values, name, next));
-      Widget child;
-      if (type == 'boolean') {
-        child = SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text(text(name)),
-          value: value == true,
-          onChanged: update,
-        );
-      } else if (type == 'list') {
-        final items = (value as List?) ?? [];
-        child = ExpansionTile(
-          key: ValueKey(name),
-          title: Text('${text(name)} (${items.length})'),
-          children: [
-            for (int index = 0; index < items.length; index++)
-              Card(
-                child: ExpansionTile(
-                  key: ValueKey('$name-$index-${items.length}'),
-                  title: Text(
-                    items[index]['name'] ??
-                        items[index]['title'] ??
-                        text('new'),
-                  ),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: MarketingFields(
-                        fields: field['fields'],
-                        values: Map<String, dynamic>.from(items[index]),
-                        bootstrap: bootstrap,
-                        config: config,
-                        onChanged: (updated) {
-                          final next = [...items];
-                          next[index] = updated;
-                          update(next);
-                        },
+        mainAxisSize: MainAxisSize.min,
+        children: fields.map<Widget>((field) {
+          final name = field['name'] as String;
+          final type = field['type'];
+          final value = values[name];
+          void update(dynamic next) =>
+              onChanged(marketingUpdate(values, name, next));
+          Widget child;
+          if (type == 'boolean') {
+            child = SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(text(name)),
+              value: value == true,
+              onChanged: update,
+            );
+          } else if (type == 'list') {
+            final items = (value as List?) ?? [];
+            child = ExpansionTile(
+              key: ValueKey(name),
+              title: Text('${text(name)} (${items.length})'),
+              children: [
+                for (int index = 0; index < items.length; index++)
+                  Card(
+                    child: ExpansionTile(
+                      key: ValueKey('$name-$index-${items.length}'),
+                      title: Text(
+                        items[index]['name'] ??
+                            items[index]['title'] ??
+                            text('new'),
                       ),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: MarketingFields(
+                            fields: field['fields'],
+                            values: Map<String, dynamic>.from(items[index]),
+                            bootstrap: bootstrap,
+                            config: config,
+                            onChanged: (updated) {
+                              final next = [...items];
+                              next[index] = updated;
+                              update(next);
+                            },
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            final next = [...items]..removeAt(index);
+                            update(next);
+                          },
+                          child: Text(text('remove')),
+                        ),
+                      ],
                     ),
-                    TextButton(
-                      onPressed: () {
-                        final next = [...items]..removeAt(index);
-                        update(next);
-                      },
-                      child: Text(text('remove')),
+                  ),
+                TextButton(
+                  onPressed: () => update([
+                    ...items,
+                    marketingInitial(
+                      field['fields'],
+                      name == 'steps' ? {'kind': 'task', 'days': 0} : {},
                     ),
-                  ],
+                  ]),
+                  child: Text(text('add')),
+                ),
+              ],
+            );
+          } else if (type == 'select') {
+            final source = field['options'];
+            final List<dynamic> options = source is List
+                ? source.map((id) => {'id': id, 'name': text(id)}).toList()
+                : (config[source] ?? bootstrap['options'][source] ?? [])
+                    as List;
+            final filtered = options
+                .where(
+                  (o) =>
+                      o['client_id'] == null ||
+                      o['client_id'] == values['client_id'],
+                )
+                .toList();
+            final selected = value?.toString() ?? '';
+            child = DropdownButtonFormField<String>(
+              isExpanded: true,
+              decoration: InputDecoration(labelText: text(name)),
+              initialValue: filtered.any((o) => o['id'].toString() == selected)
+                  ? selected
+                  : '',
+              items: [
+                const DropdownMenuItem(value: '', child: Text('—')),
+                ...filtered.map(
+                  (o) => DropdownMenuItem<String>(
+                    value: o['id'].toString(),
+                    child: Text(o['name'].toString()),
+                  ),
+                ),
+              ],
+              onChanged: update,
+            );
+          } else if (type == 'date' || type == 'datetime-local') {
+            child = TextFormField(
+              key: ValueKey('$name-$value'),
+              initialValue: value?.toString() ?? '',
+              readOnly: true,
+              decoration: InputDecoration(
+                labelText: text(name),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () => update(''),
                 ),
               ),
-            TextButton(
-              onPressed: () =>
-                  update([...items, marketingInitial(field['fields'])]),
-              child: Text(text('add')),
-            ),
-          ],
-        );
-      } else if (type == 'select') {
-        final source = field['options'];
-        final List<dynamic> options = source is List
-            ? source.map((id) => {'id': id, 'name': text(id)}).toList()
-            : (config[source] ?? bootstrap['options'][source] ?? []) as List;
-        final filtered = options
-            .where(
-              (o) =>
-                  o['client_id'] == null ||
-                  o['client_id'] == values['client_id'],
-            )
-            .toList();
-        final selected = value?.toString() ?? '';
-        child = DropdownButtonFormField<String>(
-          isExpanded: true,
-          decoration: InputDecoration(labelText: text(name)),
-          initialValue: filtered.any((o) => o['id'].toString() == selected)
-              ? selected
-              : '',
-          items: [
-            const DropdownMenuItem(value: '', child: Text('—')),
-            ...filtered.map(
-              (o) => DropdownMenuItem<String>(
-                value: o['id'].toString(),
-                child: Text(o['name'].toString()),
-              ),
-            ),
-          ],
-          onChanged: update,
-        );
-      } else if (type == 'date' || type == 'datetime-local') {
-        child = TextFormField(
-          key: ValueKey('$name-$value'),
-          initialValue: value?.toString() ?? '',
-          readOnly: true,
-          decoration: InputDecoration(
-            labelText: text(name),
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () => update(''),
-            ),
-          ),
-          onTap: () async {
-            final parsed =
-                DateTime.tryParse(value?.toString() ?? '') ?? DateTime.now();
-            final day = await showDatePicker(
-              context: context,
-              initialDate: parsed,
-              firstDate: DateTime(2000),
-              lastDate: DateTime(2100),
+              onTap: () async {
+                final parsed = DateTime.tryParse(value?.toString() ?? '') ??
+                    DateTime.now();
+                final day = await showDatePicker(
+                  context: context,
+                  initialDate: parsed,
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2100),
+                );
+                if (day == null || !context.mounted) {
+                  return;
+                }
+                if (type == 'date') {
+                  update(day.toIso8601String().substring(0, 10));
+                  return;
+                }
+                final time = await showTimePicker(
+                  context: context,
+                  initialTime: TimeOfDay.fromDateTime(parsed),
+                );
+                if (time == null) {
+                  return;
+                }
+                update(
+                  DateTime.utc(
+                    day.year,
+                    day.month,
+                    day.day,
+                    time.hour,
+                    time.minute,
+                  ).toIso8601String().substring(0, 16),
+                );
+              },
             );
-            if (day == null || !context.mounted) {
-              return;
-            }
-            if (type == 'date') {
-              update(day.toIso8601String().substring(0, 10));
-              return;
-            }
-            final time = await showTimePicker(
-              context: context,
-              initialTime: TimeOfDay.fromDateTime(parsed),
+          } else {
+            child = TextFormField(
+              initialValue: value?.toString() ?? '',
+              decoration: InputDecoration(labelText: text(name)),
+              minLines: type == 'textarea' ? 3 : 1,
+              maxLines: type == 'textarea' ? 8 : 1,
+              keyboardType: type == 'number'
+                  ? const TextInputType.numberWithOptions(decimal: true)
+                  : TextInputType.multiline,
+              onChanged: (v) =>
+                  update(type == 'number' ? (num.tryParse(v) ?? v) : v),
             );
-            if (time == null) {
-              return;
-            }
-            update(
-              DateTime.utc(
-                day.year,
-                day.month,
-                day.day,
-                time.hour,
-                time.minute,
-              ).toIso8601String().substring(0, 16),
-            );
-          },
-        );
-      } else {
-        child = TextFormField(
-          initialValue: value?.toString() ?? '',
-          decoration: InputDecoration(labelText: text(name)),
-          minLines: type == 'textarea' ? 3 : 1,
-          maxLines: type == 'textarea' ? 8 : 1,
-          keyboardType: type == 'number'
-              ? const TextInputType.numberWithOptions(decimal: true)
-              : TextInputType.multiline,
-          onChanged: (v) =>
-              update(type == 'number' ? (num.tryParse(v) ?? v) : v),
-        );
-      }
-      return Padding(
-        key: ValueKey(name),
-        padding: const EdgeInsets.only(bottom: 14),
-        child: child,
+          }
+          return Padding(
+            key: ValueKey(name),
+            padding: const EdgeInsets.only(bottom: 14),
+            child: child,
+          );
+        }).toList(),
       );
-    }).toList(),
-  );
 }

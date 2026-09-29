@@ -859,6 +859,7 @@ const String kSettingsCustomDesignsView = 'custom_designs/view';
 const String kSettingsCustomDesignsEdit = 'custom_designs/edit';
 const String kSettingsGeneratedNumbers = 'generated_numbers';
 const String kSettingsWorkflowSettings = 'workflow_settings';
+const String kSettingsMarketing = 'marketing';
 const String kSettingsInvoiceDesign = 'invoice_design';
 const String kSettingsClientPortal = 'client_portal';
 const String kSettingsEmailSettings = 'email_settings';

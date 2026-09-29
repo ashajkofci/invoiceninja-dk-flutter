@@ -270,6 +270,8 @@ IconData? getSettingIcon(String section) {
       return MdiIcons.brush;
     case kSettingsWorkflowSettings:
       return MdiIcons.sourceBranch;
+    case kSettingsMarketing:
+      return Icons.campaign_outlined;
     case kSettingsClientPortal:
       return MdiIcons.cloud;
     case kSettingsEmailSettings:

@@ -16,6 +16,7 @@ import 'package:invoiceninja_flutter/ui/app/lists/list_filter.dart';
 import 'package:invoiceninja_flutter/ui/app/lists/selected_indicator.dart';
 import 'package:invoiceninja_flutter/ui/app/scrollable_listview.dart';
 import 'package:invoiceninja_flutter/ui/settings/settings_list_vm.dart';
+import 'package:invoiceninja_flutter/ui/marketing/marketing_screen.dart';
 import 'package:invoiceninja_flutter/utils/icons.dart';
 import 'package:invoiceninja_flutter/utils/localization.dart';
 import 'package:invoiceninja_flutter/utils/platforms.dart';
@@ -150,6 +151,11 @@ class _SettingsListState extends State<SettingsList> {
               section: kSettingsWorkflowSettings,
               viewModel: widget.viewModel,
             ),
+            if (state.company.enabledModules & kModuleMarketing != 0)
+              SettingsListTile(
+                section: kSettingsMarketing,
+                viewModel: widget.viewModel,
+              ),
             // TODO Re-entable
             /*
               if (showAll)
@@ -313,7 +319,9 @@ class _SettingsListTileState extends State<SettingsListTile> {
               child: Icon(icon ?? icon, size: 22),
             ),
             title: Text(
-              localization.lookup(widget.section),
+              widget.section == kSettingsMarketing
+                  ? marketingTitle(context)
+                  : localization.lookup(widget.section),
               style:
                   Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14),
             ),
@@ -506,6 +514,17 @@ class SettingsSearch extends StatelessWidget {
           'use_quote_terms#2022-05-17',
         ],
       ],
+      if (company.enabledModules & kModuleMarketing != 0)
+        kSettingsMarketing: [
+          [
+            'marketing',
+            'stages',
+            'templates',
+            'sequences',
+            'campaigns',
+            'sources'
+          ],
+        ],
       kSettingsImportExport: [
         [
           'import',
