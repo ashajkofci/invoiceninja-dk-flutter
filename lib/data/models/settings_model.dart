@@ -18,6 +18,9 @@ abstract class SettingsEntity
     SettingsEntity? clientSettings,
   }) {
     return _$SettingsEntity._(
+      pdfGroupTotalLabel: clientSettings?.pdfGroupTotalLabel ??
+          groupSettings?.pdfGroupTotalLabel ??
+          companySettings?.pdfGroupTotalLabel,
       defaultInvoiceDesignId: clientSettings?.defaultInvoiceDesignId ??
           groupSettings?.defaultInvoiceDesignId ??
           companySettings?.defaultInvoiceDesignId,
@@ -172,6 +175,9 @@ abstract class SettingsEntity
 
   @BuiltValueField(wireName: 'language_id')
   String? get languageId;
+
+  @BuiltValueField(wireName: 'pdf_group_total_label')
+  String? get pdfGroupTotalLabel;
 
   @BuiltValueField(wireName: 'show_currency_code')
   bool? get showCurrencyCode;

@@ -1,5 +1,6 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:invoiceninja_flutter/ui/invoice/edit/bulk_line_items.dart';
 
 // Package imports:
 import 'package:flutter_redux/flutter_redux.dart';
@@ -48,6 +49,8 @@ class PurchaseOrderEditItemsScreen extends StatelessWidget {
 
 class PurchaseOrderEditItemsVM extends EntityEditItemsVM {
   PurchaseOrderEditItemsVM({
+    Function(Set<int>, BulkLineItemAction, double, String, String)?
+        onBulkLineItems,
     AppState? state,
     CompanyEntity? company,
     InvoiceEntity? invoice,
@@ -60,6 +63,7 @@ class PurchaseOrderEditItemsVM extends EntityEditItemsVM {
     Function(InvoiceItemEntity, int)? onChangedInvoiceItem,
     Function(int, int)? onMovedInvoiceItem,
   }) : super(
+          onBulkLineItems: onBulkLineItems,
           state: state,
           company: company,
           invoice: invoice,
@@ -79,6 +83,14 @@ class PurchaseOrderEditItemsVM extends EntityEditItemsVM {
     final purchaseOrder = store.state.purchaseOrderUIState.editing;
 
     return PurchaseOrderEditItemsVM(
+      onBulkLineItems: (indices, action, value, name, groupId) {
+        final current = store.state.purchaseOrderUIState.editing!;
+        final items = bulkLineItems(current.lineItems.toList(), indices, action,
+            value: value, name: name, groupId: groupId);
+        store.dispatch(UpdatePurchaseOrder(
+            current.rebuild((b) => b..lineItems.replace(items))));
+        store.dispatch(EditPurchaseOrderItem());
+      },
       state: state,
       company: company,
       invoice: purchaseOrder,

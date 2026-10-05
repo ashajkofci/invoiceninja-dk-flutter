@@ -1,5 +1,6 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:invoiceninja_flutter/ui/invoice/edit/line_item_bulk_actions.dart';
 import 'package:invoiceninja_flutter/constants.dart';
 import 'package:collection/collection.dart';
 
@@ -18,9 +19,16 @@ import 'package:invoiceninja_flutter/utils/completers.dart';
 import 'package:invoiceninja_flutter/utils/dialogs.dart';
 import 'package:invoiceninja_flutter/utils/formatting.dart';
 import 'package:invoiceninja_flutter/utils/localization.dart';
-import 'package:invoiceninja_flutter/data/repositories/invoice_repository.dart';
+import 'package:invoiceninja_flutter/ui/product_reservation/reservation_availability.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_line_status.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
+
+String _groupOptionLabel(InvoiceItemEntity group) {
+  final description = group.notes.trim();
+  return description.isEmpty
+      ? group.groupTitle
+      : '${group.groupTitle}\n$description';
+}
 
 Future<bool> showMoveToGroupDialog({
   required BuildContext context,
@@ -47,7 +55,7 @@ Future<bool> showMoveToGroupDialog({
           ),
         for (final group in groups)
           SimpleDialogOption(
-            child: Text(group.groupTitle),
+            child: Text(_groupOptionLabel(group)),
             onPressed: () => Navigator.pop(context, group.groupId),
           ),
       ],
@@ -78,6 +86,17 @@ class InvoiceEditItems extends StatefulWidget {
 
 class _InvoiceEditItemsState extends State<InvoiceEditItems> {
   int? selectedItemIndex;
+  final _selectedItems = <int>{};
+
+  @override
+  void didUpdateWidget(covariant InvoiceEditItems oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.viewModel.invoice?.lineItems !=
+            widget.viewModel.invoice?.lineItems ||
+        oldWidget.viewModel.invoice?.id != widget.viewModel.invoice?.id) {
+      _selectedItems.clear();
+    }
+  }
 
   void _showInvoiceItemEditor(int? lineItemIndex, BuildContext context) {
     final viewModel = widget.viewModel;
@@ -124,12 +143,44 @@ class _InvoiceEditItemsState extends State<InvoiceEditItems> {
 
     return ScrollableListView(
       children: [
+        CheckboxListTile(
+          title: Text('${localization!.select} ${localization.all}'),
+          value: invoice.lineItems.where((item) => !item.isGroup).isNotEmpty &&
+              List.generate(invoice.lineItems.length, (i) => i)
+                  .where((i) => !invoice.lineItems[i].isGroup)
+                  .every(_selectedItems.contains),
+          onChanged: (value) => setState(() {
+            _selectedItems.clear();
+            if (value == true) {
+              _selectedItems.addAll(
+                  List.generate(invoice.lineItems.length, (i) => i)
+                      .where((i) => !invoice.lineItems[i].isGroup));
+            }
+          }),
+        ),
+        LineItemBulkActions(
+            viewModel: viewModel,
+            selected: Set<int>.from(_selectedItems),
+            onClear: () => setState(_selectedItems.clear)),
         for (int i = 0; i < invoice.lineItems.length; i++)
-          InvoiceItemListTile(
-            invoice: invoice,
-            invoiceItem: invoice.lineItems[i],
-            onTap: () => _showInvoiceItemEditor(i, context),
-          )
+          Row(children: [
+            if (!invoice.lineItems[i].isGroup)
+              Checkbox(
+                  value: _selectedItems.contains(i),
+                  semanticLabel:
+                      '${localization.select}: ${invoice.lineItems[i].productKey}',
+                  onChanged: (value) => setState(() {
+                        value == true
+                            ? _selectedItems.add(i)
+                            : _selectedItems.remove(i);
+                      })),
+            Expanded(
+                child: InvoiceItemListTile(
+              invoice: invoice,
+              invoiceItem: invoice.lineItems[i],
+              onTap: () => _showInvoiceItemEditor(i, context),
+            )),
+          ])
       ],
     );
   }
@@ -181,7 +232,7 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
 
   List<TextEditingController> _controllers = [];
   final _debouncer = Debouncer();
-  Future<List<dynamic>>? _reservationAvailability;
+  final _reservationAvailability = ReservationAvailability();
 
   @override
   void didChangeDependencies() {
@@ -244,56 +295,32 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
         TaxRateEntity(name: invoiceItem.taxName3, rate: invoiceItem.taxRate3);
     _taxCategoryId = invoiceItem.taxCategoryId;
 
-    final state = widget.viewModel.state!;
-    final company = state.company;
-    final invoice = widget.viewModel.invoice!;
-    String customValue(int field) {
-      if (field == 1) {
-        return invoice.customValue1;
-      }
-      if (field == 2) {
-        return invoice.customValue2;
-      }
-      if (field == 3) {
-        return invoice.customValue3;
-      }
-      if (field == 4) {
-        return invoice.customValue4;
-      }
-      if (field == 5) {
-        return invoice.customValue5;
-      }
-      if (field == 6) {
-        return invoice.customValue6;
-      }
-      if (field == 7) {
-        return invoice.customValue7;
-      }
-      if (field == 8) {
-        return invoice.customValue8;
-      }
-      return '';
-    }
-
-    if (company.enabledModules & kModuleProductReservations != 0 &&
-        (invoice.isInvoice || invoice.isQuote) &&
-        customValue(company.reservationStartCustomField).isNotEmpty &&
-        customValue(company.reservationEndCustomField).isNotEmpty) {
-      _reservationAvailability = const InvoiceRepository()
-          .getProductAvailability(state.credentials, invoice);
-    }
+    _updateReservationAvailability();
 
     super.didChangeDependencies();
   }
 
   @override
   void dispose() {
+    _reservationAvailability.dispose();
     _controllers.forEach((dynamic controller) {
       controller.removeListener(_onTextChanged);
       controller.dispose();
     });
 
     super.dispose();
+  }
+
+  void _updateReservationAvailability() {
+    final state = widget.viewModel.state!;
+    _reservationAvailability.update(
+        state.credentials, state.company, widget.viewModel.invoice!);
+  }
+
+  @override
+  void didUpdateWidget(covariant ItemEditDetails oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _updateReservationAvailability();
   }
 
   void _onTextChanged() {
@@ -357,6 +384,10 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
     final viewModel = widget.viewModel;
     final company = viewModel.company!;
     final invoice = viewModel.invoice;
+    final selectedGroup = widget.invoiceItem.groupId.isEmpty
+        ? null
+        : invoice?.lineItems.firstWhereOrNull((item) =>
+            item.isGroup && item.groupId == widget.invoiceItem.groupId);
     final timeCoefficients =
         decodeTimeCoefficients(company.timeCoefficientsJson);
     final timeCoefficientNames = timeCoefficients
@@ -435,14 +466,9 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(Icons.account_tree_outlined),
                 title: Text('${localization.select} ${localization.group}'),
-                subtitle: widget.invoiceItem.groupId.isEmpty
-                    ? Text(localization.none)
-                    : Text(widget.viewModel.invoice!.lineItems
-                            .firstWhereOrNull((item) =>
-                                item.isGroup &&
-                                item.groupId == widget.invoiceItem.groupId)
-                            ?.groupTitle ??
-                        localization.none),
+                subtitle: Text(selectedGroup == null
+                    ? localization.none
+                    : _groupOptionLabel(selectedGroup)),
                 onTap: () async {
                   if (await showMoveToGroupDialog(
                     context: context,
@@ -536,7 +562,7 @@ class ItemEditDetailsState extends State<ItemEditDetails> {
                 title: Text(reservationText(context, 'currentStatus')),
                 subtitle: ProductReservationLineStatus(
                   item: widget.invoiceItem,
-                  availability: _reservationAvailability,
+                  availability: _reservationAvailability.future,
                 ),
               ),
             CustomField(

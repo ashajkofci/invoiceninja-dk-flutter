@@ -2,6 +2,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:invoiceninja_flutter/ui/invoice/edit/bulk_line_items.dart';
 
 // Package imports:
 import 'package:flutter_redux/flutter_redux.dart';
@@ -52,6 +53,8 @@ class QuoteEditItemsScreen extends StatelessWidget {
 
 class QuoteEditItemsVM extends EntityEditItemsVM {
   QuoteEditItemsVM({
+    Function(Set<int>, BulkLineItemAction, double, String, String)?
+        onBulkLineItems,
     AppState? state,
     CompanyEntity? company,
     InvoiceEntity? invoice,
@@ -65,6 +68,7 @@ class QuoteEditItemsVM extends EntityEditItemsVM {
     Function(int, int)? onMovedInvoiceItem,
     Function(int, String)? onGroupInvoiceItem,
   }) : super(
+          onBulkLineItems: onBulkLineItems,
           state: state,
           company: company,
           invoice: invoice,
@@ -88,6 +92,14 @@ class QuoteEditItemsVM extends EntityEditItemsVM {
     final quote = store.state.quoteUIState.editing;
 
     return QuoteEditItemsVM(
+      onBulkLineItems: (indices, action, value, name, groupId) {
+        final current = store.state.quoteUIState.editing!;
+        final items = bulkLineItems(current.lineItems.toList(), indices, action,
+            value: value, name: name, groupId: groupId);
+        store.dispatch(
+            UpdateQuote(current.rebuild((b) => b..lineItems.replace(items))));
+        store.dispatch(EditQuoteItem());
+      },
       state: state,
       company: company,
       invoice: quote,
