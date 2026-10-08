@@ -1,5 +1,6 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:invoiceninja_flutter/ui/invoice/edit/bulk_line_items.dart';
 
 // Package imports:
 import 'package:flutter_redux/flutter_redux.dart';
@@ -50,6 +51,8 @@ class RecurringInvoiceEditItemsScreen extends StatelessWidget {
 
 class RecurringInvoiceEditItemsVM extends EntityEditItemsVM {
   RecurringInvoiceEditItemsVM({
+    Function(Set<int>, BulkLineItemAction, double, String, String)?
+        onBulkLineItems,
     AppState? state,
     CompanyEntity? company,
     InvoiceEntity? invoice,
@@ -62,6 +65,7 @@ class RecurringInvoiceEditItemsVM extends EntityEditItemsVM {
     Function(InvoiceItemEntity, int)? onChangedInvoiceItem,
     Function(int, int)? onMovedInvoiceItem,
   }) : super(
+          onBulkLineItems: onBulkLineItems,
           state: state,
           company: company,
           invoice: invoice,
@@ -82,6 +86,14 @@ class RecurringInvoiceEditItemsVM extends EntityEditItemsVM {
     final invoice = store.state.recurringInvoiceUIState.editing;
 
     return RecurringInvoiceEditItemsVM(
+      onBulkLineItems: (indices, action, value, name, groupId) {
+        final current = store.state.recurringInvoiceUIState.editing!;
+        final items = bulkLineItems(current.lineItems.toList(), indices, action,
+            value: value, name: name, groupId: groupId);
+        store.dispatch(UpdateRecurringInvoice(
+            current.rebuild((b) => b..lineItems.replace(items))));
+        store.dispatch(EditRecurringInvoiceItem());
+      },
       state: state,
       company: company,
       invoice: invoice,

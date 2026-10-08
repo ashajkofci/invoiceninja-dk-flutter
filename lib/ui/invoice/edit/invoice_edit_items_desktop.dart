@@ -1,6 +1,8 @@
 // Flutter imports:
 
 import 'package:flutter/material.dart';
+import 'package:invoiceninja_flutter/ui/invoice/edit/line_item_bulk_actions.dart';
+import 'package:invoiceninja_flutter/ui/invoice/edit/bulk_line_items.dart';
 
 // Package imports:
 import 'package:flutter_redux/flutter_redux.dart';
@@ -30,7 +32,7 @@ import 'package:invoiceninja_flutter/utils/colors.dart';
 import 'package:invoiceninja_flutter/utils/completers.dart';
 import 'package:invoiceninja_flutter/utils/formatting.dart';
 import 'package:invoiceninja_flutter/utils/localization.dart';
-import 'package:invoiceninja_flutter/data/repositories/invoice_repository.dart';
+import 'package:invoiceninja_flutter/ui/product_reservation/reservation_availability.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_line_status.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
 
@@ -71,12 +73,13 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
   static const COLUMN_TAX_CATEGORY = 'tax_category';
   static const COLUMN_DISCOUNT = 'discount';
 
+  final _selectedItems = <int>{};
   final _debouncer = Debouncer();
   TextEditingController? _textEditingController;
   bool _isReordering = false;
   int _autocompleteFocusIndex = -1;
   final _columns = <String>[];
-  Future<List<dynamic>>? _reservationAvailability;
+  final _reservationAvailability = ReservationAvailability();
 
   @override
   void initState() {
@@ -92,34 +95,6 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
     return !widget.isTasks &&
         (invoice.isInvoice || invoice.isQuote) &&
         company.enabledModules & kModuleProductReservations != 0;
-  }
-
-  String _customValue(InvoiceEntity invoice, int field) {
-    if (field == 1) {
-      return invoice.customValue1;
-    }
-    if (field == 2) {
-      return invoice.customValue2;
-    }
-    if (field == 3) {
-      return invoice.customValue3;
-    }
-    if (field == 4) {
-      return invoice.customValue4;
-    }
-    if (field == 5) {
-      return invoice.customValue5;
-    }
-    if (field == 6) {
-      return invoice.customValue6;
-    }
-    if (field == 7) {
-      return invoice.customValue7;
-    }
-    if (field == 8) {
-      return invoice.customValue8;
-    }
-    return '';
   }
 
   Widget _customFieldCell(
@@ -146,14 +121,14 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
   void _updateReservationAvailability() {
     final invoice = widget.viewModel.invoice!;
     final state = widget.viewModel.state!;
-    final company = state.company;
-    final hasDates =
-        _customValue(invoice, company.reservationStartCustomField).isNotEmpty &&
-            _customValue(invoice, company.reservationEndCustomField).isNotEmpty;
-    _reservationAvailability = _showReservationStatus && hasDates
-        ? const InvoiceRepository()
-            .getProductAvailability(state.credentials, invoice)
-        : null;
+    _reservationAvailability.update(state.credentials, state.company, invoice,
+        isTasks: widget.isTasks);
+  }
+
+  @override
+  void dispose() {
+    _reservationAvailability.dispose();
+    super.dispose();
   }
 
   void _updateColumns() {
@@ -367,15 +342,18 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
   @override
   void didUpdateWidget(oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.viewModel.invoice?.lineItems !=
+            widget.viewModel.invoice?.lineItems ||
+        oldWidget.viewModel.invoice?.id != widget.viewModel.invoice?.id ||
+        oldWidget.isTasks != widget.isTasks) {
+      _selectedItems.clear();
+    }
 
     if (oldWidget.isTasks != widget.isTasks) {
       _isReordering = false;
       _updateColumns();
     }
-    if (oldWidget.viewModel.invoice != widget.viewModel.invoice ||
-        oldWidget.isTasks != widget.isTasks) {
-      _updateReservationAvailability();
-    }
+    _updateReservationAvailability();
   }
 
   void _updateTable() {
@@ -561,10 +539,38 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
       ));
     }
 
+    final selectableIndices = [
+      for (var i = 0; i < invoice.lineItems.length; i++)
+        if (!invoice.lineItems[i].isGroup &&
+            includedLineItems.contains(invoice.lineItems[i]))
+          i
+    ];
+    final selectAllCheckbox = Checkbox(
+      semanticLabel: '${localization!.select} ${localization.all}',
+      tristate: true,
+      value: _selectedItems.isEmpty
+          ? false
+          : selectableIndices.every(_selectedItems.contains)
+              ? true
+              : null,
+      onChanged: (_) => setState(() {
+        final allSelected = selectableIndices.every(_selectedItems.contains);
+        _selectedItems.clear();
+        if (!allSelected) {
+          _selectedItems.addAll(selectableIndices);
+        }
+      }),
+    );
+
     if (_isReordering) {
       return FormCard(
         padding: const EdgeInsets.symmetric(horizontal: kMobileDialogPadding),
         children: [
+          LineItemBulkActions(
+            viewModel: viewModel,
+            selected: Set<int>.from(_selectedItems),
+            onClear: () => setState(_selectedItems.clear),
+          ),
           DecoratedBox(
             decoration: tableHeaderColor.isNotEmpty
                 ? BoxDecoration(
@@ -574,6 +580,7 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
             child: Row(
               mainAxisSize: MainAxisSize.max,
               children: [
+                SizedBox(width: 44, child: selectAllCheckbox),
                 ...tableHeaderColumns
                     .map((widget) => Expanded(child: widget))
                     .toList(),
@@ -610,13 +617,30 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                 return SizedBox(key: ObjectKey(item));
               }
 
-              return ReorderableDragStartListener(
-                index: index,
+              return ColoredBox(
                 key: ObjectKey(item),
+                color: _selectedItems.contains(index)
+                    ? theme.colorScheme.primary.withValues(alpha: 0.10)
+                    : Colors.transparent,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Row(
                     children: [
+                      SizedBox(
+                        width: 44,
+                        child: item.isGroup
+                            ? null
+                            : Checkbox(
+                                value: _selectedItems.contains(index),
+                                semanticLabel:
+                                    '${localization.select}: ${item.productKey}',
+                                onChanged: (value) => setState(() {
+                                  value == true
+                                      ? _selectedItems.add(index)
+                                      : _selectedItems.remove(index);
+                                }),
+                              ),
+                      ),
                       ..._columns
                           .map((column) {
                             if (column == COLUMN_ITEM) {
@@ -731,9 +755,12 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                         ),
                       ),
                       SizedBox(width: 16),
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Icon(Icons.drag_handle),
+                      ReorderableDragStartListener(
+                        index: index,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Icon(Icons.drag_handle),
+                        ),
                       )
                     ],
                   ),
@@ -741,6 +768,20 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
               );
             },
             onReorder: (oldIndex, newIndex) {
+              Debouncer.complete();
+              if (_selectedItems.contains(oldIndex) &&
+                  _selectedItems.length > 1 &&
+                  viewModel.onBulkLineItems != null) {
+                viewModel.onBulkLineItems!(
+                  Set<int>.from(_selectedItems),
+                  BulkLineItemAction.move,
+                  newIndex.clamp(0, lineItems.length).toDouble(),
+                  '',
+                  '',
+                );
+                setState(_selectedItems.clear);
+                return;
+              }
               // https://stackoverflow.com/a/54164333/497368
               // These two lines are workarounds for ReorderableListView problems
               if (newIndex > lineItems.length) {
@@ -767,9 +808,11 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
       ));
     }
 
+    tableHeaderColumns.insert(0, selectAllCheckbox);
+
     tableHeaderColumns.addAll([
       TableHeader(
-        localization!.lineTotal,
+        localization.lineTotal,
         isNumeric: true,
       ),
       Row(
@@ -802,6 +845,7 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                 includedLineItems.where((item) => !item.isEmpty).length < 2
                     ? null
                     : () {
+                        Debouncer.complete();
                         setState(() => _isReordering = !_isReordering);
                       },
           ),
@@ -811,908 +855,957 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
 
     return FormCard(
       padding: const EdgeInsets.symmetric(horizontal: kMobileDialogPadding),
-      child: Table(
-        columnWidths: {
-          _columns.indexOf(COLUMN_ITEM): FlexColumnWidth(1.3),
-          _columns.indexOf(COLUMN_DESCRIPTION): FlexColumnWidth(2.2),
-          _columns.length + (_showReservationStatus ? 2 : 1):
-              FixedColumnWidth(canCreateGroup ? 96 : 48),
-        },
-        // TODO change to top once we can set maxLines to 2
-        defaultVerticalAlignment: TableCellVerticalAlignment.bottom,
-        children: [
-          TableRow(
-            children: tableHeaderColumns,
-            decoration: tableHeaderColor.isNotEmpty
-                ? BoxDecoration(
-                    color: convertHexStringToColor(tableHeaderColor),
-                  )
-                : BoxDecoration(),
-          ),
-          for (var index = 0; index < lineItems.length; index++)
-            if ((lineItems[index].typeId == InvoiceItemEntity.TYPE_TASK &&
-                    widget.isTasks) ||
-                (lineItems[index].typeId != InvoiceItemEntity.TYPE_TASK &&
-                    !widget.isTasks) ||
-                lineItems[index].isEmpty)
-              TableRow(
-                  key: ValueKey(
-                      '__line_item_${index}_${lineItems[index].createdAt}__'),
-                  children: [
-                    ..._columns.map((column) {
-                      if (column == COLUMN_ITEM) {
-                        return Focus(
-                          onFocusChange: (hasFocus) {
-                            if (hasFocus) {
-                              _autocompleteFocusIndex = index;
-                            }
-                            _onFocusChange(hasFocus);
-                          },
-                          skipTraversal: true,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.only(right: kTableColumnGap),
-                            child: RawAutocomplete<ProductEntity>(
-                              key: ValueKey('__line_item_${index}_name__'),
-                              textEditingController: _textEditingController,
-                              initialValue: TextEditingValue(
-                                  text: lineItems[index].productKey),
-                              optionsBuilder:
-                                  (TextEditingValue textEditingValue) {
-                                final options = productIds
-                                    .map((productId) =>
-                                        productState.map[productId])
-                                    .whereType<ProductEntity>()
-                                    .where((product) {
-                                  final filter =
-                                      textEditingValue.text.toLowerCase();
-                                  final productKey =
-                                      product.productKey.toLowerCase();
+      children: [
+        LineItemBulkActions(
+            viewModel: viewModel,
+            selected: Set<int>.from(_selectedItems),
+            onClear: () => setState(_selectedItems.clear)),
+        Table(
+          columnWidths: {
+            0: const FixedColumnWidth(44),
+            _columns.indexOf(COLUMN_ITEM) + 1: FlexColumnWidth(1.3),
+            _columns.indexOf(COLUMN_DESCRIPTION) + 1: FlexColumnWidth(2.2),
+            _columns.length + (_showReservationStatus ? 3 : 2):
+                FixedColumnWidth(canCreateGroup ? 96 : 48),
+          },
+          // TODO change to top once we can set maxLines to 2
+          defaultVerticalAlignment: TableCellVerticalAlignment.bottom,
+          children: [
+            TableRow(
+              children: tableHeaderColumns,
+              decoration: tableHeaderColor.isNotEmpty
+                  ? BoxDecoration(
+                      color: convertHexStringToColor(tableHeaderColor),
+                    )
+                  : BoxDecoration(),
+            ),
+            for (var index = 0; index < lineItems.length; index++)
+              if ((lineItems[index].typeId == InvoiceItemEntity.TYPE_TASK &&
+                      widget.isTasks) ||
+                  (lineItems[index].typeId != InvoiceItemEntity.TYPE_TASK &&
+                      !widget.isTasks) ||
+                  lineItems[index].isEmpty)
+                TableRow(
+                    key: ValueKey(
+                        '__line_item_${index}_${lineItems[index].createdAt}__'),
+                    children: [
+                      if (index < invoice.lineItems.length &&
+                          !lineItems[index].isGroup)
+                        Checkbox(
+                            value: _selectedItems.contains(index),
+                            semanticLabel:
+                                '${localization.select}: ${lineItems[index].productKey}',
+                            onChanged: (value) => setState(() {
+                                  value == true
+                                      ? _selectedItems.add(index)
+                                      : _selectedItems.remove(index);
+                                }))
+                      else
+                        const SizedBox.shrink(),
+                      ..._columns.map((column) {
+                        if (column == COLUMN_ITEM) {
+                          return Focus(
+                            onFocusChange: (hasFocus) {
+                              if (hasFocus) {
+                                _autocompleteFocusIndex = index;
+                              }
+                              _onFocusChange(hasFocus);
+                            },
+                            skipTraversal: true,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.only(right: kTableColumnGap),
+                              child: RawAutocomplete<ProductEntity>(
+                                key: ValueKey('__line_item_${index}_name__'),
+                                textEditingController: _textEditingController,
+                                initialValue: TextEditingValue(
+                                    text: lineItems[index].productKey),
+                                optionsBuilder:
+                                    (TextEditingValue textEditingValue) {
+                                  final options = productIds
+                                      .map((productId) =>
+                                          productState.map[productId])
+                                      .whereType<ProductEntity>()
+                                      .where((product) {
+                                    final filter =
+                                        textEditingValue.text.toLowerCase();
+                                    final productKey =
+                                        product.productKey.toLowerCase();
 
-                                  if (company.showProductDetails) {
-                                    return product.matchesFilter(filter);
-                                  } else {
-                                    return productKey.contains(filter);
+                                    if (company.showProductDetails) {
+                                      return product.matchesFilter(filter);
+                                    } else {
+                                      return productKey.contains(filter);
+                                    }
+                                  }).toList();
+
+                                  if (options.length == 1 &&
+                                      options[0].productKey.toLowerCase() ==
+                                          lineItems[index]
+                                              .productKey
+                                              .toLowerCase()) {
+                                    return <ProductEntity>[];
                                   }
-                                }).toList();
 
-                                if (options.length == 1 &&
-                                    options[0].productKey.toLowerCase() ==
-                                        lineItems[index]
-                                            .productKey
-                                            .toLowerCase()) {
-                                  return <ProductEntity>[];
-                                }
-
-                                return options;
-                              },
-                              displayStringForOption: (product) =>
-                                  product.productKey,
-                              onSelected: (product) {
-                                Debouncer.cancel();
-                                if (product.isGroup) {
-                                  final groupedItems =
-                                      convertProductToInvoiceItems(
-                                    product: product,
-                                    company: company,
-                                    invoice: invoice,
-                                    currencyMap: state.staticState.currencyMap,
-                                    client:
-                                        state.clientState.get(invoice.clientId),
-                                  );
-                                  _onChanged(groupedItems.first, index,
-                                      debounce: false);
-                                  for (var childIndex = 1;
-                                      childIndex < groupedItems.length;
-                                      childIndex++) {
-                                    viewModel.addLineItem!(
-                                      index + childIndex,
-                                      groupedItems[childIndex],
+                                  return options;
+                                },
+                                displayStringForOption: (product) =>
+                                    product.productKey,
+                                onSelected: (product) {
+                                  Debouncer.cancel();
+                                  if (product.isGroup) {
+                                    final groupedItems =
+                                        convertProductToInvoiceItems(
+                                      product: product,
+                                      company: company,
+                                      invoice: invoice,
+                                      currencyMap:
+                                          state.staticState.currencyMap,
+                                      client: state.clientState
+                                          .get(invoice.clientId),
                                     );
+                                    _onChanged(groupedItems.first, index,
+                                        debounce: false);
+                                    for (var childIndex = 1;
+                                        childIndex < groupedItems.length;
+                                        childIndex++) {
+                                      viewModel.addLineItem!(
+                                        index + childIndex,
+                                        groupedItems[childIndex],
+                                      );
+                                    }
+                                    _updateTable();
+                                    return;
                                   }
+                                  final item = lineItems[index];
+                                  final client =
+                                      state.clientState.get(invoice.clientId);
+                                  final currency = state.staticState
+                                      .currencyMap[client.currencyId];
+
+                                  double cost = (invoice.isPurchaseOrder &&
+                                          company.enableProductCost &&
+                                          product.cost != 0)
+                                      ? product.cost
+                                      : product.price;
+                                  if (company.convertProductExchangeRate &&
+                                      client.currencyId != company.currencyId) {
+                                    double exchangeRate = invoice.exchangeRate;
+                                    if (!company.convertRateToClient &&
+                                        exchangeRate != 0) {
+                                      exchangeRate = 1 / exchangeRate;
+                                    }
+                                    cost = round(cost * exchangeRate,
+                                        currency?.precision ?? 2);
+                                  }
+
+                                  final updatedItem = company.fillProducts
+                                      ? item.rebuild((b) => b
+                                        ..productKey = product.productKey
+                                        ..createdAt = DateTime.now()
+                                            .microsecondsSinceEpoch
+                                        ..notes = item.isTask
+                                            ? item.notes
+                                            : product.notes
+                                        ..productCost = product.cost
+                                        ..cost = item.isTask && item.cost != 0
+                                            ? item.cost
+                                            : cost
+                                        ..quantity =
+                                            item.isTask || item.quantity != 0
+                                                ? item.quantity
+                                                : viewModel.state!.company
+                                                        .defaultQuantity
+                                                    ? 1
+                                                    : product.quantity
+                                        ..customValue1 = product.customValue1
+                                        ..customValue2 = product.customValue2
+                                        ..customValue3 = product.customValue3
+                                        ..customValue4 = product.customValue4
+                                        ..customValue5 = product.customValue5
+                                        ..customValue6 = product.customValue6
+                                        ..customValue7 = product.customValue7
+                                        ..customValue8 = product.customValue8
+                                        ..taxCategoryId = product.taxCategoryId
+                                        ..taxName1 =
+                                            company.numberOfItemTaxRates >= 1 &&
+                                                    product.taxName1.isNotEmpty
+                                                ? product.taxName1
+                                                : item.taxName1
+                                        ..taxRate1 =
+                                            company.numberOfItemTaxRates >= 1 &&
+                                                    product.taxName1.isNotEmpty
+                                                ? product.taxRate1
+                                                : item.taxRate1
+                                        ..taxName2 =
+                                            company.numberOfItemTaxRates >= 2 &&
+                                                    product.taxName2.isNotEmpty
+                                                ? product.taxName2
+                                                : item.taxName2
+                                        ..taxRate2 =
+                                            company.numberOfItemTaxRates >= 2 &&
+                                                    product.taxName2.isNotEmpty
+                                                ? product.taxRate2
+                                                : item.taxRate2
+                                        ..taxName3 =
+                                            company.numberOfItemTaxRates >= 3 &&
+                                                    product.taxName3.isNotEmpty
+                                                ? product.taxName3
+                                                : item.taxName3
+                                        ..taxRate3 =
+                                            company.numberOfItemTaxRates >= 3 &&
+                                                    product.taxName3.isNotEmpty
+                                                ? product.taxRate3
+                                                : item.taxRate3)
+                                      : item.rebuild((b) => b
+                                        ..productKey = product.productKey
+                                        ..createdAt = DateTime.now()
+                                            .microsecondsSinceEpoch);
+
+                                  _onChanged(updatedItem, index,
+                                      debounce: false);
                                   _updateTable();
-                                  return;
-                                }
-                                final item = lineItems[index];
-                                final client =
-                                    state.clientState.get(invoice.clientId);
-                                final currency = state
-                                    .staticState.currencyMap[client.currencyId];
-
-                                double cost = (invoice.isPurchaseOrder &&
-                                        company.enableProductCost &&
-                                        product.cost != 0)
-                                    ? product.cost
-                                    : product.price;
-                                if (company.convertProductExchangeRate &&
-                                    client.currencyId != company.currencyId) {
-                                  double exchangeRate = invoice.exchangeRate;
-                                  if (!company.convertRateToClient &&
-                                      exchangeRate != 0) {
-                                    exchangeRate = 1 / exchangeRate;
-                                  }
-                                  cost = round(cost * exchangeRate,
-                                      currency?.precision ?? 2);
-                                }
-
-                                final updatedItem = company.fillProducts
-                                    ? item.rebuild((b) => b
-                                      ..productKey = product.productKey
-                                      ..createdAt =
-                                          DateTime.now().microsecondsSinceEpoch
-                                      ..notes = item.isTask
-                                          ? item.notes
-                                          : product.notes
-                                      ..productCost = product.cost
-                                      ..cost = item.isTask && item.cost != 0
-                                          ? item.cost
-                                          : cost
-                                      ..quantity =
-                                          item.isTask || item.quantity != 0
-                                              ? item.quantity
-                                              : viewModel.state!.company
-                                                      .defaultQuantity
-                                                  ? 1
-                                                  : product.quantity
-                                      ..customValue1 = product.customValue1
-                                      ..customValue2 = product.customValue2
-                                      ..customValue3 = product.customValue3
-                                      ..customValue4 = product.customValue4
-                                      ..customValue5 = product.customValue5
-                                      ..customValue6 = product.customValue6
-                                      ..customValue7 = product.customValue7
-                                      ..customValue8 = product.customValue8
-                                      ..taxCategoryId = product.taxCategoryId
-                                      ..taxName1 =
-                                          company.numberOfItemTaxRates >= 1 &&
-                                                  product.taxName1.isNotEmpty
-                                              ? product.taxName1
-                                              : item.taxName1
-                                      ..taxRate1 =
-                                          company.numberOfItemTaxRates >= 1 &&
-                                                  product.taxName1.isNotEmpty
-                                              ? product.taxRate1
-                                              : item.taxRate1
-                                      ..taxName2 =
-                                          company.numberOfItemTaxRates >= 2 &&
-                                                  product.taxName2.isNotEmpty
-                                              ? product.taxName2
-                                              : item.taxName2
-                                      ..taxRate2 =
-                                          company.numberOfItemTaxRates >= 2 &&
-                                                  product.taxName2.isNotEmpty
-                                              ? product.taxRate2
-                                              : item.taxRate2
-                                      ..taxName3 =
-                                          company.numberOfItemTaxRates >= 3 &&
-                                                  product.taxName3.isNotEmpty
-                                              ? product.taxName3
-                                              : item.taxName3
-                                      ..taxRate3 =
-                                          company.numberOfItemTaxRates >= 3 &&
-                                                  product.taxName3.isNotEmpty
-                                              ? product.taxRate3
-                                              : item.taxRate3)
-                                    : item.rebuild((b) => b
-                                      ..productKey = product.productKey
-                                      ..createdAt = DateTime.now()
-                                          .microsecondsSinceEpoch);
-
-                                _onChanged(updatedItem, index, debounce: false);
-                                _updateTable();
-                              },
-                              fieldViewBuilder: (BuildContext context,
-                                  TextEditingController textEditingController,
-                                  FocusNode focusNode,
-                                  VoidCallback onFieldSubmitted) {
-                                return Row(
-                                  children: [
-                                    if (lineItems[index].isGroupChild(invoice))
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(right: 8),
-                                        child: Text('↳'),
+                                },
+                                fieldViewBuilder: (BuildContext context,
+                                    TextEditingController textEditingController,
+                                    FocusNode focusNode,
+                                    VoidCallback onFieldSubmitted) {
+                                  return Row(
+                                    children: [
+                                      if (lineItems[index]
+                                          .isGroupChild(invoice))
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 8),
+                                          child: Text('↳'),
+                                        ),
+                                      Expanded(
+                                        child: DecoratedFormField(
+                                          showClear: false,
+                                          controller: textEditingController,
+                                          keyboardType: TextInputType.text,
+                                          focusNode: focusNode,
+                                          onFieldSubmitted: (String value) {
+                                            onFieldSubmitted();
+                                          },
+                                          onChanged: (value) {
+                                            _onChanged(
+                                                lineItems[index].rebuild((b) =>
+                                                    b..productKey = value),
+                                                index);
+                                          },
+                                        ),
                                       ),
-                                    Expanded(
-                                      child: DecoratedFormField(
-                                        showClear: false,
-                                        controller: textEditingController,
-                                        keyboardType: TextInputType.text,
-                                        focusNode: focusNode,
-                                        onFieldSubmitted: (String value) {
-                                          onFieldSubmitted();
-                                        },
-                                        onChanged: (value) {
-                                          _onChanged(
-                                              lineItems[index].rebuild(
-                                                  (b) => b..productKey = value),
-                                              index);
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                              optionsViewBuilder: (BuildContext context,
-                                  AutocompleteOnSelected<ProductEntity>
-                                      onSelected,
-                                  Iterable<SelectableEntity> options) {
-                                final highlightedIndex =
-                                    AutocompleteHighlightedOption.of(context);
-                                final optionsView = Theme(
-                                  data: theme,
-                                  child: Align(
-                                    alignment: Alignment.topLeft,
-                                    child: Material(
-                                      elevation: 4,
-                                      child: AppBorder(
-                                        child: Container(
-                                          color: Theme.of(context).cardColor,
-                                          width: double.infinity,
-                                          constraints:
-                                              BoxConstraints(maxHeight: 270),
-                                          child: ScrollableListViewBuilder(
-                                            itemCount: options.length,
-                                            itemBuilder: (BuildContext context,
-                                                int index) {
-                                              final entity =
-                                                  options.elementAt(index);
-                                              return Container(
-                                                color: highlightedIndex == index
-                                                    ? convertHexStringToColor(state
-                                                            .prefState
-                                                            .enableDarkMode
-                                                        ? kDefaultDarkSelectedColor
-                                                        : kDefaultLightSelectedColor)
-                                                    : Theme.of(context)
-                                                        .cardColor,
-                                                child:
-                                                    EntityAutocompleteListTile(
-                                                  onTap: (entity) => onSelected(
-                                                      entity as ProductEntity),
-                                                  overrideSuggestedLabel:
-                                                      (entity) {
-                                                    var label =
-                                                        entity.listDisplayName;
-                                                    if (state.company
-                                                            .trackInventory ||
-                                                        state.company
-                                                                    .enabledModules &
-                                                                kModuleProductReservations !=
-                                                            0) {
+                                    ],
+                                  );
+                                },
+                                optionsViewBuilder: (BuildContext context,
+                                    AutocompleteOnSelected<ProductEntity>
+                                        onSelected,
+                                    Iterable<SelectableEntity> options) {
+                                  final highlightedIndex =
+                                      AutocompleteHighlightedOption.of(context);
+                                  final optionsView = Theme(
+                                    data: theme,
+                                    child: Align(
+                                      alignment: Alignment.topLeft,
+                                      child: Material(
+                                        elevation: 4,
+                                        child: AppBorder(
+                                          child: Container(
+                                            color: Theme.of(context).cardColor,
+                                            width: double.infinity,
+                                            constraints:
+                                                BoxConstraints(maxHeight: 270),
+                                            child: ScrollableListViewBuilder(
+                                              itemCount: options.length,
+                                              itemBuilder:
+                                                  (BuildContext context,
+                                                      int index) {
+                                                final entity =
+                                                    options.elementAt(index);
+                                                return Container(
+                                                  color: highlightedIndex ==
+                                                          index
+                                                      ? convertHexStringToColor(state
+                                                              .prefState
+                                                              .enableDarkMode
+                                                          ? kDefaultDarkSelectedColor
+                                                          : kDefaultLightSelectedColor)
+                                                      : Theme.of(context)
+                                                          .cardColor,
+                                                  child:
+                                                      EntityAutocompleteListTile(
+                                                    onTap: (entity) =>
+                                                        onSelected(entity
+                                                            as ProductEntity),
+                                                    overrideSuggestedLabel:
+                                                        (entity) {
+                                                      var label = entity
+                                                          .listDisplayName;
+                                                      if (state.company
+                                                              .trackInventory ||
+                                                          state.company
+                                                                      .enabledModules &
+                                                                  kModuleProductReservations !=
+                                                              0) {
+                                                        final product = entity
+                                                            as ProductEntity;
+                                                        label +=
+                                                            ' [${product.stockQuantity}]';
+                                                      }
+                                                      return label;
+                                                    },
+                                                    overrideSuggestedAmount:
+                                                        (entity) {
                                                       final product = entity
                                                           as ProductEntity;
-                                                      label +=
-                                                          ' [${product.stockQuantity}]';
-                                                    }
-                                                    return label;
-                                                  },
-                                                  overrideSuggestedAmount:
-                                                      (entity) {
-                                                    final product =
-                                                        entity as ProductEntity;
-                                                    return formatNumber(
-                                                        (invoice.isPurchaseOrder &&
-                                                                company
-                                                                    .enableProductCost &&
-                                                                product.cost !=
-                                                                    0)
-                                                            ? product.cost
-                                                            : product.price,
-                                                        context);
-                                                  },
-                                                  subtitle: entity
-                                                              is ProductEntity &&
-                                                          company
-                                                              .showProductDetails
-                                                      ? entity.notes
-                                                      : null,
-                                                  entity: entity,
-                                                ),
-                                              );
-                                            },
+                                                      return formatNumber(
+                                                          (invoice.isPurchaseOrder &&
+                                                                  company
+                                                                      .enableProductCost &&
+                                                                  product.cost !=
+                                                                      0)
+                                                              ? product.cost
+                                                              : product.price,
+                                                          context);
+                                                    },
+                                                    subtitle: entity
+                                                                is ProductEntity &&
+                                                            company
+                                                                .showProductDetails
+                                                        ? entity.notes
+                                                        : null,
+                                                    entity: entity,
+                                                  ),
+                                                );
+                                              },
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                );
-                                return LayoutBuilder(
-                                  builder: (context, constraints) {
-                                    final width = constraints.maxWidth < 500
-                                        ? 500.0
-                                        : constraints.maxWidth;
-                                    return OverflowBox(
-                                      alignment: Alignment.topLeft,
-                                      minWidth: width,
-                                      maxWidth: width,
-                                      child: optionsView,
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                          ),
-                        );
-                      } else if (column == COLUMN_DESCRIPTION) {
-                        return Focus(
-                          onFocusChange: (hasFocus) => _onFocusChange(hasFocus),
-                          skipTraversal: true,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.only(right: kTableColumnGap),
-                            child: GrowableFormField(
-                              key: ValueKey(
-                                  '__line_item_${index}_description__'),
-                              autofocus: _autocompleteFocusIndex == index,
-                              initialValue: lineItems[index].notes,
-                              onChanged: (value) => _onChanged(
-                                  lineItems[index]
-                                      .rebuild((b) => b..notes = value),
-                                  index),
-                            ),
-                          ),
-                        );
-                      } else if (column == COLUMN_CUSTOM1) {
-                        return Focus(
-                          onFocusChange: (hasFocus) => _onFocusChange(hasFocus),
-                          skipTraversal: true,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.only(right: kTableColumnGap),
-                            child: CustomField(
-                              field: customField1,
-                              value: lineItems[index].customValue1,
-                              hideFieldLabel: true,
-                              onChanged: (value) => _onChanged(
-                                  lineItems[index]
-                                      .rebuild((b) => b..customValue1 = value),
-                                  index),
-                              onSavePressed:
-                                  widget.entityViewModel.onSavePressed,
-                            ),
-                          ),
-                        );
-                      } else if (column == COLUMN_CUSTOM2) {
-                        return Focus(
-                          onFocusChange: (hasFocus) => _onFocusChange(hasFocus),
-                          skipTraversal: true,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.only(right: kTableColumnGap),
-                            child: CustomField(
-                              field: customField2,
-                              value: lineItems[index].customValue2,
-                              hideFieldLabel: true,
-                              onChanged: (value) => _onChanged(
-                                  lineItems[index]
-                                      .rebuild((b) => b..customValue2 = value),
-                                  index),
-                              onSavePressed:
-                                  widget.entityViewModel.onSavePressed,
-                            ),
-                          ),
-                        );
-                      } else if (column == COLUMN_CUSTOM3) {
-                        return Focus(
-                          onFocusChange: (hasFocus) => _onFocusChange(hasFocus),
-                          skipTraversal: true,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.only(right: kTableColumnGap),
-                            child: CustomField(
-                              field: customField3,
-                              value: lineItems[index].customValue3,
-                              hideFieldLabel: true,
-                              onChanged: (value) => _onChanged(
-                                  lineItems[index]
-                                      .rebuild((b) => b..customValue3 = value),
-                                  index),
-                              onSavePressed:
-                                  widget.entityViewModel.onSavePressed,
-                            ),
-                          ),
-                        );
-                      } else if (column == COLUMN_CUSTOM4) {
-                        return Focus(
-                          onFocusChange: (hasFocus) => _onFocusChange(hasFocus),
-                          skipTraversal: true,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.only(right: kTableColumnGap),
-                            child: CustomField(
-                              field: customField4,
-                              value: lineItems[index].customValue4,
-                              hideFieldLabel: true,
-                              onChanged: (value) => _onChanged(
-                                  lineItems[index]
-                                      .rebuild((b) => b..customValue4 = value),
-                                  index),
-                              onSavePressed:
-                                  widget.entityViewModel.onSavePressed,
-                            ),
-                          ),
-                        );
-                      } else if (column == COLUMN_CUSTOM5) {
-                        return _customFieldCell(
-                          customField5,
-                          lineItems[index].customValue5,
-                          (value) => _onChanged(
-                            lineItems[index]
-                                .rebuild((b) => b..customValue5 = value),
-                            index,
-                          ),
-                        );
-                      } else if (column == COLUMN_CUSTOM6) {
-                        return _customFieldCell(
-                          customField6,
-                          lineItems[index].customValue6,
-                          (value) => _onChanged(
-                            lineItems[index]
-                                .rebuild((b) => b..customValue6 = value),
-                            index,
-                          ),
-                        );
-                      } else if (column == COLUMN_CUSTOM7) {
-                        return _customFieldCell(
-                          customField7,
-                          lineItems[index].customValue7,
-                          (value) => _onChanged(
-                            lineItems[index]
-                                .rebuild((b) => b..customValue7 = value),
-                            index,
-                          ),
-                        );
-                      } else if (column == COLUMN_CUSTOM8) {
-                        return _customFieldCell(
-                          customField8,
-                          lineItems[index].customValue8,
-                          (value) => _onChanged(
-                            lineItems[index]
-                                .rebuild((b) => b..customValue8 = value),
-                            index,
-                          ),
-                        );
-                      } else if (column == COLUMN_TAX_CATEGORY &&
-                          !lineItems[index].hasOverrideTax) {
-                        return Focus(
-                          onFocusChange: (hasFocus) => _onFocusChange(hasFocus),
-                          skipTraversal: true,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.only(right: kTableColumnGap),
-                            child: AppDropdownButton<String>(
-                                labelText: '',
-                                value: lineItems[index].taxCategoryId,
-                                onChanged: (dynamic value) => _onChanged(
-                                    lineItems[index].rebuild(
-                                        (b) => b..taxCategoryId = value),
-                                    index),
-                                items: kTaxCategories.keys
-                                    .map((key) => DropdownMenuItem<String>(
-                                          child: Text(localization.lookup(
-                                            kTaxCategories[key],
-                                          )),
-                                          value: key,
-                                        ))
-                                    .toList()),
-                          ),
-                        );
-                      } else if (column == COLUMN_TAX1 ||
-                          (column == COLUMN_TAX_CATEGORY &&
-                              lineItems[index].hasOverrideTax)) {
-                        Widget child = Focus(
-                          onFocusChange: (hasFocus) => _onFocusChange(hasFocus),
-                          skipTraversal: true,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.only(right: kTableColumnGap),
-                            child: TaxRateDropdown(
-                              onSelected: (taxRate) => _onChanged(
-                                lineItems[index].rebuild((b) => b
-                                  ..taxName1 = taxRate.name
-                                  ..taxRate1 = taxRate.rate),
-                                index,
-                                debounce: false,
+                                  );
+                                  return LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      final width = constraints.maxWidth < 500
+                                          ? 500.0
+                                          : constraints.maxWidth;
+                                      return OverflowBox(
+                                        alignment: Alignment.topLeft,
+                                        minWidth: width,
+                                        maxWidth: width,
+                                        child: optionsView,
+                                      );
+                                    },
+                                  );
+                                },
                               ),
-                              labelText: null,
-                              initialTaxName: lineItems[index].taxName1,
-                              initialTaxRate: lineItems[index].taxRate1,
                             ),
-                          ),
-                        );
-
-                        if (lineItems[index].hasOverrideTax) {
-                          child = Row(
-                            children: [
-                              Expanded(child: child),
-                              IconButton(
-                                  visualDensity: VisualDensity.compact,
-                                  onPressed: () => _onChanged(
-                                      lineItems[index].rebuild((b) => b
-                                        ..taxName1 = ''
-                                        ..taxRate1 = 0
-                                        ..taxCategoryId = kTaxCategoryPhysical),
-                                      index),
-                                  icon: Icon(Icons.clear))
-                            ],
                           );
-                        }
-
-                        return child;
-                      } else if (column == COLUMN_TAX2) {
-                        return Focus(
-                          onFocusChange: (hasFocus) => _onFocusChange(hasFocus),
-                          skipTraversal: true,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.only(right: kTableColumnGap),
-                            child: TaxRateDropdown(
-                              onSelected: (taxRate) => _onChanged(
-                                lineItems[index].rebuild((b) => b
-                                  ..taxName2 = taxRate.name
-                                  ..taxRate2 = taxRate.rate),
-                                index,
-                                debounce: false,
-                              ),
-                              labelText: null,
-                              initialTaxName: lineItems[index].taxName2,
-                              initialTaxRate: lineItems[index].taxRate2,
-                            ),
-                          ),
-                        );
-                      } else if (column == COLUMN_TAX3) {
-                        return Focus(
-                          onFocusChange: (hasFocus) => _onFocusChange(hasFocus),
-                          skipTraversal: true,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.only(right: kTableColumnGap),
-                            child: TaxRateDropdown(
-                              onSelected: (taxRate) => _onChanged(
-                                lineItems[index].rebuild((b) => b
-                                  ..taxName3 = taxRate.name
-                                  ..taxRate3 = taxRate.rate),
-                                index,
-                                debounce: false,
-                              ),
-                              labelText: null,
-                              initialTaxName: lineItems[index].taxName3,
-                              initialTaxRate: lineItems[index].taxRate3,
-                            ),
-                          ),
-                        );
-                      } else if (column == COLUMN_UNIT_COST) {
-                        final proRataUnitPrice =
-                            overrideChildUnitPrice(lineItems[index]);
-                        if (proRataUnitPrice != null) {
-                          return Tooltip(
-                            message:
-                                localization.lookup('price_per_unit_pro_rata'),
+                        } else if (column == COLUMN_DESCRIPTION) {
+                          return Focus(
+                            onFocusChange: (hasFocus) =>
+                                _onFocusChange(hasFocus),
+                            skipTraversal: true,
                             child: Padding(
                               padding:
                                   const EdgeInsets.only(right: kTableColumnGap),
-                              child: Align(
-                                alignment: Alignment.bottomRight,
-                                child: Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
-                                  child: Text(
-                                    formatNumber(
-                                          proRataUnitPrice,
-                                          context,
-                                          clientId: invoice.isPurchaseOrder
-                                              ? null
-                                              : invoice.clientId,
-                                          vendorId: invoice.isPurchaseOrder
-                                              ? invoice.vendorId
-                                              : null,
-                                        ) ??
-                                        '',
-                                    style: TextStyle(color: state.greyColor),
-                                    textAlign: TextAlign.right,
+                              child: GrowableFormField(
+                                key: ValueKey(
+                                    '__line_item_${index}_description__'),
+                                autofocus: _autocompleteFocusIndex == index,
+                                initialValue: lineItems[index].notes,
+                                onChanged: (value) => _onChanged(
+                                    lineItems[index]
+                                        .rebuild((b) => b..notes = value),
+                                    index),
+                              ),
+                            ),
+                          );
+                        } else if (column == COLUMN_CUSTOM1) {
+                          return Focus(
+                            onFocusChange: (hasFocus) =>
+                                _onFocusChange(hasFocus),
+                            skipTraversal: true,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.only(right: kTableColumnGap),
+                              child: CustomField(
+                                field: customField1,
+                                value: lineItems[index].customValue1,
+                                hideFieldLabel: true,
+                                onChanged: (value) => _onChanged(
+                                    lineItems[index].rebuild(
+                                        (b) => b..customValue1 = value),
+                                    index),
+                                onSavePressed:
+                                    widget.entityViewModel.onSavePressed,
+                              ),
+                            ),
+                          );
+                        } else if (column == COLUMN_CUSTOM2) {
+                          return Focus(
+                            onFocusChange: (hasFocus) =>
+                                _onFocusChange(hasFocus),
+                            skipTraversal: true,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.only(right: kTableColumnGap),
+                              child: CustomField(
+                                field: customField2,
+                                value: lineItems[index].customValue2,
+                                hideFieldLabel: true,
+                                onChanged: (value) => _onChanged(
+                                    lineItems[index].rebuild(
+                                        (b) => b..customValue2 = value),
+                                    index),
+                                onSavePressed:
+                                    widget.entityViewModel.onSavePressed,
+                              ),
+                            ),
+                          );
+                        } else if (column == COLUMN_CUSTOM3) {
+                          return Focus(
+                            onFocusChange: (hasFocus) =>
+                                _onFocusChange(hasFocus),
+                            skipTraversal: true,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.only(right: kTableColumnGap),
+                              child: CustomField(
+                                field: customField3,
+                                value: lineItems[index].customValue3,
+                                hideFieldLabel: true,
+                                onChanged: (value) => _onChanged(
+                                    lineItems[index].rebuild(
+                                        (b) => b..customValue3 = value),
+                                    index),
+                                onSavePressed:
+                                    widget.entityViewModel.onSavePressed,
+                              ),
+                            ),
+                          );
+                        } else if (column == COLUMN_CUSTOM4) {
+                          return Focus(
+                            onFocusChange: (hasFocus) =>
+                                _onFocusChange(hasFocus),
+                            skipTraversal: true,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.only(right: kTableColumnGap),
+                              child: CustomField(
+                                field: customField4,
+                                value: lineItems[index].customValue4,
+                                hideFieldLabel: true,
+                                onChanged: (value) => _onChanged(
+                                    lineItems[index].rebuild(
+                                        (b) => b..customValue4 = value),
+                                    index),
+                                onSavePressed:
+                                    widget.entityViewModel.onSavePressed,
+                              ),
+                            ),
+                          );
+                        } else if (column == COLUMN_CUSTOM5) {
+                          return _customFieldCell(
+                            customField5,
+                            lineItems[index].customValue5,
+                            (value) => _onChanged(
+                              lineItems[index]
+                                  .rebuild((b) => b..customValue5 = value),
+                              index,
+                            ),
+                          );
+                        } else if (column == COLUMN_CUSTOM6) {
+                          return _customFieldCell(
+                            customField6,
+                            lineItems[index].customValue6,
+                            (value) => _onChanged(
+                              lineItems[index]
+                                  .rebuild((b) => b..customValue6 = value),
+                              index,
+                            ),
+                          );
+                        } else if (column == COLUMN_CUSTOM7) {
+                          return _customFieldCell(
+                            customField7,
+                            lineItems[index].customValue7,
+                            (value) => _onChanged(
+                              lineItems[index]
+                                  .rebuild((b) => b..customValue7 = value),
+                              index,
+                            ),
+                          );
+                        } else if (column == COLUMN_CUSTOM8) {
+                          return _customFieldCell(
+                            customField8,
+                            lineItems[index].customValue8,
+                            (value) => _onChanged(
+                              lineItems[index]
+                                  .rebuild((b) => b..customValue8 = value),
+                              index,
+                            ),
+                          );
+                        } else if (column == COLUMN_TAX_CATEGORY &&
+                            !lineItems[index].hasOverrideTax) {
+                          return Focus(
+                            onFocusChange: (hasFocus) =>
+                                _onFocusChange(hasFocus),
+                            skipTraversal: true,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.only(right: kTableColumnGap),
+                              child: AppDropdownButton<String>(
+                                  labelText: '',
+                                  value: lineItems[index].taxCategoryId,
+                                  onChanged: (dynamic value) => _onChanged(
+                                      lineItems[index].rebuild(
+                                          (b) => b..taxCategoryId = value),
+                                      index),
+                                  items: kTaxCategories.keys
+                                      .map((key) => DropdownMenuItem<String>(
+                                            child: Text(localization.lookup(
+                                              kTaxCategories[key],
+                                            )),
+                                            value: key,
+                                          ))
+                                      .toList()),
+                            ),
+                          );
+                        } else if (column == COLUMN_TAX1 ||
+                            (column == COLUMN_TAX_CATEGORY &&
+                                lineItems[index].hasOverrideTax)) {
+                          Widget child = Focus(
+                            onFocusChange: (hasFocus) =>
+                                _onFocusChange(hasFocus),
+                            skipTraversal: true,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.only(right: kTableColumnGap),
+                              child: TaxRateDropdown(
+                                onSelected: (taxRate) => _onChanged(
+                                  lineItems[index].rebuild((b) => b
+                                    ..taxName1 = taxRate.name
+                                    ..taxRate1 = taxRate.rate),
+                                  index,
+                                  debounce: false,
+                                ),
+                                labelText: null,
+                                initialTaxName: lineItems[index].taxName1,
+                                initialTaxRate: lineItems[index].taxRate1,
+                              ),
+                            ),
+                          );
+
+                          if (lineItems[index].hasOverrideTax) {
+                            child = Row(
+                              children: [
+                                Expanded(child: child),
+                                IconButton(
+                                    visualDensity: VisualDensity.compact,
+                                    onPressed: () => _onChanged(
+                                        lineItems[index].rebuild((b) => b
+                                          ..taxName1 = ''
+                                          ..taxRate1 = 0
+                                          ..taxCategoryId =
+                                              kTaxCategoryPhysical),
+                                        index),
+                                    icon: Icon(Icons.clear))
+                              ],
+                            );
+                          }
+
+                          return child;
+                        } else if (column == COLUMN_TAX2) {
+                          return Focus(
+                            onFocusChange: (hasFocus) =>
+                                _onFocusChange(hasFocus),
+                            skipTraversal: true,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.only(right: kTableColumnGap),
+                              child: TaxRateDropdown(
+                                onSelected: (taxRate) => _onChanged(
+                                  lineItems[index].rebuild((b) => b
+                                    ..taxName2 = taxRate.name
+                                    ..taxRate2 = taxRate.rate),
+                                  index,
+                                  debounce: false,
+                                ),
+                                labelText: null,
+                                initialTaxName: lineItems[index].taxName2,
+                                initialTaxRate: lineItems[index].taxRate2,
+                              ),
+                            ),
+                          );
+                        } else if (column == COLUMN_TAX3) {
+                          return Focus(
+                            onFocusChange: (hasFocus) =>
+                                _onFocusChange(hasFocus),
+                            skipTraversal: true,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.only(right: kTableColumnGap),
+                              child: TaxRateDropdown(
+                                onSelected: (taxRate) => _onChanged(
+                                  lineItems[index].rebuild((b) => b
+                                    ..taxName3 = taxRate.name
+                                    ..taxRate3 = taxRate.rate),
+                                  index,
+                                  debounce: false,
+                                ),
+                                labelText: null,
+                                initialTaxName: lineItems[index].taxName3,
+                                initialTaxRate: lineItems[index].taxRate3,
+                              ),
+                            ),
+                          );
+                        } else if (column == COLUMN_UNIT_COST) {
+                          final proRataUnitPrice =
+                              overrideChildUnitPrice(lineItems[index]);
+                          if (proRataUnitPrice != null) {
+                            return Tooltip(
+                              message: localization
+                                  .lookup('price_per_unit_pro_rata'),
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                    right: kTableColumnGap),
+                                child: Align(
+                                  alignment: Alignment.bottomRight,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    child: Text(
+                                      formatNumber(
+                                            proRataUnitPrice,
+                                            context,
+                                            clientId: invoice.isPurchaseOrder
+                                                ? null
+                                                : invoice.clientId,
+                                            vendorId: invoice.isPurchaseOrder
+                                                ? invoice.vendorId
+                                                : null,
+                                          ) ??
+                                          '',
+                                      style: TextStyle(color: state.greyColor),
+                                      textAlign: TextAlign.right,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          );
-                        }
-                        if (hidesGroupChildPrices(lineItems[index])) {
-                          return const SizedBox.shrink();
-                        }
-                        return Focus(
-                          onFocusChange: (hasFocus) => _onFocusChange(hasFocus),
-                          skipTraversal: true,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.only(right: kTableColumnGap),
-                            child: DecoratedFormField(
-                              key: ValueKey('__line_item_${index}_cost__'),
-                              textAlign: TextAlign.right,
-                              initialValue: formatNumber(
-                                lineItems[index].cost,
-                                context,
-                                formatNumberType: FormatNumberType.inputMoney,
-                                clientId: invoice.isPurchaseOrder
-                                    ? null
-                                    : invoice.clientId,
-                                vendorId: invoice.isPurchaseOrder
-                                    ? invoice.vendorId
-                                    : null,
-                              ),
-                              onChanged: (value) => _onChanged(
-                                lineItems[index].rebuild(
-                                    (b) => b..cost = parseDouble(value)),
-                                index,
-                                debounce: false,
-                              ),
-                              keyboardType: TextInputType.numberWithOptions(
-                                  decimal: true, signed: true),
-                              onSavePressed:
-                                  widget.entityViewModel.onSavePressed,
-                            ),
-                          ),
-                        );
-                      } else if (column == COLUMN_QUANTITY) {
-                        return Focus(
-                          onFocusChange: (hasFocus) => _onFocusChange(hasFocus),
-                          skipTraversal: true,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.only(right: kTableColumnGap),
-                            child: DecoratedFormField(
-                              key: ValueKey('__line_item_${index}_quantity__'),
-                              textAlign: TextAlign.right,
-                              initialValue: formatNumber(
-                                lineItems[index].quantity,
-                                context,
-                                formatNumberType: FormatNumberType.inputAmount,
-                                clientId: invoice.isPurchaseOrder
-                                    ? null
-                                    : invoice.clientId,
-                                vendorId: invoice.isPurchaseOrder
-                                    ? invoice.vendorId
-                                    : null,
-                              ),
-                              onChanged: (value) => _onChanged(
-                                lineItems[index].rebuild(
-                                    (b) => b..quantity = parseDouble(value)),
-                                index,
-                                debounce: false,
-                              ),
-                              keyboardType: TextInputType.numberWithOptions(
-                                  decimal: true, signed: true),
-                              onSavePressed:
-                                  widget.entityViewModel.onSavePressed,
-                            ),
-                          ),
-                        );
-                      } else if (column == COLUMN_TIME_COEFFICIENT_NAME) {
-                        final presets = decodeTimeCoefficients(
-                            company.timeCoefficientsJson);
-                        final names = presets
-                            .map((value) => value['name']?.toString() ?? '')
-                            .where((value) => value.isNotEmpty)
-                            .toList();
-                        if (lineItems[index].timeCoefficientName.isNotEmpty &&
-                            !names.contains(
-                                lineItems[index].timeCoefficientName)) {
-                          names.add(lineItems[index].timeCoefficientName);
-                        }
-                        return Padding(
-                          padding:
-                              const EdgeInsets.only(right: kTableColumnGap),
-                          child: AppDropdownButton<String>(
-                            labelText: '',
-                            value: lineItems[index].timeCoefficientName,
-                            showBlank: true,
-                            blankValue: '',
-                            blankLabel: reservationText(context, 'standard'),
-                            items: names
-                                .map((name) => DropdownMenuItem<String>(
-                                      value: name,
-                                      child: Text(name),
-                                    ))
-                                .toList(),
-                            onChanged: (value) {
-                              final name = value ?? '';
-                              _onChanged(
-                                lineItems[index].rebuild((b) => b
-                                  ..timeCoefficientName = name
-                                  ..timeCoefficient = resolveTimeCoefficient(
-                                      name,
-                                      presets,
-                                      lineItems[index].timeCoefficient)),
-                                index,
-                                debounce: false,
-                              );
-                            },
-                          ),
-                        );
-                      } else if (column == COLUMN_TIME_COEFFICIENT) {
-                        return Padding(
-                          padding:
-                              const EdgeInsets.only(right: kTableColumnGap),
-                          child: DecoratedFormField(
-                            key: ValueKey(
-                                '__line_item_${index}_time_coefficient__'),
-                            textAlign: TextAlign.right,
-                            initialValue:
-                                lineItems[index].timeCoefficient.toString(),
-                            onChanged: (value) => _onChanged(
-                              lineItems[index].rebuild((b) =>
-                                  b..timeCoefficient = parseDouble(value)),
-                              index,
-                              debounce: false,
-                            ),
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true),
-                            onSavePressed: widget.entityViewModel.onSavePressed,
-                          ),
-                        );
-                      } else if (column == COLUMN_DISCOUNT) {
-                        return Focus(
-                          onFocusChange: (hasFocus) => _onFocusChange(hasFocus),
-                          skipTraversal: true,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.only(right: kTableColumnGap),
-                            child: DecoratedFormField(
-                              key: ValueKey('__line_item_${index}_discount__'),
-                              textAlign: TextAlign.right,
-                              initialValue: formatNumber(
-                                lineItems[index].discount,
-                                context,
-                                formatNumberType: FormatNumberType.inputAmount,
-                                clientId: invoice.isPurchaseOrder
-                                    ? null
-                                    : invoice.clientId,
-                                vendorId: invoice.isPurchaseOrder
-                                    ? invoice.vendorId
-                                    : null,
-                              ),
-                              onChanged: (value) => _onChanged(
+                            );
+                          }
+                          if (hidesGroupChildPrices(lineItems[index])) {
+                            return const SizedBox.shrink();
+                          }
+                          return Focus(
+                            onFocusChange: (hasFocus) =>
+                                _onFocusChange(hasFocus),
+                            skipTraversal: true,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.only(right: kTableColumnGap),
+                              child: DecoratedFormField(
+                                key: ValueKey('__line_item_${index}_cost__'),
+                                textAlign: TextAlign.right,
+                                initialValue: formatNumber(
+                                  lineItems[index].cost,
+                                  context,
+                                  formatNumberType: FormatNumberType.inputMoney,
+                                  clientId: invoice.isPurchaseOrder
+                                      ? null
+                                      : invoice.clientId,
+                                  vendorId: invoice.isPurchaseOrder
+                                      ? invoice.vendorId
+                                      : null,
+                                ),
+                                onChanged: (value) => _onChanged(
                                   lineItems[index].rebuild(
-                                      (b) => b..discount = parseDouble(value)),
-                                  index),
-                              keyboardType: TextInputType.numberWithOptions(
-                                  decimal: true, signed: true),
+                                      (b) => b..cost = parseDouble(value)),
+                                  index,
+                                  debounce: false,
+                                ),
+                                keyboardType: TextInputType.numberWithOptions(
+                                    decimal: true, signed: true),
+                                onSavePressed:
+                                    widget.entityViewModel.onSavePressed,
+                              ),
+                            ),
+                          );
+                        } else if (column == COLUMN_QUANTITY) {
+                          return Focus(
+                            onFocusChange: (hasFocus) =>
+                                _onFocusChange(hasFocus),
+                            skipTraversal: true,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.only(right: kTableColumnGap),
+                              child: DecoratedFormField(
+                                key:
+                                    ValueKey('__line_item_${index}_quantity__'),
+                                textAlign: TextAlign.right,
+                                initialValue: formatNumber(
+                                  lineItems[index].quantity,
+                                  context,
+                                  formatNumberType:
+                                      FormatNumberType.inputAmount,
+                                  clientId: invoice.isPurchaseOrder
+                                      ? null
+                                      : invoice.clientId,
+                                  vendorId: invoice.isPurchaseOrder
+                                      ? invoice.vendorId
+                                      : null,
+                                ),
+                                onChanged: (value) => _onChanged(
+                                  lineItems[index].rebuild(
+                                      (b) => b..quantity = parseDouble(value)),
+                                  index,
+                                  debounce: false,
+                                ),
+                                keyboardType: TextInputType.numberWithOptions(
+                                    decimal: true, signed: true),
+                                onSavePressed:
+                                    widget.entityViewModel.onSavePressed,
+                              ),
+                            ),
+                          );
+                        } else if (column == COLUMN_TIME_COEFFICIENT_NAME) {
+                          final presets = decodeTimeCoefficients(
+                              company.timeCoefficientsJson);
+                          final names = presets
+                              .map((value) => value['name']?.toString() ?? '')
+                              .where((value) => value.isNotEmpty)
+                              .toList();
+                          if (lineItems[index].timeCoefficientName.isNotEmpty &&
+                              !names.contains(
+                                  lineItems[index].timeCoefficientName)) {
+                            names.add(lineItems[index].timeCoefficientName);
+                          }
+                          return Padding(
+                            padding:
+                                const EdgeInsets.only(right: kTableColumnGap),
+                            child: AppDropdownButton<String>(
+                              labelText: '',
+                              value: lineItems[index].timeCoefficientName,
+                              showBlank: true,
+                              blankValue: '',
+                              blankLabel: reservationText(context, 'standard'),
+                              items: names
+                                  .map((name) => DropdownMenuItem<String>(
+                                        value: name,
+                                        child: Text(name),
+                                      ))
+                                  .toList(),
+                              onChanged: (value) {
+                                final name = value ?? '';
+                                _onChanged(
+                                  lineItems[index].rebuild((b) => b
+                                    ..timeCoefficientName = name
+                                    ..timeCoefficient = resolveTimeCoefficient(
+                                        name,
+                                        presets,
+                                        lineItems[index].timeCoefficient)),
+                                  index,
+                                  debounce: false,
+                                );
+                              },
+                            ),
+                          );
+                        } else if (column == COLUMN_TIME_COEFFICIENT) {
+                          return Padding(
+                            padding:
+                                const EdgeInsets.only(right: kTableColumnGap),
+                            child: DecoratedFormField(
+                              key: ValueKey(
+                                  '__line_item_${index}_time_coefficient__'),
+                              textAlign: TextAlign.right,
+                              initialValue:
+                                  lineItems[index].timeCoefficient.toString(),
+                              onChanged: (value) => _onChanged(
+                                lineItems[index].rebuild((b) =>
+                                    b..timeCoefficient = parseDouble(value)),
+                                index,
+                                debounce: false,
+                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
                               onSavePressed:
                                   widget.entityViewModel.onSavePressed,
                             ),
-                          ),
-                        );
-                      } else {
-                        return SizedBox();
-                      }
-                    }).toList(),
-                    if (_showReservationStatus)
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            right: kTableColumnGap, bottom: 12),
-                        child: ProductReservationLineStatus(
-                          item: lineItems[index],
-                          availability: _reservationAvailability,
-                        ),
-                      ),
-                    if (!hidesGroupChildPrices(lineItems[index]) ||
-                        overrideChildAmount(lineItems[index]) != null)
-                      Padding(
-                        padding: const EdgeInsets.only(right: kTableColumnGap),
-                        child: Align(
-                          alignment: Alignment.bottomRight,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: Text(
-                              formatNumber(
-                                    overrideChildAmount(lineItems[index]) ??
-                                        lineItems[index]
-                                            .total(invoice, precision),
-                                    context,
-                                    clientId: invoice.isPurchaseOrder
-                                        ? null
-                                        : invoice.clientId,
-                                    vendorId: invoice.isPurchaseOrder
-                                        ? invoice.vendorId
-                                        : null,
-                                  ) ??
-                                  '',
-                              style: TextStyle(color: state.greyColor),
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                        ),
-                      )
-                    else
-                      const SizedBox.shrink(),
-                    PopupMenuButton<String>(
-                      icon: Icon(Icons.more_vert),
-                      enabled: !lineItems[index].isEmpty ||
-                          index < includedLineItems.length,
-                      itemBuilder: (BuildContext context) {
-                        final sectionIndex =
-                            includedLineItems.indexOf(lineItems[index]);
-                        final options = {
-                          if (!lineItems[index].isEmpty)
-                            localization.clone: Icons.control_point_duplicate,
-                          if (canCreateGroup && lineItems[index].isGroup)
-                            localization.editGroup: Icons.edit,
-                          if (canCreateGroup &&
-                              !lineItems[index].isGroup &&
-                              !lineItems[index].isEmpty &&
-                              invoice.lineItems.any((item) => item.isGroup))
-                            '${localization.select} ${localization.group}':
-                                Icons.account_tree_outlined,
-                          if (includedLineItems.length > 1)
-                            localization.insertBelow: MdiIcons.plus,
-                          if (widget.isTasks &&
-                              (lineItems[index].taskId ?? '').isNotEmpty)
-                            localization.viewTask: MdiIcons.chevronDoubleRight,
-                          if (sectionIndex > 0)
-                            localization.moveTop: MdiIcons.chevronDoubleUp,
-                          if (sectionIndex > 1)
-                            localization.moveUp: MdiIcons.chevronUp,
-                          if (sectionIndex < includedLineItems.length - 2)
-                            localization.moveDown: MdiIcons.chevronDown,
-                          if (sectionIndex < includedLineItems.length - 1)
-                            localization.moveBottom: MdiIcons.chevronDoubleDown,
-                          localization.remove: Icons.clear,
-                        };
-
-                        return options.keys
-                            .map((option) => PopupMenuItem<String>(
-                                  child: IconText(
-                                    icon: options[option],
-                                    text: option,
-                                  ),
-                                  value: option,
-                                ))
-                            .toList();
-                      },
-                      onSelected: (String action) async {
-                        if (action == localization.viewTask) {
-                          viewEntityById(
-                              entityId: lineItems[index].taskId,
-                              entityType: EntityType.task);
-                        } else if (action == localization.moveTop) {
-                          viewModel.onMovedInvoiceItem!(index, 0);
-                        } else if (action == localization.moveUp) {
-                          viewModel.onMovedInvoiceItem!(index, index - 1);
-                        } else if (action == localization.moveDown) {
-                          viewModel.onMovedInvoiceItem!(index, index + 1);
-                        } else if (action == localization.moveBottom) {
-                          viewModel.onMovedInvoiceItem!(
-                              index, lineItems.length - 2);
-                        } else if (action == localization.remove) {
-                          viewModel.onRemoveInvoiceItemPressed!(index);
-                        } else if (action == localization.insertBelow) {
-                          viewModel.addLineItem!(index + 1);
-                        } else if (action == localization.clone) {
-                          viewModel.cloneLineItem!(index);
-                        } else if (action == localization.editGroup) {
-                          await showDialog<ItemEditDetails>(
-                            context: context,
-                            builder: (context) => ItemEditDetails(
-                              viewModel: viewModel,
-                              entityViewModel: widget.entityViewModel,
-                              invoiceItem: lineItems[index],
-                              index: index,
+                          );
+                        } else if (column == COLUMN_DISCOUNT) {
+                          return Focus(
+                            onFocusChange: (hasFocus) =>
+                                _onFocusChange(hasFocus),
+                            skipTraversal: true,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.only(right: kTableColumnGap),
+                              child: DecoratedFormField(
+                                key:
+                                    ValueKey('__line_item_${index}_discount__'),
+                                textAlign: TextAlign.right,
+                                initialValue: formatNumber(
+                                  lineItems[index].discount,
+                                  context,
+                                  formatNumberType:
+                                      FormatNumberType.inputAmount,
+                                  clientId: invoice.isPurchaseOrder
+                                      ? null
+                                      : invoice.clientId,
+                                  vendorId: invoice.isPurchaseOrder
+                                      ? invoice.vendorId
+                                      : null,
+                                ),
+                                onChanged: (value) => _onChanged(
+                                    lineItems[index].rebuild((b) =>
+                                        b..discount = parseDouble(value)),
+                                    index),
+                                keyboardType: TextInputType.numberWithOptions(
+                                    decimal: true, signed: true),
+                                onSavePressed:
+                                    widget.entityViewModel.onSavePressed,
+                              ),
                             ),
                           );
-                        } else if (action ==
-                            '${localization.select} ${localization.group}') {
-                          await showMoveToGroupDialog(
-                            context: context,
-                            viewModel: viewModel,
-                            itemIndex: index,
-                          );
+                        } else {
+                          return SizedBox();
                         }
-                        _updateTable();
-                      },
-                    ),
-                  ])
-        ],
-      ),
+                      }).toList(),
+                      if (_showReservationStatus)
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              right: kTableColumnGap, bottom: 12),
+                          child: ProductReservationLineStatus(
+                            item: lineItems[index],
+                            availability: _reservationAvailability.future,
+                          ),
+                        ),
+                      if (!hidesGroupChildPrices(lineItems[index]) ||
+                          overrideChildAmount(lineItems[index]) != null)
+                        Padding(
+                          padding:
+                              const EdgeInsets.only(right: kTableColumnGap),
+                          child: Align(
+                            alignment: Alignment.bottomRight,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: Text(
+                                formatNumber(
+                                      overrideChildAmount(lineItems[index]) ??
+                                          lineItems[index]
+                                              .total(invoice, precision),
+                                      context,
+                                      clientId: invoice.isPurchaseOrder
+                                          ? null
+                                          : invoice.clientId,
+                                      vendorId: invoice.isPurchaseOrder
+                                          ? invoice.vendorId
+                                          : null,
+                                    ) ??
+                                    '',
+                                style: TextStyle(color: state.greyColor),
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        const SizedBox.shrink(),
+                      PopupMenuButton<String>(
+                        icon: Icon(Icons.more_vert),
+                        enabled: !lineItems[index].isEmpty ||
+                            index < includedLineItems.length,
+                        itemBuilder: (BuildContext context) {
+                          final sectionIndex =
+                              includedLineItems.indexOf(lineItems[index]);
+                          final options = {
+                            if (!lineItems[index].isEmpty)
+                              localization.clone: Icons.control_point_duplicate,
+                            if (canCreateGroup && lineItems[index].isGroup)
+                              localization.editGroup: Icons.edit,
+                            if (canCreateGroup &&
+                                !lineItems[index].isGroup &&
+                                !lineItems[index].isEmpty &&
+                                invoice.lineItems.any((item) => item.isGroup))
+                              '${localization.select} ${localization.group}':
+                                  Icons.account_tree_outlined,
+                            if (includedLineItems.length > 1)
+                              localization.insertBelow: MdiIcons.plus,
+                            if (widget.isTasks &&
+                                (lineItems[index].taskId ?? '').isNotEmpty)
+                              localization.viewTask:
+                                  MdiIcons.chevronDoubleRight,
+                            if (sectionIndex > 0)
+                              localization.moveTop: MdiIcons.chevronDoubleUp,
+                            if (sectionIndex > 1)
+                              localization.moveUp: MdiIcons.chevronUp,
+                            if (sectionIndex < includedLineItems.length - 2)
+                              localization.moveDown: MdiIcons.chevronDown,
+                            if (sectionIndex < includedLineItems.length - 1)
+                              localization.moveBottom:
+                                  MdiIcons.chevronDoubleDown,
+                            localization.remove: Icons.clear,
+                          };
+
+                          return options.keys
+                              .map((option) => PopupMenuItem<String>(
+                                    child: IconText(
+                                      icon: options[option],
+                                      text: option,
+                                    ),
+                                    value: option,
+                                  ))
+                              .toList();
+                        },
+                        onSelected: (String action) async {
+                          setState(_selectedItems.clear);
+                          if (action == localization.viewTask) {
+                            viewEntityById(
+                                entityId: lineItems[index].taskId,
+                                entityType: EntityType.task);
+                          } else if (action == localization.moveTop) {
+                            viewModel.onMovedInvoiceItem!(index, 0);
+                          } else if (action == localization.moveUp) {
+                            viewModel.onMovedInvoiceItem!(index, index - 1);
+                          } else if (action == localization.moveDown) {
+                            viewModel.onMovedInvoiceItem!(index, index + 1);
+                          } else if (action == localization.moveBottom) {
+                            viewModel.onMovedInvoiceItem!(
+                                index, lineItems.length - 2);
+                          } else if (action == localization.remove) {
+                            viewModel.onRemoveInvoiceItemPressed!(index);
+                          } else if (action == localization.insertBelow) {
+                            viewModel.addLineItem!(index + 1);
+                          } else if (action == localization.clone) {
+                            viewModel.cloneLineItem!(index);
+                          } else if (action == localization.editGroup) {
+                            await showDialog<ItemEditDetails>(
+                              context: context,
+                              builder: (context) => ItemEditDetails(
+                                viewModel: viewModel,
+                                entityViewModel: widget.entityViewModel,
+                                invoiceItem: lineItems[index],
+                                index: index,
+                              ),
+                            );
+                          } else if (action ==
+                              '${localization.select} ${localization.group}') {
+                            await showMoveToGroupDialog(
+                              context: context,
+                              viewModel: viewModel,
+                              itemIndex: index,
+                            );
+                          }
+                          _updateTable();
+                        },
+                      ),
+                    ])
+          ],
+        ),
+      ],
     );
   }
 }

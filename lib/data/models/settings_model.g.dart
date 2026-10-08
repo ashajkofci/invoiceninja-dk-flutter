@@ -51,6 +51,13 @@ class _$SettingsEntitySerializer
         ..add(serializers.serialize(value,
             specifiedType: const FullType(String)));
     }
+    value = object.pdfGroupTotalLabel;
+    if (value != null) {
+      result
+        ..add('pdf_group_total_label')
+        ..add(serializers.serialize(value,
+            specifiedType: const FullType(String)));
+    }
     value = object.showCurrencyCode;
     if (value != null) {
       result
@@ -1796,6 +1803,10 @@ class _$SettingsEntitySerializer
           result.languageId = serializers.deserialize(value,
               specifiedType: const FullType(String)) as String?;
           break;
+        case 'pdf_group_total_label':
+          result.pdfGroupTotalLabel = serializers.deserialize(value,
+              specifiedType: const FullType(String)) as String?;
+          break;
         case 'show_currency_code':
           result.showCurrencyCode = serializers.deserialize(value,
               specifiedType: const FullType(bool)) as bool?;
@@ -2879,6 +2890,8 @@ class _$SettingsEntity extends SettingsEntity {
   @override
   final String? languageId;
   @override
+  final String? pdfGroupTotalLabel;
+  @override
   final bool? showCurrencyCode;
   @override
   final String? currencyId;
@@ -3381,6 +3394,7 @@ class _$SettingsEntity extends SettingsEntity {
       this.dateFormatId,
       this.enableMilitaryTime,
       this.languageId,
+      this.pdfGroupTotalLabel,
       this.showCurrencyCode,
       this.currencyId,
       this.customValue1,
@@ -3644,6 +3658,7 @@ class _$SettingsEntity extends SettingsEntity {
         dateFormatId == other.dateFormatId &&
         enableMilitaryTime == other.enableMilitaryTime &&
         languageId == other.languageId &&
+        pdfGroupTotalLabel == other.pdfGroupTotalLabel &&
         showCurrencyCode == other.showCurrencyCode &&
         currencyId == other.currencyId &&
         customValue1 == other.customValue1 &&
@@ -3908,6 +3923,7 @@ class _$SettingsEntity extends SettingsEntity {
     _$hash = $jc(_$hash, dateFormatId.hashCode);
     _$hash = $jc(_$hash, enableMilitaryTime.hashCode);
     _$hash = $jc(_$hash, languageId.hashCode);
+    _$hash = $jc(_$hash, pdfGroupTotalLabel.hashCode);
     _$hash = $jc(_$hash, showCurrencyCode.hashCode);
     _$hash = $jc(_$hash, currencyId.hashCode);
     _$hash = $jc(_$hash, customValue1.hashCode);
@@ -4166,6 +4182,7 @@ class _$SettingsEntity extends SettingsEntity {
           ..add('dateFormatId', dateFormatId)
           ..add('enableMilitaryTime', enableMilitaryTime)
           ..add('languageId', languageId)
+          ..add('pdfGroupTotalLabel', pdfGroupTotalLabel)
           ..add('showCurrencyCode', showCurrencyCode)
           ..add('currencyId', currencyId)
           ..add('customValue1', customValue1)
@@ -4443,6 +4460,11 @@ class SettingsEntityBuilder
   String? _languageId;
   String? get languageId => _$this._languageId;
   set languageId(String? languageId) => _$this._languageId = languageId;
+
+  String? _pdfGroupTotalLabel;
+  String? get pdfGroupTotalLabel => _$this._pdfGroupTotalLabel;
+  set pdfGroupTotalLabel(String? pdfGroupTotalLabel) =>
+      _$this._pdfGroupTotalLabel = pdfGroupTotalLabel;
 
   bool? _showCurrencyCode;
   bool? get showCurrencyCode => _$this._showCurrencyCode;
@@ -5674,6 +5696,7 @@ class SettingsEntityBuilder
       _dateFormatId = $v.dateFormatId;
       _enableMilitaryTime = $v.enableMilitaryTime;
       _languageId = $v.languageId;
+      _pdfGroupTotalLabel = $v.pdfGroupTotalLabel;
       _showCurrencyCode = $v.showCurrencyCode;
       _currencyId = $v.currencyId;
       _customValue1 = $v.customValue1;
@@ -5948,6 +5971,7 @@ class SettingsEntityBuilder
             dateFormatId: dateFormatId,
             enableMilitaryTime: enableMilitaryTime,
             languageId: languageId,
+            pdfGroupTotalLabel: pdfGroupTotalLabel,
             showCurrencyCode: showCurrencyCode,
             currencyId: currencyId,
             customValue1: customValue1,

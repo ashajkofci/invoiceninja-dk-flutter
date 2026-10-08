@@ -33,6 +33,10 @@ const _english = <String, String>{
   'overbooked': 'Overbooked',
   'invoice': 'Invoice',
   'unableOpenInvoice': 'Unable to open the invoice',
+  'pdfGroupTotalLabel': 'PDF group total label',
+  'pdfGroupTotalLabelHelp':
+      r'Use $group for the group description (or its item name when empty), and $group_name for its item name. Leave blank for the translated default.',
+  'pdfGroupTotalLabelPlaceholder': r'Group total $group',
   'rentalTimeCoefficients': 'Rental time coefficients',
   'timeCoefficientHelp':
       'Apply a named multiplier before tax to invoice and quote product lines.',
@@ -94,6 +98,10 @@ const _french = <String, String>{
   'overbooked': 'Surréservé',
   'invoice': 'Facture',
   'unableOpenInvoice': 'Impossible d’ouvrir la facture',
+  'pdfGroupTotalLabel': 'Libellé du total de groupe PDF',
+  'pdfGroupTotalLabelHelp':
+      r'Utilisez $group pour la description du groupe (ou son nom si elle est vide), et $group_name pour son nom. Laissez vide pour le libellé traduit par défaut.',
+  'pdfGroupTotalLabelPlaceholder': r'Total du groupe $group',
   'rentalTimeCoefficients': 'Coefficients de durée de location',
   'timeCoefficientHelp':
       'Appliquer un multiplicateur nommé avant taxes aux lignes de produits des factures et devis.',

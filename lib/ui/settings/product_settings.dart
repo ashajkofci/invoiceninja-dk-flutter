@@ -34,6 +34,7 @@ class _ProductSettingsState extends State<ProductSettings> {
   FocusScopeNode? _focusNode;
   final _debouncer = Debouncer();
   final _stockThresholdController = TextEditingController();
+  final _pdfGroupTotalLabelController = TextEditingController();
   List<TextEditingController> _controllers = [];
 
   @override
@@ -44,13 +45,15 @@ class _ProductSettingsState extends State<ProductSettings> {
 
   @override
   void didChangeDependencies() {
-    _controllers = [_stockThresholdController];
+    _controllers = [_stockThresholdController, _pdfGroupTotalLabelController];
 
     _controllers
         .forEach((dynamic controller) => controller.removeListener(_onChanged));
 
     final viewModel = widget.viewModel;
-    final company = viewModel.state.company;
+    final company = viewModel.company;
+    _pdfGroupTotalLabelController.text =
+        company.settings.pdfGroupTotalLabel ?? '';
 
     _stockThresholdController.text = company.stockNotificationThreshold == 0
         ? ''
@@ -79,7 +82,8 @@ class _ProductSettingsState extends State<ProductSettings> {
   void _onChanged() {
     final company = widget.viewModel.company.rebuild((b) => b
       ..stockNotificationThreshold =
-          parseInt(_stockThresholdController.text.trim()));
+          parseInt(_stockThresholdController.text.trim())
+      ..settings.pdfGroupTotalLabel = _pdfGroupTotalLabelController.text);
     if (company != widget.viewModel.company) {
       _debouncer.run(() {
         widget.viewModel.onCompanyChanged(company);
@@ -250,6 +254,24 @@ class _ProductSettingsState extends State<ProductSettings> {
                 subtitle: Text(localization.defaultQuantityHelp),
                 onChanged: (value) => viewModel.onCompanyChanged(
                     company.rebuild((b) => b..defaultQuantity = value)),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: DecoratedFormField(
+                  keyboardType: TextInputType.text,
+                  controller: _pdfGroupTotalLabelController,
+                  label: reservationText(context, 'pdfGroupTotalLabel'),
+                  hint:
+                      reservationText(context, 'pdfGroupTotalLabelPlaceholder'),
+                  decoration: InputDecoration(
+                    labelText: reservationText(context, 'pdfGroupTotalLabel'),
+                    hintText: reservationText(
+                        context, 'pdfGroupTotalLabelPlaceholder'),
+                    helperText:
+                        reservationText(context, 'pdfGroupTotalLabelHelp'),
+                    helperMaxLines: 4,
+                  ),
+                ),
               ),
               SwitchListTile(
                 activeThumbColor: Theme.of(context).colorScheme.secondary,

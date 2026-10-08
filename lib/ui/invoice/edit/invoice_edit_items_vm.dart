@@ -2,6 +2,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:invoiceninja_flutter/ui/invoice/edit/bulk_line_items.dart';
 
 // Package imports:
 import 'package:flutter_redux/flutter_redux.dart';
@@ -63,8 +64,11 @@ class EntityEditItemsVM {
     required this.onChangedInvoiceItem,
     required this.onMovedInvoiceItem,
     this.onGroupInvoiceItem,
+    this.onBulkLineItems,
   });
 
+  final Function(Set<int>, BulkLineItemAction, double, String, String)?
+      onBulkLineItems;
   final AppState? state;
   final CompanyEntity? company;
   final InvoiceEntity? invoice;
@@ -81,6 +85,8 @@ class EntityEditItemsVM {
 
 class InvoiceEditItemsVM extends EntityEditItemsVM {
   InvoiceEditItemsVM({
+    Function(Set<int>, BulkLineItemAction, double, String, String)?
+        onBulkLineItems,
     AppState? state,
     CompanyEntity? company,
     InvoiceEntity? invoice,
@@ -94,6 +100,7 @@ class InvoiceEditItemsVM extends EntityEditItemsVM {
     Function(int, int)? onMovedInvoiceItem,
     Function(int, String)? onGroupInvoiceItem,
   }) : super(
+          onBulkLineItems: onBulkLineItems,
           state: state,
           company: company,
           invoice: invoice,
@@ -117,6 +124,14 @@ class InvoiceEditItemsVM extends EntityEditItemsVM {
     final invoice = state.invoiceUIState.editing;
 
     return InvoiceEditItemsVM(
+      onBulkLineItems: (indices, action, value, name, groupId) {
+        final current = store.state.invoiceUIState.editing!;
+        final items = bulkLineItems(current.lineItems.toList(), indices, action,
+            value: value, name: name, groupId: groupId);
+        store.dispatch(
+            UpdateInvoice(current.rebuild((b) => b..lineItems.replace(items))));
+        store.dispatch(EditInvoiceItem());
+      },
       state: state,
       company: company,
       invoice: invoice,
