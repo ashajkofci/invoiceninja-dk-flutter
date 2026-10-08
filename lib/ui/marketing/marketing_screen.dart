@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'package:invoiceninja_flutter/redux/quote/quote_actions.dart';
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_redux/flutter_redux.dart';
 import 'package:invoiceninja_flutter/constants.dart';
@@ -8,6 +8,7 @@ import 'package:invoiceninja_flutter/data/models/models.dart';
 import 'package:invoiceninja_flutter/data/web_client.dart';
 import 'package:invoiceninja_flutter/redux/app/app_actions.dart';
 import 'package:invoiceninja_flutter/redux/app/app_state.dart';
+import 'package:invoiceninja_flutter/redux/quote/quote_actions.dart';
 import 'package:invoiceninja_flutter/redux/settings/settings_actions.dart';
 
 String marketingTitle(BuildContext context) =>
@@ -49,6 +50,188 @@ Map<String, dynamic> marketingUpdate(
       },
       if (name == 'contact_id') ...{'consent': false, 'consent_source': ''},
     };
+
+String marketingQuoteLabel(
+  Map<String, dynamic> quote,
+  Map<String, dynamic> bootstrap,
+) {
+  final clients = {
+    for (final client in bootstrap['options']['clients'] as List<dynamic>)
+      client['id']: client['name'],
+  };
+  final client = clients[quote['client_id']]?.toString() ?? '';
+  return client.isEmpty
+      ? quote['name'].toString()
+      : '${quote['name']} · $client';
+}
+
+List<Map<String, dynamic>> marketingQuoteOptions(
+  Map<String, dynamic> bootstrap, {
+  String search = '',
+  String clientId = '',
+}) {
+  final query = search.trim().toLowerCase();
+  final quotes = (bootstrap['options']['quotes'] as List<dynamic>)
+      .map((quote) => Map<String, dynamic>.from(quote))
+      .toList()
+      .reversed;
+  return quotes
+      .where(
+        (quote) =>
+            (clientId.isEmpty || quote['client_id'] == clientId) &&
+            (query.isEmpty ||
+                marketingQuoteLabel(quote, bootstrap)
+                    .toLowerCase()
+                    .contains(query)),
+      )
+      .toList();
+}
+
+class MarketingQuotePicker extends StatefulWidget {
+  const MarketingQuotePicker({
+    super.key,
+    required this.bootstrap,
+    required this.selectedId,
+    required this.label,
+    required this.emptyLabel,
+    required this.onChanged,
+    this.clientId = '',
+    this.enabled = true,
+  });
+
+  final Map<String, dynamic> bootstrap;
+  final String selectedId;
+  final String clientId;
+  final String label;
+  final String emptyLabel;
+  final bool enabled;
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<MarketingQuotePicker> createState() => _MarketingQuotePickerState();
+}
+
+class _MarketingQuotePickerState extends State<MarketingQuotePicker> {
+  final SearchController _controller = SearchController();
+  String _selectedId = '';
+
+  Map<String, dynamic>? get _selectedQuote {
+    for (final quote in marketingQuoteOptions(
+      widget.bootstrap,
+      clientId: widget.clientId,
+    )) {
+      if (quote['id'].toString() == _selectedId) {
+        return quote;
+      }
+    }
+    return null;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _syncSelection();
+  }
+
+  @override
+  void didUpdateWidget(covariant MarketingQuotePicker oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedId != _selectedId ||
+        widget.bootstrap != oldWidget.bootstrap ||
+        widget.clientId != oldWidget.clientId) {
+      _syncSelection();
+    }
+  }
+
+  void _syncSelection() {
+    _selectedId = widget.selectedId;
+    final selected = _selectedQuote;
+    _controller.text =
+        selected == null ? '' : marketingQuoteLabel(selected, widget.bootstrap);
+  }
+
+  void _clear() {
+    _selectedId = '';
+    _controller.clear();
+    widget.onChanged('');
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SearchAnchor.bar(
+        searchController: _controller,
+        enabled: widget.enabled,
+        barHintText: widget.label,
+        viewHintText: widget.label,
+        barLeading: const Icon(Icons.request_quote_outlined),
+        barTrailing: [
+          IconButton(
+            tooltip: MaterialLocalizations.of(context).cancelButtonLabel,
+            onPressed: widget.enabled ? _clear : null,
+            icon: const Icon(Icons.clear),
+          ),
+        ],
+        barElevation: const WidgetStatePropertyAll(0),
+        barBackgroundColor: WidgetStatePropertyAll(
+          Theme.of(context).colorScheme.surface,
+        ),
+        barSide: WidgetStatePropertyAll(
+          BorderSide(color: Theme.of(context).colorScheme.outline),
+        ),
+        barShape: const WidgetStatePropertyAll(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
+        ),
+        onChanged: (value) {
+          final selected = _selectedQuote;
+          if (selected != null &&
+              value != marketingQuoteLabel(selected, widget.bootstrap)) {
+            _selectedId = '';
+            widget.onChanged('');
+          }
+        },
+        suggestionsBuilder: (context, controller) {
+          final quotes = marketingQuoteOptions(
+            widget.bootstrap,
+            search: controller.text,
+            clientId: widget.clientId,
+          );
+          if (quotes.isEmpty) {
+            return [
+              ListTile(
+                enabled: false,
+                leading: const Icon(Icons.search_off_outlined),
+                title: Text(widget.emptyLabel),
+              ),
+            ];
+          }
+          return quotes.map((quote) {
+            final name = quote['name'].toString();
+            final label = marketingQuoteLabel(quote, widget.bootstrap);
+            final client =
+                label == name ? '' : label.substring(name.length + 3);
+            return ListTile(
+              leading: const Icon(Icons.request_quote_outlined),
+              title: Text(name),
+              subtitle: client.isEmpty ? null : Text(client),
+              selected: quote['id'].toString() == _selectedId,
+              onTap: () {
+                final id = quote['id'].toString();
+                _selectedId = id;
+                controller.closeView(label);
+                widget.onChanged(id);
+              },
+            );
+          });
+        },
+      );
+}
 
 String marketingQuoteActionTitle(BuildContext context) =>
     {
@@ -137,6 +320,7 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
   List<dynamic>? _allOpportunities;
   bool _board = true, _cacheDirty = false, _viewInitialized = false;
   String _tab = 'opportunities',
+      _activityView = 'future',
       _search = '',
       _filter = '',
       _opportunity = '',
@@ -153,7 +337,28 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
 
   bool _openedQuote = false;
   final Set<String> _selected = {};
-  String text(String key) => _bootstrap?['labels'][key]?.toString() ?? key;
+  String text(String key) {
+    final label = _bootstrap?['labels'][key]?.toString();
+    if (label != null) {
+      return label;
+    }
+    return {
+          'en': {
+            'future': 'Future activities',
+            'logs': 'Activity log',
+          },
+          'fr': {
+            'future': 'Activités à venir',
+            'logs': 'Journal des activités',
+          },
+          'de': {
+            'future': 'Künftige Aktivitäten',
+            'logs': 'Aktivitätsprotokoll',
+          },
+        }[_language]?[key] ??
+        key;
+  }
+
   bool allowed(String key) => _bootstrap?['permissions'][key] == true;
   @override
   void didChangeDependencies() {
@@ -193,6 +398,69 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
     return client.post(url, credentials.token, data: jsonEncode(data));
   }
 
+  String _activityQuery({required int page, String? state}) =>
+      Uri(queryParameters: {
+        'page': '$page',
+        if (_worklist.isNotEmpty) 'worklist': _worklist,
+        if (_search.isNotEmpty) 'q': _search,
+        if (_opportunity.isNotEmpty) 'opportunity_id': _opportunity,
+        if (state != null) 'state': state,
+      }).query;
+
+  Future<List<dynamic>> _allActivitiesForState(String state) async {
+    final activities = <dynamic>[];
+    var page = 1;
+    var lastPage = 1;
+    do {
+      final result = await api(
+        'GET',
+        'activities?${_activityQuery(page: page, state: state)}',
+      );
+      activities.addAll(result['data'] as List<dynamic>);
+      lastPage = result['last_page'] as int? ?? 1;
+      page++;
+    } while (page <= lastPage);
+    return activities;
+  }
+
+  Future<Map<String, dynamic>> _loadActivities() async {
+    if (_activityView == 'future') {
+      return await api(
+        'GET',
+        'activities?${_activityQuery(page: _page, state: 'pending')}',
+      );
+    }
+
+    if (_filter.isNotEmpty) {
+      return await api(
+        'GET',
+        'activities?${_activityQuery(page: _page, state: _filter)}',
+      );
+    }
+
+    final groups = await Future.wait([
+      for (final state in ['sent', 'failed', 'sending', 'done', 'cancelled'])
+        _allActivitiesForState(state),
+    ]);
+    final activities = groups.expand((group) => group).toList()
+      ..sort((a, b) {
+        final aDate = DateTime.tryParse(
+              a['updated_at']?.toString() ?? '',
+            )?.millisecondsSinceEpoch ??
+            0;
+        final bDate = DateTime.tryParse(
+              b['updated_at']?.toString() ?? '',
+            )?.millisecondsSinceEpoch ??
+            0;
+        return bDate.compareTo(aDate);
+      });
+    final lastPage = ((activities.length + 49) ~/ 50).clamp(1, 1000000);
+    return {
+      'data': activities.skip((_page - 1) * 50).take(50).toList(),
+      'last_page': lastPage,
+    };
+  }
+
   Future<void> _load({bool refresh = false}) async {
     refresh = refresh || _cacheDirty;
     final generation = ++_generation;
@@ -225,10 +493,7 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
           'worklist': _worklist,
           'q': _search,
           'archived': _archived ? '1' : '0',
-          if (_tab == 'opportunities')
-            'stage_id': _filter
-          else
-            'state': _filter,
+          if (_tab == 'opportunities') 'stage_id': _filter,
           'opportunity_id': _opportunity,
         },
       ).query;
@@ -249,7 +514,7 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
               'last_page':
                   _board ? 1 : ((filtered.length + 49) ~/ 50).clamp(1, 1000000),
             }
-          : await api('GET', '$_tab?$query');
+          : await _loadActivities();
       if (mounted && generation == _generation)
         setState(() {
           _bootstrap = Map<String, dynamic>.from(bootstrap['data']);
@@ -289,7 +554,7 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
       });
       await _load();
       if (mounted && _bootstrap != null) {
-        await _edit(record);
+        await _edit(record: record);
       }
     } catch (e) {
       if (mounted) {
@@ -305,6 +570,9 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
   void _showWork(String value) {
     setState(() {
       _tab = value == 'due' ? 'activities' : 'opportunities';
+      if (value == 'due') {
+        _activityView = 'future';
+      }
       _worklist = value;
       _opportunity = '';
       _filter = '';
@@ -319,6 +587,7 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
   Future<void> _quickFollowup(Map<String, dynamic> record) async {
     setState(() {
       _tab = 'activities';
+      _activityView = 'future';
       _opportunity = record['id'];
       _filter = 'pending';
       _worklist = '';
@@ -350,27 +619,29 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
     }
   }
 
-  Future<void> _edit([Map<String, dynamic>? record]) async {
-    final fields = _bootstrap!['fields'][_tab] as List<dynamic>;
+  Future<void> _edit({Map<String, dynamic>? record, String? resource}) async {
+    final editorResource = resource ?? _tab;
+    final fields = _bootstrap!['fields'][editorResource] as List<dynamic>;
     final values = record ??
         marketingInitial(fields, {
           ...Map<String, dynamic>.from(_bootstrap!['defaults']),
           'opportunity_id': _opportunity,
           'kind': 'task',
-          if (_tab == 'activities') 'title': text('add_followup'),
+          if (editorResource == 'activities') 'title': text('add_followup'),
           'due_at': DateTime.now().toUtc().toIso8601String().substring(0, 16),
         });
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (context) => _MarketingEditor(
-        title: '${text(record == null ? 'new' : 'edit')} · ${text(_tab)}',
+        title:
+            '${text(record == null ? 'new' : 'edit')} · ${text(editorResource)}',
         fields: fields,
         values: values,
         bootstrap: _bootstrap!,
         save: (updated) => api(
           record == null ? 'POST' : 'PUT',
-          '$_tab${record == null ? '' : '/${record['id']}'}',
+          '$editorResource${record == null ? '' : '/${record['id']}'}',
           updated,
         ),
       ),
@@ -533,21 +804,44 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
     return id?.toString() ?? '';
   }
 
-  Widget _sectionTitle(String title, {IconData? icon}) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Row(
-          children: [
-            if (icon != null) ...[
-              Icon(icon,
-                  size: 20, color: Theme.of(context).colorScheme.primary),
-              const SizedBox(width: 8),
-            ],
-            Expanded(
-              child:
-                  Text(title, style: Theme.of(context).textTheme.titleMedium),
-            ),
-          ],
-        ),
+  Map<String, dynamic>? _opportunityForActivity(Map<String, dynamic> record) {
+    final opportunityId = record['opportunity_id']?.toString();
+    for (final raw in _allOpportunities ?? const <dynamic>[]) {
+      final opportunity = Map<String, dynamic>.from(raw);
+      if (opportunity['id']?.toString() == opportunityId) {
+        return opportunity;
+      }
+    }
+    return null;
+  }
+
+  Widget _activityDetails(Map<String, dynamic> record) {
+    final opportunity = _opportunityForActivity(record);
+    if (opportunity == null) {
+      return const SizedBox.shrink();
+    }
+    final quoteId = opportunity['quote_id']?.toString() ?? '';
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            opportunity['title']?.toString() ?? '',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          Text(optionName('clients', opportunity['client_id'])),
+          if (quoteId.isNotEmpty) Text(optionName('quotes', quoteId)),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String title, {IconData? icon}) => ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: icon == null ? null : Icon(icon),
+        title: Text(title),
+        titleTextStyle: Theme.of(context).textTheme.titleMedium,
       );
 
   Widget _nextAction(dynamic next) => Row(
@@ -698,8 +992,28 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
               '${record['amount']} ${optionName('currencies', record['currency_id'])}',
               style: Theme.of(context).textTheme.titleSmall,
             ),
+            if ((record['expected_close'] ?? '').toString().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                '${text('expected_close')}: ${record['expected_close']}',
+              ),
+            ],
             const SizedBox(height: 12),
             _nextAction(next),
+            if (next != null && allowed('edit'))
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: _busy
+                      ? null
+                      : () => _edit(
+                            record: Map<String, dynamic>.from(next),
+                            resource: 'activities',
+                          ),
+                  icon: const Icon(Icons.edit_calendar_outlined, size: 18),
+                  label: Text(text('edit')),
+                ),
+              ),
             if (allowed('edit'))
               DropdownButtonFormField<String>(
                 key: ValueKey(
@@ -730,7 +1044,7 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
               children: [
                 if (allowed('edit'))
                   TextButton(
-                    onPressed: _busy ? null : () => _edit(record),
+                    onPressed: _busy ? null : () => _edit(record: record),
                     child: Text(text('edit')),
                   ),
                 TextButton(
@@ -739,6 +1053,7 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
                       : () {
                           setState(() {
                             _tab = 'activities';
+                            _activityView = 'logs';
                             _filter = '';
                             _worklist = '';
                             _opportunity = record['id'];
@@ -803,71 +1118,76 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
                       onWillAcceptWithDetails: (_) => allowed('edit') && !_busy,
                       onAcceptWithDetails: (details) =>
                           _moveStage(details.data, stage['id']),
-                      builder: (context, candidates, rejected) => Container(
+                      builder: (context, candidates, rejected) => SizedBox(
                         width: 320,
-                        margin: const EdgeInsets.only(right: 12),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color:
-                              Theme.of(context).colorScheme.surfaceContainerLow,
-                          border: Border.all(
-                            color: candidates.isEmpty
-                                ? Theme.of(context).dividerColor
-                                : Theme.of(context).colorScheme.primary,
+                        child: Card.outlined(
+                          margin: const EdgeInsets.only(right: 12),
+                          shape: RoundedRectangleBorder(
+                            side: BorderSide(
+                              color: candidates.isEmpty
+                                  ? Theme.of(context).colorScheme.outlineVariant
+                                  : Theme.of(context).colorScheme.primary,
+                              width: candidates.isEmpty ? 1 : 2,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
                               children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        stage['name'],
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium,
+                                      ),
+                                    ),
+                                    Badge(label: Text('${cards.length}')),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
                                 Expanded(
-                                  child: Text(
-                                    stage['name'],
-                                    style:
-                                        Theme.of(context).textTheme.titleMedium,
+                                  child: ListView(
+                                    children: [
+                                      for (final raw in cards)
+                                        Builder(
+                                          builder: (context) {
+                                            final record =
+                                                Map<String, dynamic>.from(
+                                              raw,
+                                            );
+                                            final card =
+                                                _kanbanCard(record, stage);
+                                            if (!allowed('edit') || _busy) {
+                                              return card;
+                                            }
+                                            return LongPressDraggable<
+                                                Map<String, dynamic>>(
+                                              data: record,
+                                              feedback: Material(
+                                                elevation: 6,
+                                                child: SizedBox(
+                                                  width: 280,
+                                                  child: Text(record['title']),
+                                                ),
+                                              ),
+                                              childWhenDragging: Opacity(
+                                                opacity: 0.4,
+                                                child: card,
+                                              ),
+                                              child: card,
+                                            );
+                                          },
+                                        ),
+                                    ],
                                   ),
                                 ),
-                                Badge(label: Text('${cards.length}')),
                               ],
                             ),
-                            const SizedBox(height: 12),
-                            Expanded(
-                              child: ListView(
-                                children: [
-                                  for (final raw in cards)
-                                    Builder(
-                                      builder: (context) {
-                                        final record =
-                                            Map<String, dynamic>.from(
-                                          raw,
-                                        );
-                                        final card = _kanbanCard(record, stage);
-                                        if (!allowed('edit') || _busy) {
-                                          return card;
-                                        }
-                                        return LongPressDraggable<
-                                            Map<String, dynamic>>(
-                                          data: record,
-                                          feedback: Material(
-                                            elevation: 6,
-                                            child: SizedBox(
-                                              width: 280,
-                                              child: Text(record['title']),
-                                            ),
-                                          ),
-                                          childWhenDragging: Opacity(
-                                            opacity: 0.4,
-                                            child: card,
-                                          ),
-                                          child: card,
-                                        );
-                                      },
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     );
@@ -949,6 +1269,7 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
                     : (values) {
                         setState(() {
                           _tab = values.first;
+                          _activityView = 'future';
                           _worklist = '';
                           _opportunity = '';
                           _filter = '';
@@ -958,44 +1279,85 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
                       },
               ),
             ),
+            if (_tab == 'activities') ...[
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: SegmentedButton<String>(
+                  segments: [
+                    ButtonSegment(
+                      value: 'future',
+                      icon: const Icon(Icons.event_upcoming_outlined),
+                      label: Text(text('future')),
+                    ),
+                    ButtonSegment(
+                      value: 'logs',
+                      icon: const Icon(Icons.receipt_long_outlined),
+                      label: Text(text('logs')),
+                    ),
+                  ],
+                  selected: {_activityView},
+                  onSelectionChanged: _busy
+                      ? null
+                      : (values) {
+                          setState(() {
+                            _activityView = values.first;
+                            _filter = '';
+                            _worklist = '';
+                            _page = 1;
+                          });
+                          _load();
+                        },
+                ),
+              ),
+            ],
             const SizedBox(height: 20),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                FilterChip(
-                  label: Text(
-                    '${text('due_work')} · ${bootstrap['workload']?['due'] ?? 0}',
-                  ),
-                  selected: _worklist == 'due',
-                  onSelected: _busy ? null : (_) => _showWork('due'),
+            Card.outlined(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    FilterChip(
+                      avatar: const Icon(Icons.schedule_outlined),
+                      label: Text(
+                        '${text('due_work')} · ${bootstrap['workload']?['due'] ?? 0}',
+                      ),
+                      selected: _worklist == 'due',
+                      onSelected: _busy ? null : (_) => _showWork('due'),
+                    ),
+                    FilterChip(
+                      avatar: const Icon(Icons.notification_important_outlined),
+                      label: Text(
+                        '${text('needs_followup')} · ${bootstrap['workload']?['needs_followup'] ?? 0}',
+                      ),
+                      selected: _worklist == 'needs_followup',
+                      onSelected:
+                          _busy ? null : (_) => _showWork('needs_followup'),
+                    ),
+                    if (_worklist.isNotEmpty || _opportunity.isNotEmpty)
+                      ActionChip(
+                        avatar: const Icon(Icons.clear_all),
+                        label: Text(text('show_all')),
+                        onPressed: _busy
+                            ? null
+                            : () {
+                                setState(() {
+                                  _worklist = '';
+                                  _opportunity = '';
+                                  _filter = '';
+                                });
+                                _load();
+                              },
+                      ),
+                  ],
                 ),
-                FilterChip(
-                  label: Text(
-                    '${text('needs_followup')} · ${bootstrap['workload']?['needs_followup'] ?? 0}',
-                  ),
-                  selected: _worklist == 'needs_followup',
-                  onSelected: _busy ? null : (_) => _showWork('needs_followup'),
-                ),
-                if (_worklist.isNotEmpty || _opportunity.isNotEmpty)
-                  ActionChip(
-                    label: Text(text('show_all')),
-                    onPressed: _busy
-                        ? null
-                        : () {
-                            setState(() {
-                              _worklist = '';
-                              _opportunity = '';
-                              _filter = '';
-                            });
-                            _load();
-                          },
-                  ),
-              ],
+              ),
             ),
             if (_tab == 'opportunities' && allowed('create')) ...[
               const SizedBox(height: 20),
-              Card.filled(
+              Card.outlined(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -1007,28 +1369,14 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
                       ),
                       Text(text('quote_start_help')),
                       const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        initialValue: _quoteChoice,
-                        decoration: InputDecoration(
-                          labelText: text('quote_id'),
-                          border: const OutlineInputBorder(),
-                        ),
-                        items: [
-                          const DropdownMenuItem(value: '', child: Text('—')),
-                          ...(bootstrap['options']['quotes'] as List).map(
-                            (q) => DropdownMenuItem<String>(
-                              value: q['id'],
-                              child: Text(
-                                '${q['name']} · ${optionName('clients', q['client_id'])}',
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                        ],
-                        onChanged: _busy
-                            ? null
-                            : (v) => setState(() => _quoteChoice = v ?? ''),
+                      MarketingQuotePicker(
+                        bootstrap: bootstrap,
+                        selectedId: _quoteChoice,
+                        label: text('quote_id'),
+                        emptyLabel: text('empty'),
+                        enabled: !_busy,
+                        onChanged: (value) =>
+                            setState(() => _quoteChoice = value),
                       ),
                       const SizedBox(height: 12),
                       FilledButton.icon(
@@ -1069,155 +1417,190 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
                 ),
             ],
             const SizedBox(height: 24),
-            TextField(
-              controller: _searchController,
-              onChanged: _tab == 'opportunities'
-                  ? (value) {
-                      _search = value;
-                      _page = 1;
-                      _load();
-                    }
-                  : null,
-              decoration: InputDecoration(
-                labelText: text('search'),
-                suffixIcon: const Icon(Icons.search),
-              ),
-              onSubmitted: (value) {
-                _search = value;
-                _page = 1;
-                _load();
-              },
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              key: ValueKey('$_tab-$_filter-filter'),
-              isExpanded: true,
-              initialValue: _filter,
-              decoration: InputDecoration(
-                labelText: text(_tab == 'opportunities' ? 'stage_id' : 'state'),
-              ),
-              items: [
-                DropdownMenuItem(value: '', child: Text(text('all'))),
-                if (_tab == 'opportunities')
-                  ...(bootstrap['config']['stages'] as List).map(
-                    (s) => DropdownMenuItem<String>(
-                      value: s['id'],
-                      child: Text(s['name']),
-                    ),
-                  )
-                else
-                  ...[
-                    'pending',
-                    'sent',
-                    'failed',
-                    'sending',
-                    'done',
-                    'cancelled',
-                  ].map(
-                    (s) => DropdownMenuItem(value: s, child: Text(text(s))),
-                  ),
-              ],
-              onChanged: _busy
-                  ? null
-                  : (v) {
-                      setState(() {
-                        _filter = v ?? '';
+            Card.outlined(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SearchBar(
+                      controller: _searchController,
+                      hintText: text('search'),
+                      leading: const Icon(Icons.search),
+                      trailing: [
+                        if (_search.isNotEmpty)
+                          IconButton(
+                            tooltip: MaterialLocalizations.of(context)
+                                .cancelButtonLabel,
+                            onPressed: _busy
+                                ? null
+                                : () {
+                                    _searchController.clear();
+                                    _search = '';
+                                    _page = 1;
+                                    _load();
+                                  },
+                            icon: const Icon(Icons.clear),
+                          ),
+                      ],
+                      elevation: const WidgetStatePropertyAll(0),
+                      side: WidgetStatePropertyAll(
+                        BorderSide(
+                            color: Theme.of(context).colorScheme.outline),
+                      ),
+                      onChanged: _tab == 'opportunities'
+                          ? (value) {
+                              _search = value;
+                              _page = 1;
+                              _load();
+                            }
+                          : null,
+                      onSubmitted: (value) {
+                        _search = value;
                         _page = 1;
-                      });
-                      _load();
-                    },
-            ),
-            if (_tab == 'opportunities')
-              CheckboxListTile(
-                title: Text(text('archived')),
-                value: _archived,
-                onChanged: _busy
-                    ? null
-                    : (v) {
-                        setState(() {
-                          _archived = v ?? false;
-                          _page = 1;
-                        });
                         _load();
                       },
-              ),
-            if (_tab == 'activities')
-              DropdownButtonFormField<String>(
-                key: ValueKey('opportunity-$_opportunity'),
-                isExpanded: true,
-                initialValue:
-                    (bootstrap['options']['opportunities'] as List).any(
-                  (o) => o['id'] == _opportunity,
-                )
-                        ? _opportunity
-                        : '',
-                decoration: InputDecoration(labelText: text('opportunity_id')),
-                items: [
-                  DropdownMenuItem(value: '', child: Text(text('all'))),
-                  ...(bootstrap['options']['opportunities'] as List).map(
-                    (o) => DropdownMenuItem<String>(
-                      value: o['id'],
-                      child: Text(o['name']),
                     ),
-                  ),
-                ],
-                onChanged: _busy
-                    ? null
-                    : (v) {
-                        setState(() {
-                          _opportunity = v ?? '';
-                          _page = 1;
-                        });
-                        _load();
-                      },
-              ),
-            if (_tab == 'opportunities' && !_board && allowed('edit'))
-              Wrap(
-                spacing: 12,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  Text('${text('selected')}: ${_selected.length}'),
-                  TextButton(
-                    onPressed:
-                        _busy || _selected.isEmpty ? null : () => _enroll(null),
-                    child: Text(text('enroll')),
-                  ),
-                  TextButton(
-                    onPressed: () => setState(() => _selected.clear()),
-                    child: Text(text('cancel')),
-                  ),
-                ],
-              ),
-            const SizedBox(height: 16),
-            if (_tab == 'opportunities')
-              Align(
-                alignment: Alignment.centerLeft,
-                child: SegmentedButton<bool>(
-                  segments: [
-                    ButtonSegment(
-                      value: true,
-                      icon: const Icon(Icons.view_kanban_outlined),
-                      label: Text(text('board')),
-                    ),
-                    ButtonSegment(
-                      value: false,
-                      icon: const Icon(Icons.view_list_outlined),
-                      label: Text(text('list')),
-                    ),
+                    const SizedBox(height: 12),
+                    if (_tab == 'opportunities' ||
+                        (_tab == 'activities' && _activityView == 'logs'))
+                      DropdownButtonFormField<String>(
+                        key: ValueKey('$_tab-$_activityView-$_filter-filter'),
+                        isExpanded: true,
+                        initialValue: _filter,
+                        decoration: InputDecoration(
+                          labelText: text(
+                              _tab == 'opportunities' ? 'stage_id' : 'state'),
+                        ),
+                        items: [
+                          DropdownMenuItem(value: '', child: Text(text('all'))),
+                          if (_tab == 'opportunities')
+                            ...(bootstrap['config']['stages'] as List).map(
+                              (s) => DropdownMenuItem<String>(
+                                value: s['id'],
+                                child: Text(s['name']),
+                              ),
+                            )
+                          else
+                            ...[
+                              'sent',
+                              'failed',
+                              'sending',
+                              'done',
+                              'cancelled',
+                            ].map(
+                              (s) => DropdownMenuItem(
+                                  value: s, child: Text(text(s))),
+                            ),
+                        ],
+                        onChanged: _busy
+                            ? null
+                            : (v) {
+                                setState(() {
+                                  _filter = v ?? '';
+                                  _page = 1;
+                                });
+                                _load();
+                              },
+                      ),
+                    if (_tab == 'opportunities')
+                      CheckboxListTile(
+                        title: Text(text('archived')),
+                        value: _archived,
+                        onChanged: _busy
+                            ? null
+                            : (v) {
+                                setState(() {
+                                  _archived = v ?? false;
+                                  _page = 1;
+                                });
+                                _load();
+                              },
+                      ),
+                    if (_tab == 'activities')
+                      DropdownButtonFormField<String>(
+                        key: ValueKey('opportunity-$_opportunity'),
+                        isExpanded: true,
+                        initialValue:
+                            (bootstrap['options']['opportunities'] as List).any(
+                          (o) => o['id'] == _opportunity,
+                        )
+                                ? _opportunity
+                                : '',
+                        decoration:
+                            InputDecoration(labelText: text('opportunity_id')),
+                        items: [
+                          DropdownMenuItem(value: '', child: Text(text('all'))),
+                          ...(bootstrap['options']['opportunities'] as List)
+                              .map(
+                            (o) => DropdownMenuItem<String>(
+                              value: o['id'],
+                              child: Text(o['name']),
+                            ),
+                          ),
+                        ],
+                        onChanged: _busy
+                            ? null
+                            : (v) {
+                                setState(() {
+                                  _opportunity = v ?? '';
+                                  _page = 1;
+                                });
+                                _load();
+                              },
+                      ),
+                    if (_tab == 'opportunities' && !_board && allowed('edit'))
+                      Wrap(
+                        spacing: 12,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text('${text('selected')}: ${_selected.length}'),
+                          TextButton(
+                            onPressed: _busy || _selected.isEmpty
+                                ? null
+                                : () => _enroll(null),
+                            child: Text(text('enroll')),
+                          ),
+                          TextButton(
+                            onPressed: () => setState(() => _selected.clear()),
+                            child: Text(text('cancel')),
+                          ),
+                        ],
+                      ),
+                    const SizedBox(height: 16),
+                    if (_tab == 'opportunities')
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: SegmentedButton<bool>(
+                          segments: [
+                            ButtonSegment(
+                              value: true,
+                              icon: const Icon(Icons.view_kanban_outlined),
+                              label: Text(text('board')),
+                            ),
+                            ButtonSegment(
+                              value: false,
+                              icon: const Icon(Icons.view_list_outlined),
+                              label: Text(text('list')),
+                            ),
+                          ],
+                          selected: {_board},
+                          onSelectionChanged: _busy
+                              ? null
+                              : (values) {
+                                  setState(() {
+                                    _board = values.first;
+                                    _page = 1;
+                                    _selected.clear();
+                                  });
+                                  _load();
+                                },
+                        ),
+                      ),
                   ],
-                  selected: {_board},
-                  onSelectionChanged: _busy
-                      ? null
-                      : (values) {
-                          setState(() {
-                            _board = values.first;
-                            _page = 1;
-                            _selected.clear();
-                          });
-                          _load();
-                        },
                 ),
               ),
+            ),
             if (_records.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 40),
@@ -1296,8 +1679,10 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
                             ),
                             const SizedBox(height: 12),
                             _nextAction(record['next_activity']),
-                          ] else
+                          ] else ...[
                             Text('${record['due_at']} UTC'),
+                            _activityDetails(record),
+                          ],
                           if ((record['notes'] ?? '')
                               .toString()
                               .isNotEmpty) ...[
@@ -1320,7 +1705,9 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
                                   (_tab == 'opportunities' ||
                                       record['state'] == 'pending'))
                                 TextButton(
-                                  onPressed: _busy ? null : () => _edit(record),
+                                  onPressed: _busy
+                                      ? null
+                                      : () => _edit(record: record),
                                   child: Text(text('edit')),
                                 ),
                               if (_tab == 'opportunities') ...[
@@ -1343,6 +1730,7 @@ class _MarketingWorkspaceState extends State<_MarketingWorkspace> {
                                       : () {
                                           setState(() {
                                             _tab = 'activities';
+                                            _activityView = 'logs';
                                             _filter = '';
                                             _opportunity = record['id'];
                                             _page = 1;
@@ -1677,23 +2065,33 @@ class MarketingFields extends StatelessWidget {
                 )
                 .toList();
             final selected = value?.toString() ?? '';
-            child = DropdownButtonFormField<String>(
-              isExpanded: true,
-              decoration: InputDecoration(labelText: text(name)),
-              initialValue: filtered.any((o) => o['id'].toString() == selected)
-                  ? selected
-                  : '',
-              items: [
-                const DropdownMenuItem(value: '', child: Text('—')),
-                ...filtered.map(
-                  (o) => DropdownMenuItem<String>(
-                    value: o['id'].toString(),
-                    child: Text(o['name'].toString()),
-                  ),
-                ),
-              ],
-              onChanged: update,
-            );
+            child = source == 'quotes'
+                ? MarketingQuotePicker(
+                    bootstrap: bootstrap,
+                    selectedId: selected,
+                    clientId: values['client_id']?.toString() ?? '',
+                    label: text(name),
+                    emptyLabel: text('empty'),
+                    onChanged: update,
+                  )
+                : DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    decoration: InputDecoration(labelText: text(name)),
+                    initialValue:
+                        filtered.any((o) => o['id'].toString() == selected)
+                            ? selected
+                            : '',
+                    items: [
+                      const DropdownMenuItem(value: '', child: Text('—')),
+                      ...filtered.map(
+                        (o) => DropdownMenuItem<String>(
+                          value: o['id'].toString(),
+                          child: Text(o['name'].toString()),
+                        ),
+                      ),
+                    ],
+                    onChanged: update,
+                  );
           } else if (type == 'date' || type == 'datetime-local') {
             child = TextFormField(
               key: ValueKey('$name-$value'),

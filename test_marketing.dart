@@ -3,6 +3,41 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:invoiceninja_flutter/ui/marketing/marketing_screen.dart';
 
 void main() {
+  test('quote picker shows newest quotes first and searches quote or client',
+      () {
+    final bootstrap = <String, dynamic>{
+      'options': {
+        'clients': [
+          {'id': 'c1', 'name': 'Acme'},
+          {'id': 'c2', 'name': 'Beta Labs'},
+        ],
+        'quotes': [
+          {'id': 'q1', 'name': 'QUOTE-001', 'client_id': 'c1'},
+          {'id': 'q2', 'name': 'QUOTE-002', 'client_id': 'c2'},
+          {'id': 'q3', 'name': 'QUOTE-003', 'client_id': 'c1'},
+        ],
+      },
+    };
+
+    expect(
+      marketingQuoteOptions(bootstrap).map((quote) => quote['id']),
+      ['q3', 'q2', 'q1'],
+    );
+    expect(
+      marketingQuoteOptions(bootstrap, search: 'beta').single['id'],
+      'q2',
+    );
+    expect(
+      marketingQuoteOptions(bootstrap, search: '003').single['id'],
+      'q3',
+    );
+    expect(
+      marketingQuoteOptions(bootstrap, clientId: 'c1')
+          .map((quote) => quote['id']),
+      ['q3', 'q1'],
+    );
+  });
+
   test('cached Kanban filtering includes opportunities beyond page one', () {
     final rows = List.generate(
       65,
