@@ -17,6 +17,7 @@ import 'package:invoiceninja_flutter/redux/app/app_state.dart';
 import 'package:invoiceninja_flutter/redux/product/product_selectors.dart';
 import 'package:invoiceninja_flutter/redux/ui/pref_state.dart';
 import 'package:invoiceninja_flutter/ui/app/app_border.dart';
+import 'package:invoiceninja_flutter/ui/app/autocomplete_options_overlay.dart';
 import 'package:invoiceninja_flutter/ui/app/entity_dropdown.dart';
 import 'package:invoiceninja_flutter/ui/app/form_card.dart';
 import 'package:invoiceninja_flutter/ui/app/forms/custom_field.dart';
@@ -1109,6 +1110,7 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                                     data: theme,
                                     child: Align(
                                       alignment: Alignment.topLeft,
+                                      heightFactor: 1,
                                       child: Material(
                                         elevation: 4,
                                         child: AppBorder(
@@ -1186,18 +1188,8 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                                       ),
                                     ),
                                   );
-                                  return LayoutBuilder(
-                                    builder: (context, constraints) {
-                                      final width = constraints.maxWidth < 500
-                                          ? 500.0
-                                          : constraints.maxWidth;
-                                      return OverflowBox(
-                                        alignment: Alignment.topLeft,
-                                        minWidth: width,
-                                        maxWidth: width,
-                                        child: optionsView,
-                                      );
-                                    },
+                                  return AutocompleteOptionsOverlay(
+                                    child: optionsView,
                                   );
                                 },
                               ),
