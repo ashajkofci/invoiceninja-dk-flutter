@@ -17,6 +17,7 @@ abstract class LocaleCodeAware {
 mixin LocalizationsProvider on LocaleCodeAware {
   static final Map<String, Map<String, String>> _localizedValues = {
     'en': {
+      'stats': 'Stats',
       'marketing': 'Marketing & Sales',
       // STARTER: lang key - do not remove comment
       'invoice_outstanding_tasks': 'Invoice Outstanding Tasks',
@@ -2818,6 +2819,7 @@ mixin LocalizationsProvider on LocaleCodeAware {
       'load_color_theme': 'Load Color Theme',
     },
     'fr': {
+      'stats': 'Statistiques',
       'marketing': 'Marketing et ventes',
       'net_cost': 'Net Cost',
       'skip_automatic_emails': 'Skip Automatic Emails',
@@ -5703,6 +5705,7 @@ mixin LocalizationsProvider on LocaleCodeAware {
       'load_color_theme': 'Charger le thème de couleur',
     },
     'de': {
+      'stats': 'Statistik',
       'marketing': 'Marketing & Vertrieb',
       'net_cost': 'Net Cost',
       'skip_automatic_emails': 'Skip Automatic Emails',
@@ -8707,6 +8710,8 @@ mixin LocalizationsProvider on LocaleCodeAware {
   String get editClient => _localizedValues[localeCode]!['edit_client']!;
 
   String get editProduct => _localizedValues[localeCode]!['edit_product']!;
+
+  String get stats => _localizedValues[localeCode]!['stats']!;
 
   String get editInvoice => _localizedValues[localeCode]!['edit_invoice']!;
 

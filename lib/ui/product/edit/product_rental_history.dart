@@ -11,10 +11,12 @@ class ProductRentalHistory extends StatefulWidget {
     Key? key,
     required this.state,
     required this.productId,
+    this.onOpenInvoice,
   }) : super(key: key);
 
   final AppState state;
   final String productId;
+  final ValueChanged<String?>? onOpenInvoice;
 
   @override
   State<ProductRentalHistory> createState() => _ProductRentalHistoryState();
@@ -201,11 +203,18 @@ class _ProductRentalHistoryState extends State<ProductRentalHistory> {
                       '${reservationText(context, 'totalPrice')}: ${_money(context, rental['total_price'], rental['currency_id'])}',
                     ),
                     isThreeLine: true,
-                    onTap: () => openReservationInvoice(
-                      context,
-                      StoreProvider.of<AppState>(context),
-                      rental['invoice_id']?.toString(),
-                    ),
+                    onTap: () {
+                      final invoiceId = rental['invoice_id']?.toString();
+                      if (widget.onOpenInvoice != null) {
+                        widget.onOpenInvoice!(invoiceId);
+                      } else {
+                        openReservationInvoice(
+                          context,
+                          StoreProvider.of<AppState>(context),
+                          invoiceId,
+                        );
+                      }
+                    },
                   ),
                 ),
             ],

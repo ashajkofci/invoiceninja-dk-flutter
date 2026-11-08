@@ -28,6 +28,7 @@ import 'package:invoiceninja_flutter/ui/app/scrollable_listview.dart';
 import 'package:invoiceninja_flutter/ui/invoice/edit/invoice_edit_items_vm.dart';
 import 'package:invoiceninja_flutter/ui/invoice/edit/invoice_edit_items.dart';
 import 'package:invoiceninja_flutter/ui/invoice/edit/invoice_edit_vm.dart';
+import 'package:invoiceninja_flutter/ui/product/edit/product_rental_history.dart';
 import 'package:invoiceninja_flutter/utils/colors.dart';
 import 'package:invoiceninja_flutter/utils/completers.dart';
 import 'package:invoiceninja_flutter/utils/formatting.dart';
@@ -35,6 +36,7 @@ import 'package:invoiceninja_flutter/utils/localization.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/reservation_availability.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_line_status.dart';
 import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_localization.dart';
+import 'package:invoiceninja_flutter/ui/product_reservation/product_reservation_invoice_link.dart';
 
 class InvoiceEditItemsDesktop extends StatefulWidget {
   const InvoiceEditItemsDesktop({
@@ -360,6 +362,57 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
     setState(() {});
   }
 
+  Future<void> _showProductStats(ProductEntity product) {
+    final localization = AppLocalization.of(context)!;
+    final store = StoreProvider.of<AppState>(context);
+    return showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        child: SizedBox(
+          width: 960,
+          height: MediaQuery.sizeOf(context).height * 0.8,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 12, 12, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${localization.stats} · ${product.productKey}',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                    const CloseButton(),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: ProductRentalHistory(
+                  state: widget.viewModel.state!,
+                  productId: product.id,
+                  onOpenInvoice: (invoiceId) {
+                    if (invoiceId == null || invoiceId.isEmpty) {
+                      return;
+                    }
+                    checkForChanges(
+                      store: store,
+                      callback: () {
+                        Navigator.of(dialogContext).pop();
+                        openReservationInvoice(context, store, invoiceId);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _onChanged(
     InvoiceItemEntity lineItem,
     int index, {
@@ -433,6 +486,18 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
           lineItem.isEmpty;
     }).toList();
     final productState = state.productState;
+    final productsByKey = <String, ProductEntity>{
+      if (!widget.isTasks)
+        for (final product in productState.map.values)
+          if (!product.isNew &&
+              !product.isDeleted! &&
+              product.productKey.isNotEmpty)
+            product.productKey: product,
+    };
+    final canViewProductStats =
+        company.enabledModules & kModuleProductReservations != 0 &&
+            (state.userCompany.canView(EntityType.invoice) ||
+                state.userCompany.canEdit(EntityType.invoice));
     final productIds = memoizedDropdownProductList(
         productState.map, productState.list, state.userState.map);
 
@@ -1721,7 +1786,18 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                         itemBuilder: (BuildContext context) {
                           final sectionIndex =
                               includedLineItems.indexOf(lineItems[index]);
+                          final product = lineItems[index].isGroup
+                              ? null
+                              : productsByKey[lineItems[index].productKey];
                           final options = {
+                            if (product != null &&
+                                state.userCompany.canEditEntity(product))
+                              localization.editProduct: Icons.edit_outlined,
+                            if (product != null &&
+                                canViewProductStats &&
+                                (state.userCompany.canView(EntityType.product) ||
+                                    state.userCompany.canEditEntity(product)))
+                              localization.stats: Icons.bar_chart,
                             if (!lineItems[index].isEmpty)
                               localization.clone: Icons.control_point_duplicate,
                             if (canCreateGroup && lineItems[index].isGroup)
@@ -1761,6 +1837,21 @@ class _InvoiceEditItemsDesktopState extends State<InvoiceEditItemsDesktop> {
                               .toList();
                         },
                         onSelected: (String action) async {
+                          if (action == localization.editProduct ||
+                              action == localization.stats) {
+                            Debouncer.complete();
+                            final product =
+                                productsByKey[lineItems[index].productKey];
+                            if (product == null) {
+                              return;
+                            }
+                            if (action == localization.editProduct) {
+                              editEntity(entity: product);
+                            } else {
+                              await _showProductStats(product);
+                            }
+                            return;
+                          }
                           setState(_selectedItems.clear);
                           if (action == localization.viewTask) {
                             viewEntityById(
