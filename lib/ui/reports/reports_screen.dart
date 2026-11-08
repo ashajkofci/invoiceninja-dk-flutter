@@ -690,12 +690,13 @@ class _YearlyReportViewState extends State<YearlyReportView> {
               label: localization.year,
               controller: _yearController,
               keyboardType: TextInputType.number,
+              onChanged: _submitYear,
               onFieldSubmitted: _submitYear,
               validator: (value) => int.tryParse(value) == null ||
                       int.parse(value) < 1900 ||
                       int.parse(value) > 9999
                   ? 'Enter a year between 1900 and 9999'
-                  : '',
+                  : null,
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
